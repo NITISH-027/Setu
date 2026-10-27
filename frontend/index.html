@@ -13,9 +13,11 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then((reg) => {
+            if (reg.installing) reg.installing.addEventListener('statechange', () => {});
+          })
+          .catch(() => {});
       }
     </script>
   </body>

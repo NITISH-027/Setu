@@ -11,6 +11,7 @@ class UserDB(Base):
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False)  # 'admin', 'teacher', 'reviewer'
     assigned_classes = Column(Text, default="[]")  # JSON list of class_ids, e.g. ["8-A"]
+    is_seeded = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     def get_classes(self):
@@ -148,6 +149,8 @@ class DeviceDB(Base):
     class_id = Column(String, index=True, nullable=False)
     registered_at = Column(DateTime, default=datetime.utcnow)
     last_sync_at = Column(DateTime, default=datetime.utcnow)
+    device_purge_token = Column(String, index=True, nullable=True)
+
 
 
 class AuditEventDB(Base):

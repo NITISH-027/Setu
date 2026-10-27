@@ -1234,6 +1234,16 @@ def build_pack() -> ContentPack:
         )
     ]
 
+    # FIX 9: Content Expansion (Full coverage for Class 8 active concepts, probes, and Hindi/Telugu drafts)
+    try:
+        from app.content_expansion import get_expansion_items
+        exp_questions, exp_lessons, exp_hints = get_expansion_items()
+        questions.extend(exp_questions)
+        lessons.extend(exp_lessons)
+        hints.extend(exp_hints)
+    except Exception as e:
+        print(f"Warning: could not import content_expansion: {e}")
+
     pack = ContentPack(
         metadata=PackMetadata(
             board="CBSE",

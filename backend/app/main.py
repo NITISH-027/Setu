@@ -9,7 +9,8 @@ import json
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, Depends, Query, Body, Security, status
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, Security, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -25,7 +26,10 @@ from app.db import (
 from app.auth.security import (
     hash_password, verify_password, hash_pin, create_session,
     get_current_session, require_teacher, require_admin, require_reviewer,
-    verify_teacher_class_access, verify_student_access, security_bearer
+    verify_teacher_class_access, verify_student_access,
+    verify_student_only_access, verify_teacher_or_admin_student_access,
+    invalidate_session, invalidate_all_student_sessions,
+    security_bearer
 )
 from app.models.pack import ContentPack, ReviewStatus
 from app.models.student import Student, ConsentStatus
@@ -43,9 +47,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS allow-list restriction (FIX 1g)
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173"
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,17 +83,44 @@ paper_manager = PaperModeManager(pack, engine)
 coverage_reporter = CoverageReporter()
 review_manager = ReviewManager()
 
-# Optional session helper for backward-compatibility with tests that don't pass headers
-def get_optional_session(
-    auth: Optional[HTTPAuthorizationCredentials] = Security(security_bearer),
-    db: Session = Depends(get_db)
-) -> Optional[SessionDB]:
-    if not auth or not auth.credentials:
-        return None
-    session = db.query(SessionDB).filter(SessionDB.token == auth.credentials).first()
-    if not session or session.expires_at < datetime.utcnow():
-        return None
-    return session
+
+@app.on_event("startup")
+def verify_production_safeguards():
+    """Refuses to start in production if seeded demo users exist in DB (FIX 6)."""
+    env = os.getenv("ENV", "development").lower()
+    if env == "production":
+        db = SessionLocal()
+        try:
+            seeded = db.query(UserDB).filter(UserDB.is_seeded == True).first()
+            if seeded:
+                raise RuntimeError(
+                    f"FATAL: Production startup refused! Seeded demo user '{seeded.username}' found in database."
+                )
+        finally:
+            db.close()
+
+
+# Pydantic Schemas for strictly validated input (FIX 1d)
+class AttemptPayload(BaseModel):
+    question_id: str
+    selected_option_id: str
+    concept_id: Optional[str] = None
+    time_spent_seconds: Optional[int] = None
+    attempt_id: Optional[str] = None
+
+
+class OverridePayload(BaseModel):
+    class_id: str
+    student_id: str
+    concept_id: str
+    action: str
+    reason: str
+
+
+class SyncPayload(BaseModel):
+    device_id: str
+    class_id: str = "8-A"
+    queued_attempts: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 # Helper to convert StudentDB + PlanDB + MasteryStateDB to domain models
@@ -113,7 +154,7 @@ def load_student_domain_state(db: Session, student_id: str):
             bridge_recheck_fails=plan_db.bridge_recheck_fails
         )
 
-    # Load primary concept mastery (or first mastery)
+    # Load primary concept mastery
     concept_id = plan.current_concept_id if plan else "c8_math_linear_eq_one_var"
     mastery_db = db.query(MasteryStateDB).filter(
         MasteryStateDB.student_id == student_id,
@@ -138,7 +179,6 @@ def load_student_domain_state(db: Session, student_id: str):
             mastery_label=mastery_db.mastery_label
         )
 
-    # Load latest open hypothesis
     hyp_db = db.query(HypothesisDB).filter(
         HypothesisDB.student_id == student_id,
         HypothesisDB.status == "open"
@@ -210,85 +250,39 @@ def save_student_domain_state(
             )
             db.add(h_db)
         h_db.suspected_concept_id = hypothesis.suspected_concept_id
-        h_db.misconception_tag = hypothesis.misconception_tag
-        h_db.evidence_list = json.dumps(hypothesis.evidence_list)
+        evidence_serialized = [
+            item.model_dump(mode="json") if hasattr(item, "model_dump") else (item if isinstance(item, dict) else str(item))
+            for item in (hypothesis.evidence_list or [])
+        ]
+        h_db.evidence_list = json.dumps(evidence_serialized, default=str)
         h_db.heuristic_score = hypothesis.heuristic_score
-        h_db.evidence_band = hypothesis.evidence_band
+        h_db.evidence_band = hypothesis.evidence_band.value if hasattr(hypothesis.evidence_band, "value") else str(hypothesis.evidence_band)
         h_db.updated_at = datetime.utcnow()
 
     db.commit()
 
 
-# Ensure demo student exists in DB if DB was empty
-def ensure_demo_student():
-    db = SessionLocal()
-    try:
-        s = db.query(StudentDB).filter(StudentDB.pseudonymous_id == "stu_demo_01").first()
-        if not s:
-            salt = secrets.token_hex(8)
-            pin_h = hash_pin("1234", salt)
-            stu = StudentDB(
-                pseudonymous_id="stu_demo_01",
-                subject_key="subj_key_demo_001",
-                class_id="8-A",
-                board="CBSE",
-                medium_language="en",
-                pin_hash=pin_h,
-                salt=salt,
-                consent_status="not requested"
-            )
-            db.add(stu)
-            db.commit()
-
-        if not db.query(PlanDB).filter(PlanDB.student_id == "stu_demo_01").first():
-            db.add(PlanDB(
-                student_id="stu_demo_01",
-                class_id="8-A",
-                current_stage="solve",
-                current_concept_id="c8_math_linear_eq_one_var",
-                reason="Initial practice sequence"
-            ))
-            db.commit()
-
-        if not db.query(MasteryStateDB).filter(MasteryStateDB.student_id == "stu_demo_01").first():
-            db.add(MasteryStateDB(
-                student_id="stu_demo_01",
-                concept_id="c8_math_linear_eq_one_var",
-                mastery_estimate=0.25
-            ))
-            db.commit()
-
-        if not db.query(DeviceDB).filter(DeviceDB.device_id == "dev_demo_tablet").first():
-            db.add(DeviceDB(
-                device_id="dev_demo_tablet",
-                class_id="8-A"
-            ))
-            db.commit()
-
-        if not db.query(PinProfileDB).filter(
-            PinProfileDB.device_id == "dev_demo_tablet",
-            PinProfileDB.student_id == "stu_demo_01"
-        ).first():
-            salt = secrets.token_hex(8)
-            pin_h = hash_pin("1234", salt)
-            db.add(PinProfileDB(
-                device_id="dev_demo_tablet",
-                student_id="stu_demo_01",
-                class_id="8-A",
-                pin_hash=pin_h,
-                salt=salt
-            ))
-            db.commit()
-    except Exception:
-        db.rollback()
-    finally:
-        db.close()
-
-ensure_demo_student()
+def sanitize_question_for_client(q_dict: dict) -> dict:
+    """Removes all answer leaks: is_correct, misconception_tag, solutions (FIX 2)."""
+    sanitized = dict(q_dict)
+    if "options" in sanitized and isinstance(sanitized["options"], list):
+        clean_opts = []
+        for opt in sanitized["options"]:
+            clean = {
+                "id": opt.get("id"),
+                "text": opt.get("text")
+            }
+            if "numeric_value" in opt and opt["numeric_value"] is not None:
+                clean["numeric_value"] = opt["numeric_value"]
+            clean_opts.append(clean)
+        sanitized["options"] = clean_opts
+    sanitized.pop("correct_option_id", None)
+    sanitized.pop("worked_solution", None)
+    return sanitized
 
 
 # ==========================================
-# PUBLIC / DISCOVERY ROUTES
+# PUBLIC / DISCOVERY ROUTES (ONLY 4 AS MANDATED)
 # ==========================================
 
 @app.get("/health")
@@ -304,26 +298,26 @@ def health_check():
 
 @app.get("/api/pack")
 def get_shipped_pack():
-    return pack.model_dump()
+    """
+    Public pack download (FIX 2): answer-free!
+    Never contains is_correct, misconception_tags, or worked solutions.
+    """
+    raw = pack.model_dump()
+    sanitized_questions = [sanitize_question_for_client(q) for q in raw.get("questions", [])]
+    raw["questions"] = sanitized_questions
+    return raw
 
-
-@app.get("/api/coverage")
-def get_coverage_report():
-    report = coverage_reporter.generate_report(pack)
-    return report.to_dict()
-
-
-# ==========================================
-# AUTHENTICATION & SESSIONS (SECTION 3)
-# ==========================================
 
 @app.post("/api/auth/login")
 def login_user(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db)):
     """
     Teacher, Admin, or Reviewer login with Argon2 verification.
+    Binds device to teacher session if device_id provided (FIX 4).
     """
     username = payload.get("username")
     password = payload.get("password")
+    device_id = payload.get("device_id")
+
     if not username or not password:
         raise HTTPException(status_code=400, detail="Username and password are required.")
 
@@ -331,7 +325,15 @@ def login_user(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
 
-    session = create_session(db, user_id=user.id, role=user.role)
+    if device_id:
+        classes = user.get_classes()
+        class_id = classes[0] if classes else "GLOBAL"
+        dev = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
+        if not dev:
+            db.add(DeviceDB(device_id=device_id, class_id=class_id))
+            db.commit()
+
+    session = create_session(db, user_id=user.id, role=user.role, device_id=device_id)
     return {
         "access_token": session.token,
         "token_type": "bearer",
@@ -345,19 +347,26 @@ def login_user(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
 def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db)):
     """
     PIN verification for student session on a shared device.
+    Registers device bound to student's class (FIX 4).
     Zero-logging of PIN plaintext.
     """
-    device_id = payload.get("device_id", "dev_demo_tablet")
+    device_id = payload.get("device_id")
     student_id = payload.get("student_id")
     candidate_pin = payload.get("pin")
 
     if not student_id or not candidate_pin:
         raise HTTPException(status_code=400, detail="student_id and pin are required.")
 
-    profile = db.query(PinProfileDB).filter(
-        PinProfileDB.device_id == device_id,
-        PinProfileDB.student_id == student_id
-    ).first()
+    student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found.")
+
+    profile = None
+    if device_id:
+        profile = db.query(PinProfileDB).filter(
+            PinProfileDB.device_id == device_id,
+            PinProfileDB.student_id == student_id
+        ).first()
 
     now = datetime.utcnow()
     if profile:
@@ -375,35 +384,64 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
         profile.locked_until = None
         db.commit()
     else:
-        # Fallback to StudentDB directly
-        student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
-        if not student:
-            raise HTTPException(status_code=404, detail="Student profile not found.")
         computed_hash = hash_pin(candidate_pin, student.salt)
         if computed_hash != student.pin_hash:
             raise HTTPException(status_code=401, detail="Incorrect PIN.")
+
+    # Register device bound to student and class upon authenticated login (FIX 4)
+    if device_id:
+        dev = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
+        if not dev:
+            db.add(DeviceDB(device_id=device_id, class_id=student.class_id))
+            db.commit()
+        else:
+            dev.class_id = student.class_id
+            dev.last_sync_at = datetime.utcnow()
+            db.commit()
 
     session = create_session(db, role="student", student_id=student_id, device_id=device_id)
     return {
         "authenticated": True,
         "access_token": session.token,
         "token_type": "bearer",
-        "student_id": student_id
+        "student_id": student_id,
+        "class_id": student.class_id
     }
 
 
+@app.post("/api/auth/logout")
+def logout_user(session: SessionDB = Depends(get_current_session), db: Session = Depends(get_db)):
+    """Session hygiene (FIX 1h): invalidates token upon logout."""
+    invalidate_session(db, session.token)
+    return {"status": "logged_out"}
+
+
 # ==========================================
-# STUDENT FLOW & SERVER-SIDE GRADING (SECTION 4)
+# PROTECTED COVERAGE & METRICS
+# ==========================================
+
+@app.get("/api/coverage")
+def get_coverage_report(session: SessionDB = Depends(get_current_session)):
+    report = coverage_reporter.generate_report(pack)
+    return report.to_dict()
+
+
+# ==========================================
+# STUDENT FLOW & SERVER-SIDE GRADING (FIX 1, 2)
 # ==========================================
 
 @app.get("/api/student/{student_id}/next-step")
 def get_student_next_step(
     student_id: str,
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    session: SessionDB = Depends(get_current_session),
     db: Session = Depends(get_db)
 ):
-    if session and session.role == "student" and session.student_id != student_id:
-        raise HTTPException(status_code=403, detail="Student cannot access another student's session.")
+    """
+    Online next step (FIX 1c, FIX 2).
+    Requires student token matching student_id.
+    Options returned are STRICTLY SANITIZED: no is_correct or misconception_tag.
+    """
+    verify_student_only_access(session, student_id)
 
     student, plan, mastery, hyp = load_student_domain_state(db, student_id)
     if not student:
@@ -412,54 +450,57 @@ def get_student_next_step(
     step = engine.get_next_step(student, plan, mastery, hyp)
     ladder = engine.get_hint_ladder(step.item.id) if (step.item and hasattr(step.item, "id")) else None
 
+    sanitized_item = None
+    if step.item and hasattr(step.item, "model_dump"):
+        item_dict = step.item.model_dump()
+        sanitized_item = sanitize_question_for_client(item_dict)
+
+    sanitized_ladder = None
+    if ladder:
+        sanitized_ladder = ladder.model_dump()
+
     return {
         "step": step.to_dict(),
-        "item": step.item.model_dump() if (step.item and hasattr(step.item, "model_dump")) else None,
-        "hint_ladder": ladder.model_dump() if ladder else None
+        "item": sanitized_item,
+        "hint_ladder": sanitized_ladder
     }
 
 
 @app.post("/api/student/{student_id}/attempt")
 def submit_attempt(
     student_id: str,
-    payload: Dict[str, Any] = Body(...),
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    payload: AttemptPayload,
+    session: SessionDB = Depends(get_current_session),
     db: Session = Depends(get_db)
 ):
     """
-    CRITICAL: Server-Side Grading (Section 4).
-    Client-sent 'is_correct' and 'misconception_tag' are STRICTLY IGNORED.
-    Grading is determined authoritatively by looking up question_id and selected_option_id in the pack.
+    CRITICAL: Server-Side Grading (FIX 1c, 1d).
+    Requires student token matching student_id.
+    Malformed bodies return 422 (never 500).
+    Missing token returns 401.
     """
-    if session and session.role == "student" and session.student_id != student_id:
-        raise HTTPException(status_code=403, detail="Student cannot submit attempts for another student.")
+    verify_student_only_access(session, student_id)
 
     student, plan, mastery, hyp = load_student_domain_state(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
 
-    q_id = payload.get("question_id")
-    selected_opt_id = payload.get("selected_option_id")
-    concept_id = payload.get("concept_id")
-
-    if not q_id or not selected_opt_id:
-        raise HTTPException(status_code=400, detail="question_id and selected_option_id are required.")
+    q_id = payload.question_id
+    selected_opt_id = payload.selected_option_id
+    concept_id = payload.concept_id
 
     # Server-Side Grading Lookup
     question = pack.get_question(q_id)
     if not question:
         raise HTTPException(status_code=404, detail=f"Question '{q_id}' not found in pack.")
 
-    # Find the option
     matched_option = next((opt for opt in question.options if opt.id == selected_opt_id), None)
     if not matched_option:
         raise HTTPException(status_code=400, detail=f"Option '{selected_opt_id}' does not exist for question '{q_id}'.")
 
-    # Authoritative server evaluation
     server_is_correct = matched_option.is_correct
     server_misconception_tag = matched_option.misconception_tag if not server_is_correct else None
 
-    # Construct validated Attempt
     attempt = Attempt(
         student_id=student_id,
         question_id=q_id,
@@ -467,12 +508,11 @@ def submit_attempt(
         selected_option_id=selected_opt_id,
         is_correct=server_is_correct,
         misconception_tag=server_misconception_tag,
-        time_spent_seconds=payload.get("time_spent_seconds")
+        time_spent_seconds=payload.time_spent_seconds
     )
 
-    # Record Attempt in Database
     attempt_db = AttemptDB(
-        id=secrets.token_hex(12),
+        id=payload.attempt_id or secrets.token_hex(12),
         student_id=student_id,
         subject_key=student.subject_key if hasattr(student, "subject_key") else None,
         question_id=attempt.question_id,
@@ -485,10 +525,8 @@ def submit_attempt(
     )
     db.add(attempt_db)
 
-    # Process through Adaptive Engine
     plan, mastery, hyp, decision = engine.process_attempt(student, plan, attempt, mastery, hyp)
 
-    # Record Decision in Database
     decision_db = DecisionDB(
         student_id=student_id,
         class_id=student.class_id,
@@ -501,7 +539,6 @@ def submit_attempt(
     db.add(decision_db)
     db.commit()
 
-    # Save domain updates back to DB
     save_student_domain_state(db, student_id, plan, mastery, hyp)
 
     return {
@@ -514,28 +551,47 @@ def submit_attempt(
     }
 
 
+@app.get("/api/student/{student_id}/offline-pack")
+def get_offline_pack(
+    student_id: str,
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """
+    Authenticated offline pack download (FIX 2).
+    Available ONLY to an authenticated student session for that student's class.
+    Contains answer keys for offline grading on device.
+    Tradeoff explicitly documented: stored in IndexedDB, server re-grades on sync.
+    """
+    verify_student_only_access(session, student_id)
+
+    student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    return pack.model_dump()
+
+
 # ==========================================
-# TEACHER DASHBOARD & OVERRIDES (SECTION 2, 3)
+# TEACHER DASHBOARD & OVERRIDES (FIX 1c)
 # ==========================================
 
 @app.get("/api/teacher/class/{class_id}")
 def get_teacher_class_dashboard(
     class_id: str,
-    teacher_id: Optional[str] = Query(default=None),
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    session: SessionDB = Depends(require_teacher),
     db: Session = Depends(get_db)
 ):
-    if session:
-        verify_teacher_class_access(session, class_id, db)
-        user = db.query(UserDB).filter(UserDB.id == session.user_id).first()
-        if user:
-            teacher_service.teacher_class_assignments[session.user_id] = set(user.get_classes()) if session.role != "admin" else {class_id}
-    elif teacher_id:
-        # Backward compatibility for legacy tests without auth header
-        if teacher_id == "tea_01" and class_id != "8-A":
-            raise HTTPException(status_code=403, detail=f"Teacher '{teacher_id}' not assigned to '{class_id}'.")
+    """
+    Teacher dashboard. Requires teacher session.
+    Class scoping strictly enforced: teacher can only access assigned classes.
+    No fallback teacher_id!
+    """
+    verify_teacher_class_access(session, class_id, db)
+    user = db.query(UserDB).filter(UserDB.id == session.user_id).first()
+    if user:
+        teacher_service.teacher_class_assignments[session.user_id] = set(user.get_classes()) if session.role != "admin" else {class_id}
 
-    # Fetch students in this class from DB
     students_db = db.query(StudentDB).filter(StudentDB.class_id == class_id).all()
     class_students_data = []
     for s_db in students_db:
@@ -548,30 +604,31 @@ def get_teacher_class_dashboard(
                 "hypothesis": hyp
             })
 
-    active_teacher = session.user_id if session else (teacher_id or "tea_01")
     try:
-        dashboard = teacher_service.get_class_dashboard(active_teacher, class_id, class_students_data)
+        dashboard = teacher_service.get_class_dashboard(session.user_id, class_id, class_students_data)
         return dashboard.model_dump()
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
 
-
 @app.post("/api/teacher/override")
 def apply_teacher_override(
-    payload: Dict[str, Any] = Body(...),
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    payload: OverridePayload,
+    session: SessionDB = Depends(require_teacher),
     db: Session = Depends(get_db)
 ):
-    class_id = payload.get("class_id", "8-A")
-    if session:
-        verify_teacher_class_access(session, class_id, db)
+    """
+    Teacher override. Requires teacher session with class scope.
+    Mandatory reason text. No no-session fallback!
+    """
+    class_id = payload.class_id
+    verify_teacher_class_access(session, class_id, db)
 
-    teacher_id = session.user_id if session else payload.get("teacher_id", "tea_01")
-    student_id = payload.get("student_id")
-    concept_id = payload.get("concept_id")
-    action = payload.get("action")
-    reason = payload.get("reason")
+    teacher_id = session.user_id
+    student_id = payload.student_id
+    concept_id = payload.concept_id
+    action = payload.action
+    reason = payload.reason
 
     if not reason or not reason.strip():
         raise HTTPException(status_code=400, detail="Teacher override reason is mandatory.")
@@ -584,7 +641,6 @@ def apply_teacher_override(
         teacher_id, class_id, student_id, concept_id, action, reason, plan
     )
 
-    # Persist override in DB
     override_db = TeacherOverrideDB(
         student_id=student_id,
         teacher_id=teacher_id,
@@ -603,11 +659,10 @@ def apply_teacher_override(
 @app.post("/api/teacher/bulk-paper-submit")
 def submit_paper_responses(
     payload: Dict[str, Any] = Body(...),
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    session: SessionDB = Depends(require_teacher),
     db: Session = Depends(get_db)
 ):
-    if session:
-        require_teacher(session)
+    """Teacher paper mode response submission. Requires teacher session."""
     responses = payload.get("responses", [])
     graded_count = 0
 
@@ -646,31 +701,42 @@ def submit_paper_responses(
 
 
 # ==========================================
-# PRIVACY, DELETION & TOMBSTONES (SECTION 6)
+# PRIVACY, DELETION & SYNC (FIX 1c, FIX 4, FIX 5)
 # ==========================================
 
 @app.post("/api/privacy/delete-student")
 def delete_student(
     payload: Dict[str, str] = Body(...),
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    session: SessionDB = Depends(get_current_session),
     db: Session = Depends(get_db)
 ):
     """
-    CRITICAL: Clean deletion with zero trace of student ID.
-    Purges from StudentDB, PlanDB, MasteryStateDB, HypothesisDB, AttemptDB, DecisionDB, PinProfileDB.
-    Sanitizes TeacherOverrideDB (replaces student_id with '[PURGED]').
+    CRITICAL: Clean deletion with zero trace of student ID (FIX 1c, FIX 5).
+    Authorized teacher (class scoped) or admin ONLY.
+    Removes:
+    - sessions, student record, plan, mastery, hypotheses, attempts, decisions, pin profile,
+    - teacher overrides (purged completely so no student_id and NO override reason text remains in DB),
+    - device bindings.
+    Issues purge tokens to devices bound to the class.
     Creates TombstoneDB using subject_key (NEVER student_id!).
-    Audit event logs counts only with zero PII.
+    Zero PII in AuditEventDB.
     """
     student_id = payload.get("student_id")
-    actor = session.user_id if session else payload.get("actor", "teacher")
-
     if not student_id:
         raise HTTPException(status_code=400, detail="student_id is required.")
 
     student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
-    class_id = student.class_id if student else "unknown_class"
-    subject_key = student.subject_key if student else secrets.token_hex(16)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    class_id = student.class_id
+    subject_key = student.subject_key
+
+    # Class scoping for teacher, admin can delete any
+    if session.role == "teacher":
+        verify_teacher_class_access(session, class_id, db)
+    elif session.role != "admin":
+        raise HTTPException(status_code=403, detail="Unauthorized role for deletion.")
 
     # 1. Purge all records from active stores
     db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).delete()
@@ -681,15 +747,21 @@ def delete_student(
     db.query(DecisionDB).filter(DecisionDB.student_id == student_id).delete()
     db.query(PinProfileDB).filter(PinProfileDB.student_id == student_id).delete()
 
-    # 2. Sanitize TeacherOverrideDB: replace student_id with '[PURGED]' to avoid dangling ID
-    overrides = db.query(TeacherOverrideDB).filter(TeacherOverrideDB.student_id == student_id).all()
-    for ov in overrides:
-        ov.student_id = "[PURGED]"
-        ov.reason = "[Purged for student privacy]"
+    # Sessions purge (FIX 1h, FIX 5)
+    invalidate_all_student_sessions(db, student_id)
 
-    # 3. Create Opaque Tombstone using subject_key (NO student_id in TombstoneDB)
+    # Purge TeacherOverrideDB records completely so zero trace of student ID and override reason remains
+    db.query(TeacherOverrideDB).filter(TeacherOverrideDB.student_id == student_id).delete()
+
+    # 2. Provide restricted revocation/purge token to devices bound to this class (FIX 5)
+    purge_token = secrets.token_hex(16)
+    devices = db.query(DeviceDB).filter(DeviceDB.class_id == class_id).all()
+    for dev in devices:
+        dev.device_purge_token = purge_token
+
+    # 3. Create Opaque Tombstone using subject_key
     opaque_key = secrets.token_hex(16)
-    device_count = db.query(DeviceDB).filter(DeviceDB.class_id == class_id).count()
+    device_count = len(devices)
 
     tombstone = TombstoneDB(
         opaque_key=opaque_key,
@@ -700,10 +772,10 @@ def delete_student(
     )
     db.add(tombstone)
 
-    # 4. Zero-PII Audit Event
+    # 4. Zero-PII Audit Event (NO student_id, NO reason text)
     audit = AuditEventDB(
         event_type="DELETE_STUDENT",
-        actor=actor,
+        actor=session.user_id or session.role,
         class_id=class_id,
         record_count=1,
         opaque_tombstone_key=opaque_key,
@@ -713,7 +785,7 @@ def delete_student(
     db.commit()
 
     return {
-        "student_id": student_id,
+        "status": "deleted",
         "tombstone_key": opaque_key,
         "pending_devices": device_count,
         "is_fully_deleted_everywhere": (device_count == 0),
@@ -722,29 +794,70 @@ def delete_student(
 
 
 @app.post("/api/privacy/sync")
-def sync_device(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+def sync_device(
+    payload: SyncPayload,
+    auth: Optional[HTTPAuthorizationCredentials] = Security(security_bearer),
+    x_device_purge_token: Optional[str] = Header(None, alias="X-Device-Purge-Token"),
+    db: Session = Depends(get_db)
+):
     """
-    Device synchronization:
-    1. Returns active pending tombstones to purge local student cache.
-    2. Re-grades queued offline attempts on server.
-    3. Handles stale devices (if last sync is older than retention period, reset device).
+    Device synchronization (FIX 1e, FIX 4, FIX 5).
+    Requires authenticated session (student/teacher) OR purge-only device credential.
+    Unregistered device returns explicit RESET-required response (never silent registration).
+    Stale device (>30 days) returns RESET-required response.
+    Purge token permits ONLY fetching pending tombstones and wiping local cache.
+    Re-grades queued attempts with idempotency.
     """
-    device_id = payload.get("device_id")
-    class_id = payload.get("class_id", "8-A")
-    queued_attempts = payload.get("queued_attempts", [])
+    token = auth.credentials if auth else None
+    session = None
+    is_purge_credential = False
 
+    if token:
+        # Check if it's a valid session token
+        session = db.query(SessionDB).filter(SessionDB.token == token).first()
+        if session and session.expires_at < datetime.utcnow():
+            session = None
+
+        # Check if it's a device purge token
+        if not session:
+            dev_with_token = db.query(DeviceDB).filter(DeviceDB.device_purge_token == token).first()
+            if dev_with_token:
+                is_purge_credential = True
+
+    if not is_purge_credential and x_device_purge_token:
+        dev_with_token = db.query(DeviceDB).filter(DeviceDB.device_purge_token == x_device_purge_token).first()
+        if dev_with_token:
+            is_purge_credential = True
+
+    if not session and not is_purge_credential:
+        raise HTTPException(status_code=401, detail="Authentication required for sync.")
+
+    device_id = payload.device_id
     device = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
-    is_stale = False
-    if device:
-        # If device last sync > 30 days ago, it is stale
-        if datetime.utcnow() - device.last_sync_at > timedelta(days=30):
-            is_stale = True
-        device.last_sync_at = datetime.utcnow()
-    else:
-        device = DeviceDB(device_id=device_id, class_id=class_id)
-        db.add(device)
 
-    # Check tombstones
+    # FIX 4: Unregistered device gets RESET, not silent registration!
+    if not device:
+        return {
+            "device_id": device_id,
+            "is_stale_reset_required": True,
+            "reset_reason": "unregistered_device",
+            "applied_tombstones": [],
+            "synced_attempts_processed": 0
+        }
+
+    # FIX 4: Stale device (>30 days) gets RESET
+    if datetime.utcnow() - device.last_sync_at > timedelta(days=30):
+        device.last_sync_at = datetime.utcnow()
+        db.commit()
+        return {
+            "device_id": device_id,
+            "is_stale_reset_required": True,
+            "reset_reason": "retention_expired",
+            "applied_tombstones": [],
+            "synced_attempts_processed": 0
+        }
+
+    # If purge credential used: fetch tombstones only, no learning access (FIX 5)
     pending_tombstones = db.query(TombstoneDB).filter(TombstoneDB.status == "pending").all()
     applied_keys = []
     for t in pending_tombstones:
@@ -753,19 +866,44 @@ def sync_device(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_d
         if t.pending_devices == 0:
             t.status = "applied"
 
-    # Re-grade queued attempts server-side
+    if is_purge_credential:
+        db.commit()
+        return {
+            "device_id": device_id,
+            "is_stale_reset_required": False,
+            "applied_tombstones": applied_keys,
+            "synced_attempts_processed": 0,
+            "purge_mode": True
+        }
+
+    # Re-grade queued attempts with idempotency (FIX 3f)
     processed_count = 0
-    for att_dict in queued_attempts:
+    latest_mastery = None
+
+    for att_dict in payload.queued_attempts:
         s_id = att_dict.get("student_id")
         q_id = att_dict.get("question_id")
         sel_opt = att_dict.get("selected_option_id")
-        # Ensure student was not deleted
+        client_attempt_id = att_dict.get("attempt_id") or att_dict.get("id")
+
+        # Session student isolation on sync: student token can only sync own attempts
+        if session.role == "student" and session.student_id != s_id:
+            continue
+
+        # Idempotency check: ignore already processed attempts
+        if client_attempt_id:
+            existing = db.query(AttemptDB).filter(AttemptDB.id == client_attempt_id).first()
+            if existing:
+                continue
+
         stu, plan, mastery, hyp = load_student_domain_state(db, s_id)
         if not stu or not plan:
             continue
+
         q = pack.get_question(q_id)
         if not q:
             continue
+
         opt = next((o for o in q.options if o.id == sel_opt), None)
         if not opt:
             continue
@@ -781,35 +919,83 @@ def sync_device(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_d
             is_correct=real_is_correct,
             misconception_tag=real_tag
         )
+
+        attempt_db = AttemptDB(
+            id=client_attempt_id or secrets.token_hex(12),
+            student_id=s_id,
+            subject_key=stu.subject_key if hasattr(stu, "subject_key") else None,
+            question_id=valid_att.question_id,
+            concept_id=valid_att.concept_id,
+            selected_option_id=valid_att.selected_option_id,
+            is_correct=valid_att.is_correct,
+            misconception_tag=valid_att.misconception_tag,
+            time_spent_seconds=att_dict.get("time_spent_seconds"),
+            timestamp=datetime.utcnow()
+        )
+        db.add(attempt_db)
+
         plan, mastery, hyp, dec = engine.process_attempt(stu, plan, valid_att, mastery, hyp)
         save_student_domain_state(db, s_id, plan, mastery, hyp)
         processed_count += 1
+        if mastery:
+            latest_mastery = {
+                "concept_id": mastery.concept_id,
+                "mastery_estimate": mastery.mastery_estimate,
+                "mastery_label": mastery.mastery_label
+            }
 
+    device.last_sync_at = datetime.utcnow()
     db.commit()
 
     return {
         "device_id": device_id,
-        "is_stale_reset_required": is_stale,
+        "is_stale_reset_required": False,
         "applied_tombstones": applied_keys,
-        "synced_attempts_processed": processed_count
+        "synced_attempts_processed": processed_count,
+        "authoritative_mastery": latest_mastery
     }
+
+
+@app.post("/api/device/purge-ack")
+def acknowledge_purge(
+    payload: Dict[str, str] = Body(...),
+    auth: Optional[HTTPAuthorizationCredentials] = Security(security_bearer),
+    x_device_purge_token: Optional[str] = Header(None, alias="X-Device-Purge-Token"),
+    db: Session = Depends(get_db)
+):
+    """
+    Device acknowledges tombstone purge applied (FIX 5).
+    Clears device_purge_token.
+    """
+    device_id = payload.get("device_id")
+    token = auth.credentials if auth else x_device_purge_token
+    device = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found.")
+
+    if device.device_purge_token and device.device_purge_token != token:
+        raise HTTPException(status_code=403, detail="Invalid purge token.")
+
+    device.device_purge_token = None
+    db.commit()
+    return {"status": "purge_acknowledged", "device_id": device_id}
 
 
 @app.get("/api/student/{student_id}/export")
 def export_student_data(
     student_id: str,
-    session: Optional[SessionDB] = Depends(get_optional_session),
+    session: SessionDB = Depends(get_current_session),
     db: Session = Depends(get_db)
 ):
     """
     Exports student data strictly without direct identifiers.
+    Authorized teacher (class scoped), student themselves, or admin ONLY (FIX 1c).
     """
-    if session:
-        verify_student_access(session, student_id)
-
     student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
+
+    verify_teacher_or_admin_student_access(session, student_id, student.class_id, db)
 
     attempts = db.query(AttemptDB).filter(AttemptDB.student_id == student_id).all()
     masteries = db.query(MasteryStateDB).filter(MasteryStateDB.student_id == student_id).all()
@@ -840,9 +1026,7 @@ def get_audit_logs(
     session: SessionDB = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Admin only: view zero-PII audit log.
-    """
+    """Admin only: view zero-PII audit log."""
     logs = db.query(AuditEventDB).order_by(AuditEventDB.id.desc()).all()
     return [
         {
@@ -863,10 +1047,7 @@ def trigger_retention_run(
     session: SessionDB = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Admin only: executes data retention policy.
-    Purges fully applied tombstones older than 30 days.
-    """
+    """Admin only: executes data retention policy."""
     cutoff = datetime.utcnow() - timedelta(days=30)
     purged_count = db.query(TombstoneDB).filter(
         TombstoneDB.status == "applied",
@@ -896,9 +1077,7 @@ def update_student_consent(
     session: SessionDB = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Admin only: updates student consent state.
-    """
+    """Admin only: updates student consent state."""
     status_str = payload.get("consent_status")
     if status_str not in ["not requested", "requested", "recorded"]:
         raise HTTPException(status_code=400, detail="Invalid consent status value.")
@@ -930,10 +1109,7 @@ def attest_pack_item(
     session: SessionDB = Depends(require_reviewer),
     db: Session = Depends(get_db)
 ):
-    """
-    Reviewer only: Human review attestation.
-    Updates the review status of an item and records reviewer identity.
-    """
+    """Reviewer only: Human review attestation."""
     item_id = payload.get("item_id")
     status_val = payload.get("status")
     statement = payload.get("attestation_statement", "Verified NCERT Class 8 curriculum alignment.")
@@ -952,7 +1128,6 @@ def attest_pack_item(
     reviewer_user = db.query(UserDB).filter(UserDB.id == session.user_id).first()
     rev_name = reviewer_user.username if reviewer_user else "Reviewer"
 
-    # Find item in pack and update
     updated = False
     for q in pack.questions:
         if q.id == item_id:
@@ -969,7 +1144,6 @@ def attest_pack_item(
     if not updated:
         raise HTTPException(status_code=404, detail=f"Pack item '{item_id}' not found.")
 
-    # Record in ReviewRecordDB
     rec = ReviewRecordDB(
         item_id=item_id,
         item_type="question" if item_id.startswith("q_") else "lesson",
@@ -982,7 +1156,6 @@ def attest_pack_item(
     db.add(rec)
     db.commit()
 
-    # Save pack to file
     with open(PACK_PATH, "w", encoding="utf-8") as f:
         f.write(pack.model_dump_json(indent=2))
 
@@ -996,9 +1169,7 @@ def attest_pack_item(
 
 @app.get("/api/content/editor/pack")
 def get_editor_pack(session: SessionDB = Depends(require_reviewer)):
-    """
-    Returns full pack for content editor UI.
-    """
+    """Returns full pack for content editor UI."""
     return pack.model_dump()
 
 
@@ -1016,7 +1187,6 @@ def update_editor_pack_item(
     if not item_id:
         raise HTTPException(status_code=400, detail="Item 'id' is required.")
 
-    # Modifying item resets review status
     payload["review_status"] = "author-drafted, unreviewed"
 
     updated = False
@@ -1037,6 +1207,6 @@ def update_editor_pack_item(
 
 
 @app.get("/api/paper/sheet/{concept_id}", response_class=HTMLResponse)
-def get_printable_sheet(concept_id: str):
+def get_printable_sheet(concept_id: str, session: SessionDB = Depends(require_teacher)):
     sheet = paper_manager.generate_printable_sheet(concept_id)
     return sheet.to_html()

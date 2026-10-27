@@ -121,12 +121,26 @@ def verify_teacher_class_access(session: SessionDB, class_id: str, db: Session):
     return True
 
 
+def invalidate_session(db: Session, token: str) -> bool:
+    session = db.query(SessionDB).filter(SessionDB.token == token).first()
+    if session:
+        db.delete(session)
+        db.commit()
+        return True
+    return False
+
+
+def invalidate_all_student_sessions(db: Session, student_id: str) -> int:
+    deleted = db.query(SessionDB).filter(SessionDB.student_id == student_id).delete()
+    db.commit()
+    return deleted
+
+
 def verify_student_access(session: SessionDB, target_student_id: str):
     """
-    Ensures student token can only read and write to their own student record.
-    Teacher or admin can also access.
+    Ensures student token can only access their own student record.
     """
-    if session.role in ["admin", "teacher"]:
+    if session.role == "admin":
         return True
     if session.role == "student":
         if session.student_id != target_student_id:
@@ -135,4 +149,42 @@ def verify_student_access(session: SessionDB, target_student_id: str):
                 detail=f"Access Denied: Student session '{session.student_id}' cannot access student '{target_student_id}'."
             )
         return True
-    raise HTTPException(status_code=403, detail="Unauthorized role.")
+    raise HTTPException(status_code=403, detail="Access denied: Student access only.")
+
+
+def verify_student_only_access(session: SessionDB, target_student_id: str):
+    """
+    Enforces that ONLY the student themselves (with a student session token) can access.
+    """
+    if session.role != "student":
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access Denied: Only student session can perform this action, got '{session.role}'."
+        )
+    if session.student_id != target_student_id:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access Denied: Student session '{session.student_id}' cannot access student '{target_student_id}'."
+        )
+    return True
+
+
+def verify_teacher_or_admin_student_access(session: SessionDB, target_student_id: str, student_class_id: str, db: Session):
+    """
+    Ensures teacher can only access/delete/export students in classes assigned to them.
+    Admin can access any student.
+    """
+    if session.role == "admin":
+        return True
+    if session.role == "teacher":
+        user = db.query(UserDB).filter(UserDB.id == session.user_id).first()
+        if not user or student_class_id not in user.get_classes():
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access Denied: Teacher is not authorized for class '{student_class_id}' of student '{target_student_id}'."
+            )
+        return True
+    if session.role == "student" and session.student_id == target_student_id:
+        return True
+    raise HTTPException(status_code=403, detail="Access Denied: Insufficient permissions for student data.")
+

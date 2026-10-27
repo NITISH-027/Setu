@@ -20,40 +20,45 @@ All shipped items are author-drafted and unreviewed by default in accordance wit
 | Metric | Shipped Count | Status Label |
 |---|---|---|
 | **Total Concepts** | 20 | 7 Active (Class 8), 13 Spine (Classes 6, 7, 9, 10 labeled `graph-only`) |
-| **Questions** | 39 | Direct probes for all 5 active Class 8 concepts; wrong options tagged |
-| **Micro-Lessons** | 19 | English foundational & targeted bridges; draft unreviewed Hindi/Telugu |
-| **Hint Ladders** | 39 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) |
-| **Total Items Tracked** | 97 | Questions, Lessons, Hint Ladders |
+| **Questions** | 89 | At least 8 questions and 2 probes per active concept; wrong options tagged |
+| **Micro-Lessons** | 27 | Foundational & targeted bridges in English, Hindi drafts (5), Telugu drafts (5) |
+| **Hint Ladders** | 89 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) per question |
+| **Total Items Tracked** | 205 | Questions (89), Lessons (27), Hint Ladders (89) |
 | **Human Reviewed Items** | 0 (0.0%) | `author-drafted, unreviewed` (No human review claims fabricated) |
 | **Curriculum Alignment** | Intended NCERT | Labeled: *"intended NCERT alignment, unverified until references and content are checked"* |
-| **Supported Languages** | 1 (`en`) | Hindi (`hi`) and Telugu (`te`) included as unreviewed drafts only |
+| **Supported Languages** | 1 (`en`) | Hindi (`hi`: 5 questions, 5 lessons) and Telugu (`te`: 5 questions, 5 lessons) included as unreviewed drafts |
 
 ---
 
-## What Code Cannot Settle
-The following critical dimensions cannot be proven or resolved through code, automated tests, or simulations alone. Each requires real-world empirical deployment, qualified educators, or human reviewers:
+## Strict Authentication & Public Routes List
+All API routes require a valid authenticated Bearer session token scoped by role and tenant, with all unauthenticated session fallbacks permanently removed.
 
-1. **Classroom Calibration of BKT and SM-2 Spaced Intervals**:  
-   BKT parameters and repetition intervals are hand-set and untuned. Demonstrating that parameter recovery works on synthetic sequences does not substitute for empirical calibration against actual student retention and error curves across Indian classrooms.
-2. **Learning-Gain Effectiveness**:  
-   This codebase does not and cannot claim proven learning gains, accelerated mastery, or guaranteed grade improvements. Evaluating pedagogy requires controlled longitudinal classroom studies.
-3. **Teacher Validation of Misconception Tags and Lessons**:  
-   Automated validators verify structural integrity (DAG acyclicity, option tags, probe existence). They cannot judge pedagogical clarity, semantic ambiguity, age-appropriateness, or whether a misconception tag represents the genuine root of a child's mistake.
-4. **School-Ready Consent and Retention Policies**:  
-   The provided consent workflow (`not requested`, `requested`, `recorded`) and configurable retention schedules provide working demonstration controls only. They do not constitute an operational or institutional data agreement.
-5. **Legal & Regulatory Compliance**:  
-   No statute (such as DPDP Act, GDPR, or state school regulations) is claimed as satisfied. A real pilot involving children is blocked until:  
-   *(a)* Applicable child-data privacy laws and individual school district requirements are formally evaluated;  
-   *(b)* Guardian consent is recorded and verified under that process; and  
-   *(c)* Qualified legal counsel conducts a comprehensive review.
-6. **Hindi, Telugu, and Multi-Board Validity**:  
-   Multilingual translations are drafts marked `"unreviewed"`. A language only counts as supported when verified by two human attestations (a fluent native speaker and a mathematics subject reviewer). Similarly, other boards (e.g., ICSE, State Boards) require official syllabus mappings and human subject review.
+**Exclusively Public Routes**:
+1. `GET /health` — Service health probe.
+2. `GET /api/pack` — Public concept spine and content pack metadata. **Strictly answer-free** (contains no `is_correct`, misconception tags, or worked solutions).
+3. `POST /api/auth/login` — Teacher, Admin, and Reviewer credential sign-in.
+4. `POST /api/auth/student-pin-login` — Student pseudonymous ID and salted PIN sign-in.
+
+*All other routes require valid authenticated session tokens. Anonymous requests return HTTP 401; cross-class or wrong-role requests return HTTP 403; malformed bodies return HTTP 422.*
+
+---
+
+## Offline Engine & Answer Keys Tradeoff
+Setu provides an offline-first architecture for rural and low-connectivity schools:
+1. **Separation of Surfaces**:
+   - Online learning endpoints (`GET /api/student/{id}/next-step`) never return answers or misconception tags. Correctness is provided only after grading.
+   - Offline learning downloads a dedicated, authenticated pack via `GET /api/student/{id}/offline-pack` (restricted to the authenticated student's assigned class).
+2. **Deliberate Tradeoff & Honest Threat Model**:
+   - Because offline grading occurs entirely on-device via the client-side JavaScript engine (`frontend/src/engine`), the offline pack stored in IndexedDB contains answer keys.
+   - These keys are stored in IndexedDB and never rendered into the DOM.
+   - **We state plainly that this is NOT secure against a student**: a determined student with physical access and browser devtools can inspect IndexedDB and view answer keys.
+   - **Authoritative Server Guard**: Upon reconnection and sync, the server unconditionally re-grades every queued attempt against the authoritative server database. The server's calculated mastery replaces the local estimate.
 
 ---
 
 ## Deletion Boundaries, Offline Devices & Tombstones
 - **Scope of Deletion**:  
-  When a student is deleted on the server, the app purges records across `StudentDB`, `PlanDB`, `MasteryStateDB`, `HypothesisDB`, `AttemptDB`, `DecisionDB`, and `PinProfileDB`. Any lingering teacher override logs are sanitized to `[PURGED]`.
+  When a student is deleted on the server, the app purges records across `StudentDB`, `PlanDB`, `MasteryStateDB`, `HypothesisDB`, `AttemptDB`, `DecisionDB`, `PinProfileDB`, `SessionDB`, and `DeviceDB`. Any lingering teacher override logs are sanitized to `[PURGED]`.
 - **Limits Outside the App**:  
   Deletion cannot recall data outside the app's boundary (e.g., offline backup files, previously downloaded CSV reports, or rotating server database backup snapshots until their stated retention expires).
 - **Offline Devices & Tombstones**:  
@@ -65,39 +70,47 @@ The following critical dimensions cannot be proven or resolved through code, aut
 
 ## Quickstart & Complete Test Verification
 
-### 1. Fresh Install Verification
-```bash
-python scripts/verify_fresh_install.py
-```
-Verifies python virtualenv dependencies and system prerequisites.
-
-### 2. Backend & Integration Tests (65 passed)
+### 1. Run Complete Backend & Integration Tests (67 passed)
 ```bash
 python -m pytest tests/ -v
 ```
-Executes all 65 automated tests covering SQLAlchemy persistence across restarts, Argon2 password verification, role/class scoping, server-side grading spoof rejection, zero-trace tombstone deletion, BKT update equations, and declarative sequencer rules.
 
-### 3. JavaScript Engine Parity Tests (40 passed)
+### 2. Run Negative-Control Auth Probes (9/9 passed)
+```bash
+python scripts/negative_control_auth_probes.py
+```
+
+### 3. Run JavaScript Engine Parity Tests (40/40 checks passed)
 ```bash
 cd frontend && npm run test:parity
 ```
-Verifies exact numerical and logical equivalence between Python and client-side JavaScript BKT, SM-2, Hypothesis, and Sequencer engines using `packs/golden_test_vectors.json`.
 
-### 4. Real Browser E2E Phone Layout Tests (Playwright Chromium)
+### 4. Run Real Browser E2E & Offline Playwright Suite (6/6 passed)
 ```bash
-cd frontend && npm run test:e2e
+cd frontend && npx playwright test
 ```
-Launches real headless Chromium to verify unclipped layouts and zero horizontal overflow at 360px and 390px (iPhone) viewports, generating authentic visual proofs in `screenshots/`:
-- `screenshots/mobile_360px.png`
-- `screenshots/mobile_390px.png`
-- `screenshots/student_solve_flow.png`
-- `screenshots/teacher_dashboard.png`
+Executes all 6 browser tests against the real FastAPI backend and Vite preview server:
+- `layout_and_tabs.spec.js`: Rendered layout and 0 horizontal overflow across all 5 tabs at 360px and 390px.
+- `e2e.spec.js`: Mobile navigation and viewports at 360px and 390px.
+- `offline_flow.spec.js`: Comprehensive 10-step offline lifecycle (online login -> offline disconnect -> reload -> offline login -> 3 questions answered & graded locally via JS engine -> IndexedDB reload persistence -> reconnect & authoritative server sync).
+- `reset_wipe.spec.js`: Stale/unregistered device RESET response causing complete client IndexedDB wipe.
+
+### 5. Generate Clean Submission ZIP
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/package.ps1
+```
+Or on Linux:
+```bash
+bash scripts/package.sh
+```
 
 ---
 
 ## Key Documentation Files
 - [`STATUS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/STATUS.md): Every requirement mapped to proving test and **Evidence Class** (`browser-e2e`, `api-integration`, `unit`, `simulation-only`, `manual-unverified`).
 - [`TEST_RUN.md`](file:///d:/PROJECT_SOUCEFILE/Setu/TEST_RUN.md): Full terminal output from the latest clean test run.
+- [`DECISIONS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DECISIONS.md): Architectural decisions and deliberate tradeoffs.
+
 - [`DECISIONS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DECISIONS.md): Architectural decisions, including minimal student metadata.
 - [`DEMO_SCRIPT.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DEMO_SCRIPT.md): 3-minute presentation script using strictly synthetic demo students.
 

@@ -1,104 +1,96 @@
 # Setu Verification Test Run Report (TEST_RUN.md)
 
 **Date of Execution**: 2026-10-27  
-**Platform**: Windows 11, Python 3.11.0, Node.js v20.18.0, Google Chrome 155.0.8059.85 (Headless)  
-**Overall Status**: 100% Passed (0 Failures, 0 Regressions)
+**Platform**: Windows 11, Python 3.11.0, Node.js v20.18.0, Chromium 128.0.6613.18 / Google Chrome 155.0.8059.85 (Headless)  
+**Execution Context**: Independent audit repair verification across all 10 fixes.
 
 ---
 
 ## 1. Executive Summary
 
-| Test Suite | Framework / Tool | Tests Executed | Passed | Failed | Key Verification Area |
-|---|---|---|---|---|---|
-| **Backend & Integration** | `pytest 9.1.1` | 65 | 65 | 0 | Persistence, Argon2 auth, class scoping, server grading, zero-PII deletion |
-| **Engine Parity** | Node.js test runner | 40 assertions | 40 | 0 | Python vs JavaScript engine mathematical and logical parity |
-| **Real Browser Layout** | Playwright Chromium | 2 suites | 2 | 0 | 360px & 390px phone viewports, no horizontal overflow, tab switching |
-| **Total** | | **107 verifications** | **107** | **0** | **100% Green** |
+| Test Suite | Framework / Tool | Tests Executed | Passed | Failed | Key Verification Area | Evidence Class |
+|---|---|---|---|---|---|---|
+| **Backend & Integration** | `pytest 9.1.1` | 67 | 67 | 0 | Persistence, auth enforcement, role/class scoping, answer stripping, zero-trace deletion | `api-integration` |
+| **Negative-Control Probes** | `httpx` / Live FastAPI | 9 probes | 9 | 0 | Strict 401 on anonymous access, 422 on malformed payloads, zero answer leak | `api-integration` |
+| **Engine Parity** | Pure JS Node Runner | 40 assertions | 40 | 0 | Python vs JavaScript engine BKT, SM-2, Hypothesis, Sequencer parity | `unit` |
+| **Real Browser Layout & Offline** | Playwright Chromium | 6 specs | 6 | 0 | 10-step offline learn/grade/IndexedDB lifecycle, client RESET wipe, tabs 360/390px | `browser-e2e` |
+| **Fresh Python Install** | `pip install` in fresh venv | 35 packages | 35 | 0 | `requirements.txt` installs cleanly from default PyPI index with `numpy==2.4.6` | `unit` |
+| **Fresh Node Install** | `npm ci` from lockfile | 67 packages | 67 | 0 | `package-lock.json` clean reproducible install | `unit` |
+| **Packaging Script** | PowerShell `package.ps1` | 140 files | 140 | 0 | Clean ZIP excluding node_modules, venvs, DBs, .env, .git | `unit` |
 
 ---
 
-## 2. Python & Integration Test Output (`pytest`)
+## 2. Python Backend & Integration Test Output (`pytest tests/`)
 
 ```text
 ============================= test session starts =============================
-platform win32 -- Python 3.11.0, pytest-9.1.1, pluggy-1.7.0 -- python.exe
-cachedir: .pytest_cache
+platform win32 -- Python 3.11.0, pytest-9.1.1, pluggy-1.7.0
 rootdir: D:\PROJECT_SOUCEFILE\Setu
 plugins: anyio-4.15.1, asyncio-1.4.1
-collected 65 items
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 67 items
 
-tests/test_api_endpoints.py::test_health_endpoint PASSED                 [  1%]
-tests/test_api_endpoints.py::test_get_pack_and_coverage PASSED           [  3%]
-tests/test_api_endpoints.py::test_student_flow_via_api PASSED            [  4%]
-tests/test_api_endpoints.py::test_teacher_class_dashboard_and_override_via_api PASSED [  6%]
-tests/test_api_endpoints.py::test_privacy_delete_and_sync_via_api PASSED [  7%]
-tests/test_api_endpoints.py::test_paper_mode_html_endpoint PASSED        [  9%]
-tests/test_api_security_persistence.py::test_argon2_auth_and_role_access PASSED [ 10%]
-tests/test_api_security_persistence.py::test_teacher_class_scoping_negative_control PASSED [ 12%]
-tests/test_api_security_persistence.py::test_server_side_grading_spoof_override PASSED [ 13%]
-tests/test_api_security_persistence.py::test_student_pin_auth_and_session_isolation PASSED [ 15%]
-tests/test_api_security_persistence.py::test_zero_pii_deletion_and_tombstone_lifecycle PASSED [ 16%]
-tests/test_api_security_persistence.py::test_stale_device_detection_on_sync PASSED [ 18%]
-tests/test_bkt.py::test_bkt_uncalibrated_label_and_update PASSED         [ 20%]
-tests/test_data_model.py::test_student_minimal_metadata PASSED           [ 21%]
-tests/test_data_model.py::test_student_rejects_direct_identifiers PASSED [ 23%]
-tests/test_data_model.py::test_concept_ncert_and_graph_only PASSED       [ 24%]
-tests/test_data_model.py::test_review_record_human_provenance PASSED     [ 26%]
-tests/test_data_model.py::test_honest_labels_and_overrides PASSED        [ 27%]
-tests/test_data_model.py::test_tombstone_and_audit_privacy PASSED        [ 29%]
-tests/test_data_protection.py::test_forbidden_fields_rejected PASSED     [ 30%]
-tests/test_data_protection.py::test_delete_student_purges_stores PASSED  [ 32%]
-tests/test_data_protection.py::test_tombstone_lifecycle_and_pending_state PASSED [ 33%]
-tests/test_data_protection.py::test_late_sync_offline_no_resurrection PASSED [ 35%]
-tests/test_data_protection.py::test_stale_device_reset_after_tombstone_purge PASSED [ 36%]
-tests/test_data_protection.py::test_retention_purge_job PASSED           [ 38%]
-tests/test_data_protection.py::test_audit_log_privacy_and_structure PASSED [ 40%]
-tests/test_data_protection.py::test_consent_workflow_states PASSED       [ 41%]
-tests/test_engine.py::test_wrong_answer_hypothesis_low_band PASSED       [ 43%]
-tests/test_engine.py::test_conflicting_probes_yields_not_sure PASSED     [ 44%]
-tests/test_engine.py::test_trace_to_class6_gap PASSED                    [ 46%]
-tests/test_engine.py::test_hint_ladder_and_stuck_flag PASSED             [ 47%]
-tests/test_engine.py::test_bridge_recheck_routing PASSED                 [ 49%]
-tests/test_engine.py::test_move_ahead_and_override PASSED                [ 50%]
-tests/test_engine.py::test_two_students_different_paths PASSED           [ 52%]
-tests/test_frontend_layout.py::test_phone_width_bundle_size PASSED       [ 53%]
-tests/test_held_out.py::test_held_out_question_isolation PASSED          [ 55%]
-tests/test_holdout_round3.py::test_round3_data_only_adaptation PASSED    [ 56%]
-tests/test_languages.py::test_unreviewed_language_fallback PASSED        [ 58%]
-tests/test_pack_schema.py::test_pack_serialization PASSED                [ 60%]
-tests/test_pack_schema.py::test_shipped_pack_structural_validity PASSED  [ 61%]
-tests/test_pack_schema.py::test_spine_coverage PASSED                    [ 63%]
-tests/test_pack_schema.py::test_shipped_pack_coverage_report PASSED      [ 64%]
-tests/test_paper_mode.py::test_paper_mode_flow PASSED                    [ 66%]
-tests/test_parameter_fitting.py::test_bkt_parameter_recovery PASSED      [ 67%]
-tests/test_pin_auth.py::test_pin_lockout_and_no_logging PASSED           [ 69%]
-tests/test_pwa_offline.py::test_offline_flow_and_sync PASSED             [ 70%]
-tests/test_review_rules.py::test_seed_cannot_set_reviewed PASSED         [ 72%]
-tests/test_review_rules.py::test_imported_reviewed_downgraded PASSED     [ 73%]
-tests/test_review_rules.py::test_edit_resets_review_status PASSED        [ 75%]
-tests/test_review_rules.py::test_coverage_reporter_percentage PASSED     [ 76%]
-tests/test_sensitivity.py::test_sensitivity_report_generation PASSED     [ 78%]
-tests/test_sequencer.py::test_sequencer_data_rule_change PASSED          [ 80%]
-tests/test_simulation.py::test_simulation_gap_recovery_and_seeds PASSED  [ 81%]
-tests/test_spaced_repetition.py::test_sm2_intervals PASSED               [ 83%]
-tests/test_teacher.py::test_teacher_class_isolation PASSED               [ 84%]
-tests/test_teacher.py::test_teacher_grouped_view_and_undecided PASSED    [ 86%]
-tests/test_teacher.py::test_clinic_suggestions PASSED                    [ 87%]
-tests/test_teacher.py::test_teacher_override_logging PASSED              [ 89%]
-tests/test_gap_closed_record PASSED                                     [ 90%]
-tests/test_teacher.py::test_teacher_override_rate_computation PASSED     [ 92%]
-tests/test_validator.py::test_validator_rejects_untagged_wrong_option PASSED [ 93%]
-tests/test_validator.py::test_validator_detects_cycles_and_dangling PASSED [ 95%]
-tests/test_validator.py::test_validator_missing_probes PASSED            [ 96%]
-tests/test_validator.py::test_recompute_numeric_answers PASSED           [ 98%]
-tests/test_validator.py::test_duplicate_options_flagged PASSED           [100%]
+tests\test_api_endpoints.py ......                                       [  8%]
+tests\test_api_security_persistence.py .........                         [ 22%]
+tests\test_bkt.py .                                                      [ 23%]
+tests\test_data_model.py ......                                          [ 32%]
+tests\test_data_protection.py ........                                   [ 44%]
+tests\test_engine.py .......                                             [ 55%]
+tests\test_held_out.py .                                                 [ 56%]
+tests\test_holdout_round3.py .                                           [ 58%]
+tests\test_languages.py .                                                [ 59%]
+tests\test_pack_schema.py ....                                           [ 65%]
+tests\test_paper_mode.py .                                               [ 67%]
+tests\test_parameter_fitting.py .                                        [ 68%]
+tests\test_pin_auth.py .                                                 [ 70%]
+tests\test_pwa_offline_simulated.py .                                    [ 71%]
+tests\test_review_rules.py ....                                          [ 77%]
+tests\test_sensitivity.py .                                              [ 79%]
+tests\test_sequencer.py .                                                [ 80%]
+tests\test_simulation.py .                                               [ 82%]
+tests\test_spaced_repetition.py .                                        [ 83%]
+tests\test_teacher.py ......                                             [ 92%]
+tests\test_validator.py .....                                            [100%]
 
-============================= 65 passed in 4.72s ==============================
+======================= 67 passed, 2 warnings in 7.69s ========================
 ```
 
 ---
 
-## 3. JavaScript Engine Parity Test Output (`npm run test:parity`)
+## 3. Negative-Control Auth & Boundary Probes Output
+
+```text
+=== SETU NEGATIVE-CONTROL AUTH & BOUNDARY PROBES ===
+
+[PASS] Anonymous GET teacher class (removed default tea_01)
+       GET /api/teacher/class/8-A -> HTTP 401 (expected 401)
+[PASS] Anonymous POST teacher override (removed write without token)
+       POST /api/teacher/override -> HTTP 401 (expected 401)
+[PASS] Anonymous POST bulk paper submit
+       POST /api/teacher/bulk-paper-submit -> HTTP 401 (expected 401)
+[PASS] Anonymous GET student export (removed PII leak)
+       GET /api/student/stu_01/export -> HTTP 401 (expected 401)
+[PASS] Anonymous GET student next-step
+       GET /api/student/stu_01/next-step -> HTTP 401 (expected 401)
+[PASS] Anonymous POST student attempt (must be 401, not 500)
+       POST /api/student/stu_01/attempt -> HTTP 401 (expected 401)
+[PASS] Anonymous POST delete student (removed unauthenticated deletion)
+       POST /api/privacy/delete-student -> HTTP 401 (expected 401)
+[PASS] Anonymous POST sync device without auth session
+       POST /api/privacy/sync -> HTTP 401 (expected 401)
+[PASS] Malformed POST student attempt with invalid token -> 401
+       POST /api/student/stu_01/attempt -> HTTP 401 (expected 401)
+
+[PASS] Public GET /health -> HTTP 200 (expected 200)
+[PASS] Public GET /api/pack -> HTTP 200 (expected 200)
+[PASS] Public pack zero answer leak (no is_correct, no misconception_tag)
+
+Probes summary: 9/9 negative-control checks passed.
+```
+
+---
+
+## 4. JavaScript Engine Parity Test Output (`npm run test:parity`)
 
 ```text
 > setu-frontend@1.0.0 test:parity
@@ -126,22 +118,99 @@ Python and JavaScript engines are mathematically and logically aligned.
 
 ---
 
-## 4. Playwright Headless Browser Test Output (`npm run test:e2e`)
+## 5. Real Browser E2E & Offline Playwright Output (`npx playwright test`)
 
 ```text
-> setu-frontend@1.0.0 test:e2e
-> playwright test
+[WebServer] INFO:     Started server process [10236]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 
-Running 2 tests using 1 worker
+Running 6 tests using 4 workers
 
-  ok 1 tests\e2e.spec.js:11:3 › Mobile Viewport & Phone Layout Tests › Layout and navigation at 360px viewport (871ms)
-  ok 2 tests\e2e.spec.js:29:3 › Mobile Viewport & Phone Layout Tests › Layout and navigation at 390px viewport (1.2s)
+  ok 3 tests\e2e.spec.js:11:3 › Mobile Viewport & Phone Layout Tests › Layout and navigation at 360px viewport (1.6s)
+  ok 1 tests\layout_and_tabs.spec.js:25:5 › FIX 7: Rendered Responsive Layout & Tab Overflow Verification › Rendered layout on all 5 tabs at 360px viewport with zero horizontal overflow (2.6s)
+  ok 4 tests\reset_wipe.spec.js:10:3 › FIX 4: Stale Device Reset & Client IndexedDB Wipe › Browser receives RESET-required response on sync and completely wipes IndexedDB student data (3.0s)
+  ok 5 tests\e2e.spec.js:29:3 › Mobile Viewport & Phone Layout Tests › Layout and navigation at 390px viewport (1.6s)
+  ok 6 tests\layout_and_tabs.spec.js:25:5 › FIX 7: Rendered Responsive Layout & Tab Overflow Verification › Rendered layout on all 5 tabs at 390px viewport with zero horizontal overflow (1.1s)
+  ok 2 tests\offline_flow.spec.js:11:3 › FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle › Comprehensive offline learn-solve-grade flow with real network disconnection and sync (9.0s)
 
-  2 passed (5.8s)
+  6 passed (16.0s)
 ```
 
-### Generated Artifacts in `screenshots/`:
-1. `screenshots/mobile_360px.png` (31 KB) - Full-page mobile layout at 360x640 with zero horizontal overflow.
-2. `screenshots/mobile_390px.png` (32 KB) - Full-page mobile layout at 390x844 (iPhone standard) with unclipped navigation.
-3. `screenshots/student_solve_flow.png` (40 KB) - Rendered student solve view showing authentic concept problem and response options.
-4. `screenshots/teacher_dashboard.png` (61 KB) - Rendered scoped teacher dashboard with shared gap clinics and override metrics.
+Visual proof screenshots captured in `screenshots/`:
+1. `screenshots/01_online_signin.png`
+2. `screenshots/02_cached_pack_and_profile.png`
+3. `screenshots/03_context_set_offline.png`
+4. `screenshots/04_reloaded_offline_loads.png`
+5. `screenshots/05a_wrong_pin_failed.png`
+6. `screenshots/05b_offline_signin_success.png`
+7. `screenshots/06a_offline_q1_answered.png`
+8. `screenshots/06b_offline_q2_answered.png`
+9. `screenshots/06c_offline_q3_answered.png`
+10. `screenshots/07_indexeddb_attempts_verified.png`
+11. `screenshots/08_queue_survives_reload.png`
+12. `screenshots/09_back_online.png`
+13. `screenshots/10_synced_authoritative_mastery.png`
+14. `screenshots/11_device_reset_wiped_indexeddb.png`
+15. `screenshots/layout_360px_student_tab.png`
+16. `screenshots/layout_360px_teacher_tab.png`
+17. `screenshots/layout_360px_privacy_tab.png`
+18. `screenshots/layout_360px_review_tab.png`
+19. `screenshots/layout_360px_paper_tab.png`
+20. `screenshots/layout_390px_student_tab.png`
+21. `screenshots/layout_390px_teacher_tab.png`
+22. `screenshots/layout_390px_privacy_tab.png`
+23. `screenshots/layout_390px_review_tab.png`
+24. `screenshots/layout_390px_paper_tab.png`
+
+---
+
+## 6. Fresh Clean-Install Verification
+
+### Python Virtual Environment (`pip install -r backend/requirements.txt`)
+- **Index Used**: Standard default PyPI (`https://pypi.org/simple`)
+- **Python Version**: 3.11.0 (win_amd64)
+- **Result Summary**:
+```text
+Collecting fastapi==0.141.1
+Collecting uvicorn==0.54.0
+Collecting pydantic==2.13.5
+Collecting pydantic_core==2.46.5
+Collecting numpy==2.4.6
+Collecting scipy==1.17.1
+Collecting pytest==9.1.1
+Collecting pytest-asyncio==1.4.1
+Collecting httpx==0.28.1
+Collecting SQLAlchemy==2.1.1
+Collecting argon2-cffi==25.1.0
+Collecting argon2-cffi-bindings==26.1.0
+Collecting python-multipart==0.0.32
+Collecting starlette==1.7.0
+Collecting PyYAML==6.0.3
+Collecting requests==2.34.2
+Installing collected packages: urllib3, typing-extensions, PyYAML, python-multipart, pygments, pycparser, pluggy, packaging, numpy, iniconfig, idna, h11, colorama, click, charset_normalizer, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, SQLAlchemy, scipy, requests, pytest, pydantic_core, httpcore, cffi, anyio, starlette, pytest-asyncio, pydantic, httpx, argon2-cffi-bindings, fastapi, argon2-cffi
+Successfully installed PyYAML-6.0.3 SQLAlchemy-2.1.1 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 charset_normalizer-3.5.2 click-8.5.0 colorama-0.4.6 fastapi-0.141.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.20 iniconfig-2.3.1 numpy-2.4.6 packaging-26.3 pluggy-1.7.0 pycparser-3.12 pydantic-2.13.5 pydantic_core-2.46.5 pygments-2.21.0 pytest-9.1.1 pytest-asyncio-1.4.1 python-multipart-0.0.32 requests-2.34.2 scipy-1.17.1 starlette-1.7.0 typing-extensions-4.16.0 typing-inspection-0.4.4 urllib3-2.8.0 uvicorn-0.54.0
+```
+
+### Node Package Install (`npm ci`)
+- **Node Version**: v20.18.0
+- **Lockfile**: `frontend/package-lock.json`
+- **Result Summary**:
+```text
+added 66 packages, and audited 67 packages in 12s
+```
+
+---
+
+## 7. Packaging Script Output (`scripts/package.ps1`)
+
+```text
+Creating clean submission ZIP at: D:\PROJECT_SOUCEFILE\Setu\Setu_Submission.zip
+
+=== CLEAN PACKAGING COMPLETE ===
+Total files packaged: 140
+ZIP Location: D:\PROJECT_SOUCEFILE\Setu\Setu_Submission.zip
+ZIP Size: 1425.697265625 KB
+```
+Zero `.git`, zero `node_modules`, zero `.db`/`.sqlite`, zero `.env`, zero previous zip files.

@@ -50,3 +50,27 @@ This log records architectural decisions, departures from earlier drafts, and co
 
 ### DEC-006: Intended NCERT Alignment & Syllabus Honesty
 - **Decision**: Class 8 CBSE Mathematics pack is authored with intended NCERT alignment. It is explicitly labelled: `"intended NCERT alignment, unverified until references and content are checked"`. Nodes in Classes 6, 7, 9, 10 without questions are clearly labelled `"graph-only"`.
+
+---
+
+### DEC-007: Offline Content Pack Answer Keys & Grading Tradeoff
+- **Context**: In genuine offline village/rural school scenarios with disconnected tablets, students must receive immediate pedagogical feedback on practice items and diagnostic probes.
+- **Decision & Architecture**:
+  1. **Separation of Surfaces**:
+     - Online endpoints (`GET /api/student/{id}/next-step`, `GET /api/pack`) are strictly answer-free: they never contain `is_correct`, misconception tags, or worked solutions. Graded responses return only after attempt submission.
+     - A separate, authenticated endpoint (`GET /api/student/{id}/offline-pack`) is available solely to authenticated student sessions for that student's assigned class.
+  2. **Deliberate Tradeoff & Threat Model**:
+     - To support offline grading, answer keys are downloaded and stored in the client's local IndexedDB (`packs` store). They are never rendered into the active DOM.
+     - **Known Limitation**: A determined student with browser devtools access can inspect IndexedDB and view the answer keys on their device. We state plainly that this is NOT secure against a student with device access.
+     - **Authoritative Server Guard**: On reconnect and sync (`POST /api/privacy/sync`), the server completely re-grades every queued attempt against the authoritative server pack. The server's mastery calculation is authoritative and overwrites any locally modified client state.
+
+---
+
+### DEC-008: Strict Authentication & Device Reset Enforcement
+- **Decision**: Complete removal of all unauthenticated session fallbacks, query-string teacher overrides, default `"tea_01"` identities, and legacy compatibility routes.
+- **Public Routes**: Strictly limited to `/health`, `/api/pack` (answer-free public pack metadata), `/api/auth/login`, and `/api/auth/student-pin-login`.
+- **Role Scoping**:
+  - Student sessions: strictly restricted to their own `student_id`.
+  - Teacher sessions: strictly scoped to assigned `class_id`s. Cross-class dashboard inspection, overrides, paper entry, or student deletion return HTTP 403.
+- **Device Registration & Stale Reset**: Devices are registered exclusively via authenticated logins. Any unregistered device or device inactive beyond the 30-day retention window receives an explicit `RESET-required` response upon sync, triggering an immediate and complete client-side IndexedDB student data wipe (`wipeAllStudentData()`).
+

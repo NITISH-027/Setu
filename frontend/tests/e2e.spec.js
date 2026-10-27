@@ -48,15 +48,21 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
     // Capture 390px mobile screenshot
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_390px.png'), fullPage: true });
 
-    // Switch to Teacher Dashboard and verify view rendered
+    // Switch to Teacher Dashboard and sign in as teacher
     await page.click('text=Teacher Dashboard');
+    await expect(page.locator('text=Teacher Sign-In')).toBeVisible();
+    await page.fill('#teacher-username-input', 'tea_e2e_8a');
+    await page.fill('#teacher-password-input', 'tea_e2e_pass');
+    await page.click('#teacher-signin-btn');
     await expect(page.locator('text=Teacher Control Dashboard')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotsDir, 'teacher_dashboard.png'), fullPage: true });
 
     // Switch to Student App and sign in
     await page.click('text=Student App (Phone)');
     await expect(page.locator('text=Student Sign-In')).toBeVisible();
-    await page.click('text=Sign In');
+    await page.fill('#student-id-input', 'stu_e2e_01');
+    await page.fill('#student-pin-input', '5678');
+    await page.click('#student-signin-btn');
     await expect(page.locator('.phone-container')).toBeVisible();
     await expect(page.locator('.info-card')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotsDir, 'student_solve_flow.png'), fullPage: true });

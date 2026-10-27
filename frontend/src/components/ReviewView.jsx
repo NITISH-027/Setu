@@ -2,18 +2,47 @@ import React, { useState, useEffect } from 'react';
 
 export default function ReviewView() {
   const [coverage, setCoverage] = useState(null);
-  const [reviewerName, setReviewerName] = useState('Sunita Rao');
-  const [reviewerRole, setReviewerRole] = useState('Senior Secondary Mathematics Teacher (self-declared)');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [token, setToken] = useState(null);
+  const [reviewerName, setReviewerName] = useState('');
+  const [reviewerRole, setReviewerRole] = useState('');
   const [attestationStatement, setAttestationStatement] = useState('I checked this item');
   const [attestationMessage, setAttestationMessage] = useState('');
+  const [loginError, setLoginError] = useState('');
 
-  useEffect(() => {
-    fetchCoverage();
-  }, []);
-
-  const fetchCoverage = async () => {
+  const handleReviewerLogin = async (e) => {
+    e.preventDefault();
+    if (!username.trim() || !password.trim()) {
+      setLoginError('Enter username and password');
+      return;
+    }
     try {
-      const res = await fetch('/api/coverage');
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password: password.trim() })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setToken(data.access_token);
+        setReviewerName(data.username);
+        setReviewerRole(data.role);
+        setLoginError('');
+        fetchCoverageWithToken(data.access_token);
+      } else {
+        setLoginError('Login failed. Please check credentials.');
+      }
+    } catch {
+      setLoginError('Network error during login.');
+    }
+  };
+
+  const fetchCoverageWithToken = async (authToken) => {
+    try {
+      const res = await fetch('/api/coverage', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setCoverage(data);
@@ -23,13 +52,47 @@ export default function ReviewView() {
     }
   };
 
-  const handleAttest = (e) => {
+  useEffect(() => {
+    if (token) {
+      fetchCoverageWithToken(token);
+    }
+  }, [token]);
+
+  const handleAttest = async (e) => {
     e.preventDefault();
     if (!reviewerName.trim() || !attestationStatement.trim()) return;
 
-    setAttestationMessage(
-      `Attestation recorded for Item #q_c8_leq_01 by ${reviewerName} (${reviewerRole}). Status updated to 'reviewed'.`
-    );
+    if (!token) {
+      setAttestationMessage('Reviewer login required to record human attestation.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/reviewer/attest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          item_id: 'q_c8_leq_01',
+          status: 'reviewed, intended NCERT alignment verified',
+          attestation_statement: attestationStatement
+        })
+      });
+
+      if (res.ok) {
+        setAttestationMessage(
+          `Attestation recorded for Item #q_c8_leq_01 by ${reviewerName} (${reviewerRole}). Status updated to 'reviewed'.`
+        );
+        fetchCoverageWithToken(token);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setAttestationMessage(err.detail || 'Attestation submission failed.');
+      }
+    } catch {
+      setAttestationMessage('Network error submitting attestation.');
+    }
   };
 
   return (
@@ -52,6 +115,35 @@ export default function ReviewView() {
           Imported records claiming 'reviewed' without verified credentials are automatically downgraded to <strong>unverified import</strong>.
         </div>
       </div>
+
+      {/* Login if unauthenticated */}
+      {!token && (
+        <div className="info-card" style={{ background: 'rgba(56, 189, 248, 0.05)' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
+            Reviewer Sign-In (Required to View Coverage & Attest Items)
+          </div>
+          <form onSubmit={handleReviewerLogin} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Reviewer Username"
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            />
+            <button type="submit" className="action-btn" style={{ width: 'auto' }}>
+              Sign In
+            </button>
+          </form>
+          {loginError && <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px' }}>{loginError}</div>}
+        </div>
+      )}
 
       {/* Coverage & Shipped Metrics */}
       {coverage && (
@@ -94,80 +186,31 @@ export default function ReviewView() {
         </div>
       )}
 
-      {/* Review Status Breakdown */}
-      {coverage?.review_status_breakdown && (
+      {/* Attestation Form */}
+      {token && (
         <div className="info-card">
-          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>
-            Review Status Distribution
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>
+            Review Attestation for Item #q_c8_leq_01
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-            {Object.entries(coverage.review_status_breakdown).map(([status, count]) => (
-              <div key={status} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
-                <span><code>{status}</code></span>
-                <strong>{count} items</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Human Review Attestation Flow in UI */}
-      <div className="info-card">
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>
-          Human Reviewer Attestation Flow
-        </h3>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-          Human reviewers act directly in the UI to attest that an item was checked.
-          Editing any item after attestation resets its status to 'changed since review'.
-        </p>
-
-        <form onSubmit={handleAttest} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Reviewer Full Name</label>
-            <input
-              type="text"
-              value={reviewerName}
-              onChange={(e) => setReviewerName(e.target.value)}
-              style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
-              required
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Stated Role / Qualification (Self-declared, shown as such)
-            </label>
-            <input
-              type="text"
-              value={reviewerRole}
-              onChange={(e) => setReviewerRole(e.target.value)}
-              style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
-              required
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Attestation Statement</label>
+          <form onSubmit={handleAttest} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input
               type="text"
               value={attestationStatement}
               onChange={(e) => setAttestationStatement(e.target.value)}
-              style={{ width: '100%', padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
-              required
+              placeholder="Attestation statement..."
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
             />
-          </div>
-
-          <button type="submit" className="action-btn" style={{ width: 'auto', alignSelf: 'flex-start' }}>
-            Submit Human Attestation Record
-          </button>
-        </form>
-
-        {attestationMessage && (
-          <div style={{ marginTop: '12px', fontSize: '12px', color: '#6ee7b7', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '6px' }}>
-            {attestationMessage}
-          </div>
-        )}
-      </div>
+            <button type="submit" className="action-btn" style={{ width: 'auto' }}>
+              Record Human Attestation
+            </button>
+          </form>
+          {attestationMessage && (
+            <div style={{ marginTop: '10px', fontSize: '12px', color: '#6ee7b7' }}>
+              {attestationMessage}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

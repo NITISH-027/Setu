@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StudentView from './components/StudentView';
 import TeacherView from './components/TeacherView';
 import PrivacyView from './components/PrivacyView';
@@ -7,14 +7,30 @@ import PaperModeView from './components/PaperModeView';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('student');
-  const [isOffline, setIsOffline] = useState(false);
+  const [devSimulateOffline, setDevSimulateOffline] = useState(false);
+  const [isSystemOnline, setIsSystemOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [language, setLanguage] = useState('en');
+
+  useEffect(() => {
+    const handleOnline = () => setIsSystemOnline(true);
+    const handleOffline = () => setIsSystemOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const effectivelyOffline = !isSystemOnline || devSimulateOffline;
 
   return (
     <>
-      {isOffline && (
-        <div className="offline-banner">
-          DISCONNECTED MODE: Simulating offline PWA with local IndexedDB storage and sync queue.
+      {effectivelyOffline && (
+        <div className="offline-banner" style={{ background: '#78350f', color: '#fef3c7', padding: '6px 12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+          {!isSystemOnline
+            ? 'DISCONNECTED MODE: Real network offline. Using local IndexedDB storage and local adaptive engine.'
+            : 'DEV SIMULATION: Offline mode simulated. Using local IndexedDB storage.'}
         </div>
       )}
 
@@ -34,38 +50,43 @@ export default function App() {
               style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
             >
               <option value="en">English (Supported)</option>
-              <option value="hi">हिंदी (Unreviewed)</option>
-              <option value="te">తెలుగు (Unreviewed)</option>
+              <option value="hi">हिंदी (Unreviewed Draft)</option>
+              <option value="te">తెలుగు (Unreviewed Draft)</option>
             </select>
           </div>
         </div>
 
         <nav className="nav-tabs">
           <button
+            id="tab-student"
             className={`nav-tab-btn ${activeTab === 'student' ? 'active' : ''}`}
             onClick={() => setActiveTab('student')}
           >
             Student App (Phone)
           </button>
           <button
+            id="tab-teacher"
             className={`nav-tab-btn ${activeTab === 'teacher' ? 'active' : ''}`}
             onClick={() => setActiveTab('teacher')}
           >
             Teacher Dashboard
           </button>
           <button
+            id="tab-privacy"
             className={`nav-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
             onClick={() => setActiveTab('privacy')}
           >
             Data & Privacy
           </button>
           <button
+            id="tab-review"
             className={`nav-tab-btn ${activeTab === 'review' ? 'active' : ''}`}
             onClick={() => setActiveTab('review')}
           >
             Coverage & Review
           </button>
           <button
+            id="tab-paper"
             className={`nav-tab-btn ${activeTab === 'paper' ? 'active' : ''}`}
             onClick={() => setActiveTab('paper')}
           >
@@ -78,8 +99,8 @@ export default function App() {
       <main className="main-content">
         {activeTab === 'student' && (
           <StudentView
-            isOffline={isOffline}
-            onToggleOffline={() => setIsOffline(!isOffline)}
+            devSimulateOffline={devSimulateOffline}
+            onToggleDevOffline={() => setDevSimulateOffline(!devSimulateOffline)}
           />
         )}
         {activeTab === 'teacher' && <TeacherView />}
@@ -95,7 +116,7 @@ export default function App() {
         </div>
         <div style={{ marginTop: '4px' }}>
           BKT estimates are <em>uncalibrated and hand-set</em>. Evidence scores are <em>rule-based heuristics</em>.
-          Demo controls only, not a legal or school compliance claim.
+          Content is <em>author-drafted, unreviewed</em>. Demo controls only, not a legal or school compliance claim.
         </div>
       </footer>
     </>
