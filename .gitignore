@@ -58,4 +58,8 @@ yarn-error.log*
 # Database files
 *.db
 *.sqlite3
+
+# Archives
+*.zip
+
 test_*.db

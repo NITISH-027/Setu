@@ -20,10 +20,10 @@ All shipped items are author-drafted and unreviewed by default in accordance wit
 | Metric | Shipped Count | Status Label |
 |---|---|---|
 | **Total Concepts** | 20 | 7 Active (Class 8), 13 Spine (Classes 6, 7, 9, 10 labeled `graph-only`) |
-| **Questions** | 32 | Structural checks passed; every wrong option tagged; probes provided |
+| **Questions** | 39 | Direct probes for all 5 active Class 8 concepts; wrong options tagged |
 | **Micro-Lessons** | 19 | English foundational & targeted bridges; draft unreviewed Hindi/Telugu |
-| **Hint Ladders** | 32 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) |
-| **Total Items Tracked** | 83 | Questions, Lessons, Hint Ladders |
+| **Hint Ladders** | 39 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) |
+| **Total Items Tracked** | 97 | Questions, Lessons, Hint Ladders |
 | **Human Reviewed Items** | 0 (0.0%) | `author-drafted, unreviewed` (No human review claims fabricated) |
 | **Curriculum Alignment** | Intended NCERT | Labeled: *"intended NCERT alignment, unverified until references and content are checked"* |
 | **Supported Languages** | 1 (`en`) | Hindi (`hi`) and Telugu (`te`) included as unreviewed drafts only |
@@ -53,53 +53,51 @@ The following critical dimensions cannot be proven or resolved through code, aut
 
 ## Deletion Boundaries, Offline Devices & Tombstones
 - **Scope of Deletion**:  
-  When a student is deleted on the server, the app removes the pseudonym mapping, attempts, hypotheses, plans, overrides, and held exports from server databases and active stores.
+  When a student is deleted on the server, the app purges records across `StudentDB`, `PlanDB`, `MasteryStateDB`, `HypothesisDB`, `AttemptDB`, `DecisionDB`, and `PinProfileDB`. Any lingering teacher override logs are sanitized to `[PURGED]`.
 - **Limits Outside the App**:  
   Deletion cannot recall data outside the app's boundary (e.g., offline backup files, previously downloaded CSV reports, or rotating server database backup snapshots until their stated retention expires).
 - **Offline Devices & Tombstones**:  
   Offline mobile devices cannot receive instant deletion notifications while disconnected. The server records an opaque tombstone key (a random token holding **zero student IDs, zero names, and zero learning payloads**) and displays the pending state: `"Deletion pending, not yet applied on N devices"`.  
   The system **never claims 'all stores deleted' while any tombstone is pending**.  
-  When an offline device reconnects, it applies the tombstone, purges local stores and queues, and blocks stale attempts from resurrecting the student. If an expired device connects after a tombstone has been purged, its local store is **reset rather than merged**.
+  When an offline device reconnects, it applies the tombstone, purges local stores and queues, and blocks stale attempts from resurrecting the student. If an expired device connects after a tombstone has been purged (or after 30 days of inactivity), its local store is **reset rather than merged**.
 
 ---
 
-## Design Assumptions (Users & Cadence)
-These are engineering design assumptions, not empirical findings:
-- **Students**: 10 to 15-minute bite-sized sessions on shared family mobile phones 3-4 times per week.
-- **Teachers**: Open the weekly class dashboard once a week to review grouped shared gaps and run targeted 10-minute remedial clinics.
-- **Remedial Records**: Gap-closed records generated on demand for parent communication and school planning.
+## Quickstart & Complete Test Verification
+
+### 1. Fresh Install Verification
+```bash
+python scripts/verify_fresh_install.py
+```
+Verifies python virtualenv dependencies and system prerequisites.
+
+### 2. Backend & Integration Tests (65 passed)
+```bash
+python -m pytest tests/ -v
+```
+Executes all 65 automated tests covering SQLAlchemy persistence across restarts, Argon2 password verification, role/class scoping, server-side grading spoof rejection, zero-trace tombstone deletion, BKT update equations, and declarative sequencer rules.
+
+### 3. JavaScript Engine Parity Tests (40 passed)
+```bash
+cd frontend && npm run test:parity
+```
+Verifies exact numerical and logical equivalence between Python and client-side JavaScript BKT, SM-2, Hypothesis, and Sequencer engines using `packs/golden_test_vectors.json`.
+
+### 4. Real Browser E2E Phone Layout Tests (Playwright Chromium)
+```bash
+cd frontend && npm run test:e2e
+```
+Launches real headless Chromium to verify unclipped layouts and zero horizontal overflow at 360px and 390px (iPhone) viewports, generating authentic visual proofs in `screenshots/`:
+- `screenshots/mobile_360px.png`
+- `screenshots/mobile_390px.png`
+- `screenshots/student_solve_flow.png`
+- `screenshots/teacher_dashboard.png`
 
 ---
 
-## Quickstart & Verification
+## Key Documentation Files
+- [`STATUS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/STATUS.md): Every requirement mapped to proving test and **Evidence Class** (`browser-e2e`, `api-integration`, `unit`, `simulation-only`, `manual-unverified`).
+- [`TEST_RUN.md`](file:///d:/PROJECT_SOUCEFILE/Setu/TEST_RUN.md): Full terminal output from the latest clean test run.
+- [`DECISIONS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DECISIONS.md): Architectural decisions, including minimal student metadata.
+- [`DEMO_SCRIPT.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DEMO_SCRIPT.md): 3-minute presentation script using strictly synthetic demo students.
 
-### 1. Run Automated Test Suite (Single Command)
-```bash
-python scripts/run_all_tests.py
-```
-Executes all 59 unit and integration tests across data models, validators, the adaptive engine, teacher controls, data protection, offline PWA flows, simulations, and hold-out tests.
-
-### 2. Run Round 3 Hold-Out Test (Data-Only Adaptation)
-```bash
-python scripts/run_holdout_test.py
-```
-Validates that unseen questions and custom rules injected purely via data function immediately with zero code changes.
-
-### 3. Run Backend Server
-```bash
-uvicorn app.main:app --app-dir backend --reload --port 8000
-```
-Interactive API documentation available at `http://localhost:8000/docs`.
-
-### 4. Run Frontend PWA
-```bash
-cd frontend
-npm run dev
-```
-Open `http://localhost:5173` to access the interactive PWA interface.
-
----
-
-## Architectural Decisions & Departures
-Detailed architectural decisions, including our deliberate departure from Round 1 regarding collecting student first names or school names, are documented in [`DECISIONS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/DECISIONS.md).  
-Every requirement status and its corresponding proving test are tracked in [`STATUS.md`](file:///d:/PROJECT_SOUCEFILE/Setu/STATUS.md).
