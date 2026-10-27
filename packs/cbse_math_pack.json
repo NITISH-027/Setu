@@ -1,0 +1,2205 @@
+{
+  "metadata": {
+    "board": "CBSE",
+    "class_level": 8,
+    "subject": "Maths",
+    "language": "en",
+    "version": "1.0.0",
+    "alignment_disclaimer": "intended NCERT alignment, unverified until references and content are checked",
+    "supported_languages": [
+      "en"
+    ],
+    "draft_unreviewed_languages": [
+      "hi",
+      "te"
+    ],
+    "author": "Setu Authoring Engine",
+    "created_at": "2026-10-27T09:08:23.072547"
+  },
+  "concepts": [
+    {
+      "id": "c6_math_integers_add_sub",
+      "name": "Addition and Subtraction of Integers",
+      "class_level": 6,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c6_math_fractions_basic",
+      "name": "Fractions and Decimals Basics",
+      "class_level": 6,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c6_math_algebra_intro",
+      "name": "Introduction to Algebra",
+      "class_level": 6,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c7_math_integers_mult_div",
+      "name": "Multiplication and Division of Integers",
+      "class_level": 7,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c7_math_simple_eq",
+      "name": "Simple Linear Equations",
+      "class_level": 7,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c7_math_rational_num_intro",
+      "name": "Introduction to Rational Numbers",
+      "class_level": 7,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c7_math_exponents_intro",
+      "name": "Exponents and Powers Basics",
+      "class_level": 7,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c7_math_algebraic_expressions",
+      "name": "Algebraic Expressions",
+      "class_level": 7,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c8_math_rational_ops",
+      "name": "Operations on Rational Numbers",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_linear_eq_one_var",
+      "name": "Linear Equations in One Variable",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_linear_eq_variables_both_sides",
+      "name": "Linear Equations with Variables on Both Sides",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_squares_square_roots",
+      "name": "Squares and Square Roots",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_exponents_powers",
+      "name": "Exponents and Powers Laws",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_algebraic_identities",
+      "name": "Algebraic Expressions and Identities",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c8_math_comparing_quantities_percentages",
+      "name": "Comparing Quantities: Percentages and Ratios",
+      "class_level": 8,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": false
+    },
+    {
+      "id": "c9_math_number_systems",
+      "name": "Number Systems",
+      "class_level": 9,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c9_math_polynomials",
+      "name": "Polynomials",
+      "class_level": 9,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c9_math_linear_eq_two_vars",
+      "name": "Linear Equations in Two Variables",
+      "class_level": 9,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c10_math_real_numbers",
+      "name": "Real Numbers",
+      "class_level": 10,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    },
+    {
+      "id": "c10_math_quadratic_equations",
+      "name": "Quadratic Equations",
+      "class_level": 10,
+      "board": "CBSE",
+      "subject": "Maths",
+      "ncert_chapter_reference": "to verify against the official NCERT list",
+      "reference_verified": false,
+      "graph_only": true
+    }
+  ],
+  "prerequisite_edges": [
+    {
+      "concept": "c7_math_simple_eq",
+      "depends_on": "c6_math_algebra_intro"
+    },
+    {
+      "concept": "c7_math_simple_eq",
+      "depends_on": "c6_math_integers_add_sub"
+    },
+    {
+      "concept": "c7_math_integers_mult_div",
+      "depends_on": "c6_math_integers_add_sub"
+    },
+    {
+      "concept": "c7_math_rational_num_intro",
+      "depends_on": "c6_math_fractions_basic"
+    },
+    {
+      "concept": "c7_math_algebraic_expressions",
+      "depends_on": "c6_math_algebra_intro"
+    },
+    {
+      "concept": "c8_math_rational_ops",
+      "depends_on": "c7_math_rational_num_intro"
+    },
+    {
+      "concept": "c8_math_rational_ops",
+      "depends_on": "c6_math_integers_add_sub"
+    },
+    {
+      "concept": "c8_math_linear_eq_one_var",
+      "depends_on": "c7_math_simple_eq"
+    },
+    {
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "depends_on": "c8_math_linear_eq_one_var"
+    },
+    {
+      "concept": "c8_math_squares_square_roots",
+      "depends_on": "c6_math_integers_add_sub"
+    },
+    {
+      "concept": "c8_math_exponents_powers",
+      "depends_on": "c7_math_exponents_intro"
+    },
+    {
+      "concept": "c8_math_algebraic_identities",
+      "depends_on": "c7_math_algebraic_expressions"
+    },
+    {
+      "concept": "c8_math_comparing_quantities_percentages",
+      "depends_on": "c6_math_fractions_basic"
+    },
+    {
+      "concept": "c9_math_number_systems",
+      "depends_on": "c8_math_rational_ops"
+    },
+    {
+      "concept": "c9_math_polynomials",
+      "depends_on": "c8_math_algebraic_identities"
+    },
+    {
+      "concept": "c9_math_linear_eq_two_vars",
+      "depends_on": "c8_math_linear_eq_variables_both_sides"
+    },
+    {
+      "concept": "c10_math_real_numbers",
+      "depends_on": "c9_math_number_systems"
+    },
+    {
+      "concept": "c10_math_quadratic_equations",
+      "depends_on": "c9_math_polynomials"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_c8_leq_01",
+      "concept": "c8_math_linear_eq_one_var",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "Solve for x: x + 7 = 3",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x = -4",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": -4.0
+        },
+        {
+          "id": "opt_2",
+          "text": "x = 10",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 10.0
+        },
+        {
+          "id": "opt_3",
+          "text": "x = 4",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": 4.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_leq_02",
+      "concept": "c8_math_linear_eq_one_var",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Solve for x: 3x - 5 = 16",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x = 7",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 7.0
+        },
+        {
+          "id": "opt_2",
+          "text": "x = 3.67",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 3.67
+        },
+        {
+          "id": "opt_3",
+          "text": "x = 11",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": 11.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_leq_03",
+      "concept": "c8_math_linear_eq_one_var",
+      "difficulty": 0.6,
+      "language": "en",
+      "question_text": "Solve for y: 2y + 9 = 1",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "y = -4",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": -4.0
+        },
+        {
+          "id": "opt_2",
+          "text": "y = 5",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 5.0
+        },
+        {
+          "id": "opt_3",
+          "text": "y = -8",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": -8.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_sign_transposition_01",
+      "concept": "c7_math_simple_eq",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "When moving +5 from the left side of 'x + 5 = 12' to the right side, what does it become?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "-5 (subtract 5)",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": -5.0
+        },
+        {
+          "id": "p2",
+          "text": "+5 (keep plus)",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 5.0
+        }
+      ],
+      "probe_for_misconception": "tag_sign_error_on_transposition",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_div_sub_01",
+      "concept": "c7_math_simple_eq",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "In '4x = 20', what operation isolates x?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "Divide both sides by 4",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "Subtract 4 from both sides",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_dividing_instead_of_subtracting",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_c6_int_sub_01",
+      "concept": "c6_math_integers_add_sub",
+      "difficulty": 0.2,
+      "language": "en",
+      "question_text": "What is 3 - 7?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "-4",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": -4.0
+        },
+        {
+          "id": "p2",
+          "text": "4",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": 4.0
+        }
+      ],
+      "probe_for_misconception": "tag_class6_integer_subtraction",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_c6_int_sub_02",
+      "concept": "c6_math_integers_add_sub",
+      "difficulty": 0.25,
+      "language": "en",
+      "question_text": "What is 5 - 12?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "-7",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": -7.0
+        },
+        {
+          "id": "p2",
+          "text": "7",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": 7.0
+        }
+      ],
+      "probe_for_misconception": "tag_class6_integer_subtraction",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_leq_both_01",
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Solve: 5x - 3 = 3x + 7",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x = 5",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 5.0
+        },
+        {
+          "id": "opt_2",
+          "text": "x = 0.5",
+          "is_correct": false,
+          "misconception_tag": "tag_grouping_variables_wrong_sign",
+          "numeric_value": 0.5
+        },
+        {
+          "id": "opt_3",
+          "text": "x = 2",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 2.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_leq_both_02",
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "difficulty": 0.6,
+      "language": "en",
+      "question_text": "Solve: 8x + 4 = 3(x - 1) + 7",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x = 0",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 0.0
+        },
+        {
+          "id": "opt_2",
+          "text": "x = 2",
+          "is_correct": false,
+          "misconception_tag": "tag_grouping_variables_wrong_sign",
+          "numeric_value": 2.0
+        },
+        {
+          "id": "opt_3",
+          "text": "x = -1",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": -1.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_leq_both_03",
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "difficulty": 0.7,
+      "language": "en",
+      "question_text": "Solve: 2x - 1 = 14 - x",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x = 5",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 5.0
+        },
+        {
+          "id": "opt_2",
+          "text": "x = 15",
+          "is_correct": false,
+          "misconception_tag": "tag_grouping_variables_wrong_sign",
+          "numeric_value": 15.0
+        },
+        {
+          "id": "opt_3",
+          "text": "x = 4.33",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 4.33
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_grouping_vars_01",
+      "concept": "c8_math_linear_eq_one_var",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "In '5x = 3x + 8', moving 3x to the left gives:",
+      "options": [
+        {
+          "id": "p1",
+          "text": "5x - 3x = 8",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "5x + 3x = 8",
+          "is_correct": false,
+          "misconception_tag": "tag_grouping_variables_wrong_sign",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_grouping_variables_wrong_sign",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_rat_01",
+      "concept": "c8_math_rational_ops",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "Find the sum: 1/2 + 1/3",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "5/6",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "2/5",
+          "is_correct": false,
+          "misconception_tag": "tag_adding_denominators_directly",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "1/5",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_rat_02",
+      "concept": "c8_math_rational_ops",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Calculate: (2/3) ÷ (4/5)",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "5/6",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "8/15",
+          "is_correct": false,
+          "misconception_tag": "tag_reciprocal_error_division",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "6/8",
+          "is_correct": false,
+          "misconception_tag": "tag_adding_denominators_directly",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_rat_03",
+      "concept": "c8_math_rational_ops",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Calculate: -3/7 + 2/7",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "-1/7",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "5/7",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "-1/14",
+          "is_correct": false,
+          "misconception_tag": "tag_adding_denominators_directly",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_add_denoms_01",
+      "concept": "c6_math_fractions_basic",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "Can we add denominators directly when adding fractions (e.g. 1/3 + 1/3 = 2/6)?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "No, the denominator remains 3 (result 2/3)",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "Yes, 3 + 3 = 6 in denominator",
+          "is_correct": false,
+          "misconception_tag": "tag_adding_denominators_directly",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_adding_denominators_directly",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_reciprocal_div_01",
+      "concept": "c7_math_rational_num_intro",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "To compute (3/4) ÷ (2/7), which step is correct?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "(3/4) × (7/2)",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "(3/4) × (2/7)",
+          "is_correct": false,
+          "misconception_tag": "tag_reciprocal_error_division",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_reciprocal_error_division",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_sqr_01",
+      "concept": "c8_math_squares_square_roots",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "What is the square of 7?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "49",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 49.0
+        },
+        {
+          "id": "opt_2",
+          "text": "14",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": 14.0
+        },
+        {
+          "id": "opt_3",
+          "text": "21",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": 21.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_sqr_02",
+      "concept": "c8_math_squares_square_roots",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "What is the square root of 64?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "8",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 8.0
+        },
+        {
+          "id": "opt_2",
+          "text": "32",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": 32.0
+        },
+        {
+          "id": "opt_3",
+          "text": "16",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 16.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_sqr_03",
+      "concept": "c8_math_squares_square_roots",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Is 50 a perfect square?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "No, between 7²=49 and 8²=64",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "Yes, because 25 × 2 = 50",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "Yes, because 5 × 10 = 50",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_squaring_doubling_01",
+      "concept": "c8_math_squares_square_roots",
+      "difficulty": 0.2,
+      "language": "en",
+      "question_text": "What does 4² mean?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "4 × 4 = 16",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 16.0
+        },
+        {
+          "id": "p2",
+          "text": "4 × 2 = 8",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": 8.0
+        }
+      ],
+      "probe_for_misconception": "tag_squaring_as_doubling",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_exp_01",
+      "concept": "c8_math_exponents_powers",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "Simplify: 2³ × 2⁴",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "2⁷",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "2¹²",
+          "is_correct": false,
+          "misconception_tag": "tag_multiplying_bases_adding_exponents_wrong",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "4⁷",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_exp_02",
+      "concept": "c8_math_exponents_powers",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Simplify: (5²)³",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "5⁶",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "5⁵",
+          "is_correct": false,
+          "misconception_tag": "tag_multiplying_bases_adding_exponents_wrong",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "5⁸",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_exp_03",
+      "concept": "c8_math_exponents_powers",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "What is 3⁻² in fraction form?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1/9",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "-6",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "-9",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_exp_law_01",
+      "concept": "c7_math_exponents_intro",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "According to exponent laws, a^m × a^n equals:",
+      "options": [
+        {
+          "id": "p1",
+          "text": "a^(m + n)",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "a^(m × n)",
+          "is_correct": false,
+          "misconception_tag": "tag_multiplying_bases_adding_exponents_wrong",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_multiplying_bases_adding_exponents_wrong",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_ident_01",
+      "concept": "c8_math_algebraic_identities",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Expand (x + 3)²",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "x² + 6x + 9",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "x² + 9",
+          "is_correct": false,
+          "misconception_tag": "tag_missing_middle_term_identity",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "x² + 6x + 6",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_ident_02",
+      "concept": "c8_math_algebraic_identities",
+      "difficulty": 0.6,
+      "language": "en",
+      "question_text": "Expand (2a - 5)²",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "4a² - 20a + 25",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "opt_2",
+          "text": "4a² - 25",
+          "is_correct": false,
+          "misconception_tag": "tag_missing_middle_term_identity",
+          "numeric_value": null
+        },
+        {
+          "id": "opt_3",
+          "text": "2a² - 10a + 25",
+          "is_correct": false,
+          "misconception_tag": "tag_squaring_as_doubling",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_ident_03",
+      "concept": "c8_math_algebraic_identities",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "Calculate 103 × 97 using algebraic identity (a + b)(a - b)",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "9991",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 9991.0
+        },
+        {
+          "id": "opt_2",
+          "text": "10009",
+          "is_correct": false,
+          "misconception_tag": "tag_sign_error_on_transposition",
+          "numeric_value": 10009.0
+        },
+        {
+          "id": "opt_3",
+          "text": "9990",
+          "is_correct": false,
+          "misconception_tag": "tag_missing_middle_term_identity",
+          "numeric_value": 9990.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_ident_middle_01",
+      "concept": "c7_math_algebraic_expressions",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "When multiplying (a + b)(a + b), do cross terms a*b + b*a cancel or combine to 2ab?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "They combine to +2ab",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "They cancel out to 0",
+          "is_correct": false,
+          "misconception_tag": "tag_missing_middle_term_identity",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_missing_middle_term_identity",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_pct_01",
+      "concept": "c8_math_comparing_quantities_percentages",
+      "difficulty": 0.3,
+      "language": "en",
+      "question_text": "What is 20% of 250?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "50",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 50.0
+        },
+        {
+          "id": "opt_2",
+          "text": "5000",
+          "is_correct": false,
+          "misconception_tag": "tag_percent_as_raw_value",
+          "numeric_value": 5000.0
+        },
+        {
+          "id": "opt_3",
+          "text": "25",
+          "is_correct": false,
+          "misconception_tag": "tag_dividing_instead_of_subtracting",
+          "numeric_value": 25.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_pct_02",
+      "concept": "c8_math_comparing_quantities_percentages",
+      "difficulty": 0.5,
+      "language": "en",
+      "question_text": "An item costs ₹400 and is discounted by 15%. What is the sale price?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "₹340",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 340.0
+        },
+        {
+          "id": "opt_2",
+          "text": "₹385",
+          "is_correct": false,
+          "misconception_tag": "tag_percent_as_raw_value",
+          "numeric_value": 385.0
+        },
+        {
+          "id": "opt_3",
+          "text": "₹60",
+          "is_correct": false,
+          "misconception_tag": "tag_class6_integer_subtraction",
+          "numeric_value": 60.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "q_c8_pct_03",
+      "concept": "c8_math_comparing_quantities_percentages",
+      "difficulty": 0.4,
+      "language": "en",
+      "question_text": "Express 3/4 as a percentage:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "75%",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": 75.0
+        },
+        {
+          "id": "opt_2",
+          "text": "0.75%",
+          "is_correct": false,
+          "misconception_tag": "tag_percent_as_raw_value",
+          "numeric_value": 0.75
+        },
+        {
+          "id": "opt_3",
+          "text": "34%",
+          "is_correct": false,
+          "misconception_tag": "tag_adding_denominators_directly",
+          "numeric_value": 34.0
+        }
+      ],
+      "probe_for_misconception": null,
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "probe_percent_fraction_01",
+      "concept": "c6_math_fractions_basic",
+      "difficulty": 0.2,
+      "language": "en",
+      "question_text": "What does 25% equal as a fraction?",
+      "options": [
+        {
+          "id": "p1",
+          "text": "25/100 (which simplifies to 1/4)",
+          "is_correct": true,
+          "misconception_tag": null,
+          "numeric_value": null
+        },
+        {
+          "id": "p2",
+          "text": "25/1 (simply 25)",
+          "is_correct": false,
+          "misconception_tag": "tag_percent_as_raw_value",
+          "numeric_value": null
+        }
+      ],
+      "probe_for_misconception": "tag_percent_as_raw_value",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    }
+  ],
+  "lessons": [
+    {
+      "id": "les_c8_leq_foundational",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": null,
+      "language": "en",
+      "content": "A linear equation is like a balanced scale. Whatever operation you apply to one side (add, subtract, multiply, divide), you must apply the exact same operation to the other side.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_leq_both_foundational",
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "misconception": null,
+      "language": "en",
+      "content": "When variable terms appear on both sides of the equation, transpose variable terms to one side and numeric constants to the other side by applying inverse operations.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_rat_foundational",
+      "concept": "c8_math_rational_ops",
+      "misconception": null,
+      "language": "en",
+      "content": "Rational numbers can be added, subtracted, multiplied and divided. Remember that before adding or subtracting, fractions must have a common denominator.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_sqr_foundational",
+      "concept": "c8_math_squares_square_roots",
+      "misconception": null,
+      "language": "en",
+      "content": "Squaring a number means multiplying the number by itself (e.g. 7² = 7 × 7 = 49). It is NOT multiplying by 2.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_exp_foundational",
+      "concept": "c8_math_exponents_powers",
+      "misconception": null,
+      "language": "en",
+      "content": "Exponent rules: When multiplying powers with the same base, add their exponents: a^m × a^n = a^(m+n).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_ident_foundational",
+      "concept": "c8_math_algebraic_identities",
+      "misconception": null,
+      "language": "en",
+      "content": "Standard algebraic identities: (a + b)² = a² + 2ab + b², (a - b)² = a² - 2ab + b², and (a + b)(a - b) = a² - b².",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_c8_pct_foundational",
+      "concept": "c8_math_comparing_quantities_percentages",
+      "misconception": null,
+      "language": "en",
+      "content": "A percentage represents parts out of 100. Always express p% as p/100 before computing.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_sign_transposition",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": "tag_sign_error_on_transposition",
+      "language": "en",
+      "content": "Transposition Rule: When a term crosses the equal sign '=', its sign flips. Addition becomes subtraction (+ becomes -), and subtraction becomes addition (- becomes +).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_div_sub",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": "tag_dividing_instead_of_subtracting",
+      "language": "en",
+      "content": "Inverse Operations: If a number is added (e.g. x + 5), subtract 5. If a number is multiplied (e.g. 5x), divide by 5.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_c6_int_sub",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": "tag_class6_integer_subtraction",
+      "language": "en",
+      "content": "Prerequisite Bridge (Class 6 Integers): When subtracting a larger positive integer from a smaller one, the result is negative (e.g. 3 - 7 = -4). Move left on the number line.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_grouping_vars",
+      "concept": "c8_math_linear_eq_variables_both_sides",
+      "misconception": "tag_grouping_variables_wrong_sign",
+      "language": "en",
+      "content": "Variable Transposition: A variable term like 3x follows the same rules as numbers. Moving +3x across '=' requires subtracting 3x on both sides.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_add_denoms",
+      "concept": "c8_math_rational_ops",
+      "misconception": "tag_adding_denominators_directly",
+      "language": "en",
+      "content": "Fraction Denominators: Denominators represent the size of parts and must never be added directly. Convert fractions to a common denominator first, then add only the numerators.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_reciprocal_div",
+      "concept": "c8_math_rational_ops",
+      "misconception": "tag_reciprocal_error_division",
+      "language": "en",
+      "content": "Fraction Division: Keep the first fraction, change '÷' to '×', and invert the second fraction (turn it upside down into its reciprocal).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_squaring_doubling",
+      "concept": "c8_math_squares_square_roots",
+      "misconception": "tag_squaring_as_doubling",
+      "language": "en",
+      "content": "Powers vs Multiplication: n² means n × n. For example, 7² is 7 × 7 = 49, whereas 7 × 2 = 14. Do not confuse squaring with doubling.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_exp_laws",
+      "concept": "c8_math_exponents_powers",
+      "misconception": "tag_multiplying_bases_adding_exponents_wrong",
+      "language": "en",
+      "content": "Exponent Addition: When multiplying identical bases (a^m × a^n), exponents ADD (m + n). Exponents multiply only when a power is raised to another power (a^m)^n = a^(m×n).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_middle_term",
+      "concept": "c8_math_algebraic_identities",
+      "misconception": "tag_missing_middle_term_identity",
+      "language": "en",
+      "content": "Identity Middle Term: (a + b)² is (a + b)(a + b) = a² + ab + ba + b² = a² + 2ab + b². Never omit the middle term 2ab.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_mis_pct_raw",
+      "concept": "c8_math_comparing_quantities_percentages",
+      "misconception": "tag_percent_as_raw_value",
+      "language": "en",
+      "content": "Percentage Value: % means 'divided by 100'. 15% is 15/100 = 0.15. Never treat 15% as 15 units.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_hi_draft_leq_01",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": "tag_sign_error_on_transposition",
+      "language": "hi",
+      "content": "[ड्राफ्ट - असमीक्षित] पक्षांतरण नियम: जब कोई पद बराबर (=) के पार जाता है, उसका चिह्न बदल जाता है।",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "id": "les_te_draft_leq_01",
+      "concept": "c8_math_linear_eq_one_var",
+      "misconception": "tag_sign_error_on_transposition",
+      "language": "te",
+      "content": "[డ్రాఫ్ట్ - సమీక్షించబడలేదు] పక్షాంతరణ నియమం: సమాన చిహ్నం దాటినప్పుడు గుర్తు మారుతుంది.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    }
+  ],
+  "hints": [
+    {
+      "question_id": "q_c8_leq_01",
+      "level_1_hint": "Notice the +7 on the left. To isolate x, what operation undoes addition?",
+      "level_2_partial_step": "Subtract 7 from both sides: x = 3 - 7",
+      "level_3_worked_step": "Calculate 3 - 7. Since 7 > 3, the result is negative: x = -4.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_leq_02",
+      "level_1_hint": "First isolate the term with x by adding 5 to both sides.",
+      "level_2_partial_step": "3x = 16 + 5 => 3x = 21",
+      "level_3_worked_step": "Divide both sides by 3: x = 21 / 3 = 7.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_leq_03",
+      "level_1_hint": "Subtract 9 from both sides first.",
+      "level_2_partial_step": "2y = 1 - 9 => 2y = -8",
+      "level_3_worked_step": "Divide both sides by 2: y = -8 / 2 = -4.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_sign_transposition_01",
+      "level_1_hint": "Transposing an addition operation to the opposite side requires the inverse operation.",
+      "level_2_partial_step": "Inverse of adding 5 is subtracting 5.",
+      "level_3_worked_step": "Therefore +5 becomes -5 on the other side.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_div_sub_01",
+      "level_1_hint": "Look at how 4 is attached to x: 4x means 4 multiplied by x.",
+      "level_2_partial_step": "The inverse of multiplication is division.",
+      "level_3_worked_step": "Divide both sides by 4 to get x = 5.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_c6_int_sub_01",
+      "level_1_hint": "Think of a number line starting at 3 and moving 7 steps to the left.",
+      "level_2_partial_step": "3 - 3 = 0, then 4 more steps left gives -4.",
+      "level_3_worked_step": "3 - 7 = -4.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_c6_int_sub_02",
+      "level_1_hint": "Subtracting a larger positive number from a smaller one yields a negative number.",
+      "level_2_partial_step": "5 - 5 = 0, then 7 steps further left gives -7.",
+      "level_3_worked_step": "5 - 12 = -7.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_leq_both_01",
+      "level_1_hint": "Collect variable terms on the left side and constants on the right side.",
+      "level_2_partial_step": "5x - 3x = 7 + 3 => 2x = 10",
+      "level_3_worked_step": "Divide by 2: x = 10 / 2 = 5.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_leq_both_02",
+      "level_1_hint": "Expand 3(x - 1) first: 3x - 3.",
+      "level_2_partial_step": "8x + 4 = 3x - 3 + 7 => 8x + 4 = 3x + 4",
+      "level_3_worked_step": "8x - 3x = 4 - 4 => 5x = 0 => x = 0.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_leq_both_03",
+      "level_1_hint": "Add x to both sides to move the variable term.",
+      "level_2_partial_step": "2x + x = 14 + 1 => 3x = 15",
+      "level_3_worked_step": "x = 15 / 3 = 5.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_grouping_vars_01",
+      "level_1_hint": "3x on the right is positive (+3x). Transposing it across '=' reverses the sign.",
+      "level_2_partial_step": "Subtract 3x from both sides.",
+      "level_3_worked_step": "Result is 5x - 3x = 8.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_rat_01",
+      "level_1_hint": "Denominators are different (2 and 3). Find their LCM first.",
+      "level_2_partial_step": "LCM of 2 and 3 is 6. Convert: 3/6 + 2/6.",
+      "level_3_worked_step": "Add numerators over common denominator: (3+2)/6 = 5/6.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_rat_02",
+      "level_1_hint": "Division by a fraction means multiplying by its reciprocal.",
+      "level_2_partial_step": "Reciprocal of 4/5 is 5/4. So calculate (2/3) * (5/4).",
+      "level_3_worked_step": "(2 * 5) / (3 * 4) = 10/12 = 5/6.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_rat_03",
+      "level_1_hint": "Denominators are already identical (7). Add numerators.",
+      "level_2_partial_step": "Numerator is (-3 + 2).",
+      "level_3_worked_step": "-3 + 2 = -1, so answer is -1/7.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_add_denoms_01",
+      "level_1_hint": "The denominator tells you the size of the slice, not the number of slices.",
+      "level_2_partial_step": "1 third + 1 third = 2 thirds.",
+      "level_3_worked_step": "The denominator stays 3. Denominators never add directly.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_reciprocal_div_01",
+      "level_1_hint": "Dividing by a fraction is the same as multiplying by its inverse.",
+      "level_2_partial_step": "Flip 2/7 to get 7/2.",
+      "level_3_worked_step": "Change ÷ to × and invert: (3/4) × (7/2).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_sqr_01",
+      "level_1_hint": "Squaring a number means multiplying the number by itself.",
+      "level_2_partial_step": "Calculate 7 × 7, not 7 × 2.",
+      "level_3_worked_step": "7 × 7 = 49.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_sqr_02",
+      "level_1_hint": "Find the positive number that multiplies by itself to give 64.",
+      "level_2_partial_step": "Test numbers: 7*7=49, 8*8=64.",
+      "level_3_worked_step": "Square root of 64 is 8.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_sqr_03",
+      "level_1_hint": "A perfect square must be an integer multiplied by itself.",
+      "level_2_partial_step": "7² = 49 and 8² = 64. There is no integer between 7 and 8.",
+      "level_3_worked_step": "50 is not a perfect square.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_squaring_doubling_01",
+      "level_1_hint": "Exponent 2 denotes self-multiplication.",
+      "level_2_partial_step": "Base is 4, exponent is 2: multiply two 4s.",
+      "level_3_worked_step": "4 × 4 = 16.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_exp_01",
+      "level_1_hint": "Recall law of exponents for common base: a^m × a^n.",
+      "level_2_partial_step": "Powers add: a^(m + n) = 2^(3 + 4).",
+      "level_3_worked_step": "2^(3 + 4) = 2⁷.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_exp_02",
+      "level_1_hint": "When raising a power to a power (a^m)^n, what happens to exponents?",
+      "level_2_partial_step": "Multiply the exponents: 2 × 3.",
+      "level_3_worked_step": "(5²)³ = 5^(2×3) = 5⁶.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_exp_03",
+      "level_1_hint": "Negative exponent means reciprocal: a^(-n) = 1/(a^n).",
+      "level_2_partial_step": "3⁻² = 1 / (3²).",
+      "level_3_worked_step": "3² = 9, so 3⁻² = 1/9.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_exp_law_01",
+      "level_1_hint": "Count the total factors of 'a'.",
+      "level_2_partial_step": "m factors followed by n factors total (m + n) factors.",
+      "level_3_worked_step": "Exponents add when multiplying common bases: a^(m+n).",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_ident_01",
+      "level_1_hint": "Use standard identity (a + b)² = a² + 2ab + b².",
+      "level_2_partial_step": "Here a = x, b = 3. Middle term is 2 × x × 3.",
+      "level_3_worked_step": "x² + 6x + 3² = x² + 6x + 9.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_ident_02",
+      "level_1_hint": "Use identity (x - y)² = x² - 2xy + y².",
+      "level_2_partial_step": "x = 2a, so x² = (2a)² = 4a². Middle term: -2(2a)(5) = -20a.",
+      "level_3_worked_step": "4a² - 20a + 25.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_ident_03",
+      "level_1_hint": "Write 103 as (100 + 3) and 97 as (100 - 3).",
+      "level_2_partial_step": "(100 + 3)(100 - 3) = 100² - 3².",
+      "level_3_worked_step": "10000 - 9 = 9991.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_ident_middle_01",
+      "level_1_hint": "Use distributive property FOIL: First, Outside, Inside, Last.",
+      "level_2_partial_step": "Outside is a*b, Inside is b*a = a*b.",
+      "level_3_worked_step": "ab + ab = 2ab. Both terms are positive and add together.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_pct_01",
+      "level_1_hint": "Percentage means 'out of 100'. Convert 20% to 20/100.",
+      "level_2_partial_step": "Multiply: (20 / 100) × 250.",
+      "level_3_worked_step": "(1/5) × 250 = 50.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_pct_02",
+      "level_1_hint": "Calculate 15% of 400 first, then subtract from 400.",
+      "level_2_partial_step": "Discount = 15/100 × 400 = 60.",
+      "level_3_worked_step": "Sale price = 400 - 60 = ₹340.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "q_c8_pct_03",
+      "level_1_hint": "Multiply fraction by 100 to convert to percentage.",
+      "level_2_partial_step": "(3/4) × 100 = 300 / 4.",
+      "level_3_worked_step": "300 / 4 = 75%.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    },
+    {
+      "question_id": "probe_percent_fraction_01",
+      "level_1_hint": "Per-cent literally means per hundred.",
+      "level_2_partial_step": "Put 25 over 100.",
+      "level_3_worked_step": "25% = 25/100 = 1/4.",
+      "review_record": {
+        "status": "author-drafted, unreviewed",
+        "reviewer_name": null,
+        "reviewer_role": null,
+        "attestation_date": null,
+        "item_version": 1,
+        "attestation_statement": null
+      }
+    }
+  ]
+}
