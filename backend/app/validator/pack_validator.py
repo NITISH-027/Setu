@@ -180,19 +180,24 @@ class PackValidator:
     def _verify_numeric_value(self, q_id: str, opt: Option, issues: List[ValidationIssue]):
         """
         Verify that option text containing numbers matches the declared numeric_value.
+        Checks if the declared numeric_value matches the evaluated number (e.g. in '4 x 4 = 16', matches 16).
         """
         import re
         numbers = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", opt.text)
         if numbers:
             try:
-                first_num = float(numbers[0])
-                if not math.isclose(first_num, opt.numeric_value, rel_tol=1e-5, abs_tol=1e-5):
+                # In expressions like '4 x 4 = 16', the result is typically the last number
+                matched = any(
+                    math.isclose(float(num), opt.numeric_value, rel_tol=1e-5, abs_tol=1e-5)
+                    for num in numbers
+                )
+                if not matched:
                     issues.append(ValidationIssue(
                         severity="WARNING",
                         code="NUMERIC_VALUE_MISMATCH",
                         message=(
-                            f"In question '{q_id}', option '{opt.id}' text has number '{first_num}' "
-                            f"which differs from computed numeric_value '{opt.numeric_value}'."
+                            f"In question '{q_id}', option '{opt.id}' numbers {numbers} "
+                            f"differ from declared numeric_value '{opt.numeric_value}'."
                         ),
                         item_id=q_id
                     ))

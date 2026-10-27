@@ -86,6 +86,35 @@ class CoverageReporter:
 
         pct_human_reviewed = (human_verified_count / total_items * 100.0) if total_items > 0 else 0.0
 
+        # Language Coverage Report
+        lang_questions: Dict[str, int] = {}
+        for q in pack.questions:
+            lang = q.language or "en"
+            lang_questions[lang] = lang_questions.get(lang, 0) + 1
+
+        lang_lessons: Dict[str, int] = {}
+        for l in pack.lessons:
+            lang = l.language or "en"
+            lang_lessons[lang] = lang_lessons.get(lang, 0) + 1
+
+        language_coverage = {
+            "en": {
+                "questions": lang_questions.get("en", 0),
+                "lessons": lang_lessons.get("en", 0),
+                "status": "primary language (draft-unreviewed until human checked)"
+            },
+            "hi": {
+                "questions": lang_questions.get("hi", 0),
+                "lessons": lang_lessons.get("hi", 0),
+                "status": "unreviewed draft (not supported - requires fluent speaker + subject review)"
+            },
+            "te": {
+                "questions": lang_questions.get("te", 0),
+                "lessons": lang_lessons.get("te", 0),
+                "status": "unreviewed draft (not supported - requires fluent speaker + subject review)"
+            }
+        }
+
         report_data = {
             "pack_version": pack.metadata.version,
             "total_concepts": len(concept_ids),
@@ -98,6 +127,7 @@ class CoverageReporter:
             "human_reviewed_items": human_verified_count,
             "percent_human_reviewed": round(pct_human_reviewed, 2),
             "review_status_breakdown": status_counts,
+            "language_coverage": language_coverage,
             "concepts_without_lessons": concepts_without_lessons,
             "concepts_with_insufficient_questions": concepts_with_insufficient_questions,
             "concepts_without_probes": concepts_without_probes,

@@ -33,36 +33,25 @@ class ReviewManager:
     def import_external_record(self, raw_record: Dict[str, Any]) -> ReviewRecord:
         """
         Processes incoming imported records.
-        Any imported record claiming 'reviewed' is downgraded to 'unverified import'
-        unless its reviewer credentials match an established local reviewer registry.
+        Rule: An imported record that claims 'reviewed' is ALWAYS stored as 'unverified import'
+        and requires a fresh human attestation in the UI. No external import may create 'reviewed'.
         """
         claimed_status = raw_record.get("status")
         reviewer_name = raw_record.get("reviewer_name")
         version = raw_record.get("item_version", 1)
 
-        if claimed_status == ReviewStatus.REVIEWED.value or claimed_status == "reviewed":
-            # Check if provenance can be verified
-            if reviewer_name and reviewer_name in self.registered_reviewers:
-                return ReviewRecord(
-                    status=ReviewStatus.REVIEWED,
-                    reviewer_name=reviewer_name,
-                    reviewer_role=self.registered_reviewers[reviewer_name],
-                    attestation_date=datetime.utcnow(),
-                    item_version=version,
-                    attestation_statement=raw_record.get("attestation_statement", "I checked this item")
-                )
-            else:
-                # Downgrade to unverified import
-                return ReviewRecord(
-                    status=ReviewStatus.UNVERIFIED_IMPORT,
-                    reviewer_name=reviewer_name,
-                    reviewer_role="Unverified imported claim",
-                    attestation_date=None,
-                    item_version=version,
-                    attestation_statement="Downgraded on import: unverified reviewer provenance"
-                )
+        if claimed_status in [ReviewStatus.REVIEWED.value, "reviewed"]:
+            # Always downgrade imported 'reviewed' claims to unverified import
+            return ReviewRecord(
+                status=ReviewStatus.UNVERIFIED_IMPORT,
+                reviewer_name=reviewer_name,
+                reviewer_role="Unverified imported claim",
+                attestation_date=None,
+                item_version=version,
+                attestation_statement="Downgraded on import: requires live reviewer UI attestation."
+            )
 
-        # Default for non-reviewed imports
+        # Default for other imports
         return ReviewRecord(
             status=ReviewStatus.AUTHOR_DRAFTED,
             item_version=version

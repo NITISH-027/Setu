@@ -113,3 +113,16 @@ class PinManager:
             }
             for p in profiles.values()
         ]
+
+    def delete_student_profile(self, student_id: str) -> int:
+        """
+        Purges student profile completely from all devices in memory.
+        Returns count of profiles removed.
+        """
+        removed = 0
+        for device_id, profiles in list(self.device_profiles.items()):
+            if student_id in profiles:
+                del profiles[student_id]
+                removed += 1
+        return removed
+

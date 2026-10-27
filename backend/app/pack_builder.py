@@ -889,7 +889,149 @@ def build_pack() -> ContentPack:
         review_record=make_draft_rr()
     ))
 
-    # 4. Micro-Lessons (Matched to concepts and misconceptions)
+    # Additional direct probes on active Class 8 concepts to ensure full probe coverage
+    questions.append(Question(
+        id="probe_c8_leq_both_01",
+        concept="c8_math_linear_eq_variables_both_sides",
+        difficulty=0.35,
+        question_text="To simplify 7x - 2 = 4x + 10, transposing 4x to the left gives:",
+        options=[
+            Option(id="p1", text="7x - 4x = 10 + 2", is_correct=True),
+            Option(id="p2", text="7x + 4x = 10 + 2", is_correct=False, misconception_tag="tag_grouping_variables_wrong_sign")
+        ],
+        probe_for_misconception="tag_grouping_variables_wrong_sign",
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="probe_c8_leq_both_01",
+        level_1_hint="Transposing +4x across '=' flips the sign to subtraction.",
+        level_2_partial_step="Subtract 4x from 7x.",
+        level_3_worked_step="7x - 4x = 10 + 2.",
+        review_record=make_draft_rr()
+    ))
+
+    questions.append(Question(
+        id="probe_c8_rat_ops_01",
+        concept="c8_math_rational_ops",
+        difficulty=0.3,
+        question_text="What is 1/4 + 2/4?",
+        options=[
+            Option(id="p1", text="3/4", is_correct=True),
+            Option(id="p2", text="3/8", is_correct=False, misconception_tag="tag_adding_denominators_directly")
+        ],
+        probe_for_misconception="tag_adding_denominators_directly",
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="probe_c8_rat_ops_01",
+        level_1_hint="Common denominator remains 4.",
+        level_2_partial_step="Add numerators: 1 + 2 = 3.",
+        level_3_worked_step="Result is 3/4.",
+        review_record=make_draft_rr()
+    ))
+
+    questions.append(Question(
+        id="probe_c8_exp_powers_01",
+        concept="c8_math_exponents_powers",
+        difficulty=0.3,
+        question_text="In simplifying 3² × 3³, what is the exponent on 3?",
+        options=[
+            Option(id="p1", text="5", is_correct=True, numeric_value=5.0),
+            Option(id="p2", text="6", is_correct=False, misconception_tag="tag_multiplying_bases_adding_exponents_wrong", numeric_value=6.0)
+        ],
+        probe_for_misconception="tag_multiplying_bases_adding_exponents_wrong",
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="probe_c8_exp_powers_01",
+        level_1_hint="Powers add when multiplying common bases: 2 + 3.",
+        level_2_partial_step="2 + 3 = 5.",
+        level_3_worked_step="Exponent is 5.",
+        review_record=make_draft_rr()
+    ))
+
+    questions.append(Question(
+        id="probe_c8_ident_01",
+        concept="c8_math_algebraic_identities",
+        difficulty=0.35,
+        question_text="In the expansion of (x + 4)², what is the middle term?",
+        options=[
+            Option(id="p1", text="+8x", is_correct=True),
+            Option(id="p2", text="No middle term (0)", is_correct=False, misconception_tag="tag_missing_middle_term_identity")
+        ],
+        probe_for_misconception="tag_missing_middle_term_identity",
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="probe_c8_ident_01",
+        level_1_hint="Middle term is 2 × x × 4.",
+        level_2_partial_step="2 × 4 = 8, multiplied by x.",
+        level_3_worked_step="Middle term is +8x.",
+        review_record=make_draft_rr()
+    ))
+
+    questions.append(Question(
+        id="probe_c8_pct_01",
+        concept="c8_math_comparing_quantities_percentages",
+        difficulty=0.3,
+        question_text="What is 50% written as a fraction in simplest form?",
+        options=[
+            Option(id="p1", text="1/2", is_correct=True),
+            Option(id="p2", text="50", is_correct=False, misconception_tag="tag_percent_as_raw_value", numeric_value=50.0)
+        ],
+        probe_for_misconception="tag_percent_as_raw_value",
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="probe_c8_pct_01",
+        level_1_hint="50% means 50/100.",
+        level_2_partial_step="Divide numerator and denominator by 50.",
+        level_3_worked_step="50/100 = 1/2.",
+        review_record=make_draft_rr()
+    ))
+
+    # Draft Hindi and Telugu Questions (marked unreviewed drafts)
+    questions.append(Question(
+        id="q_c8_leq_hi_01",
+        concept="c8_math_linear_eq_one_var",
+        difficulty=0.3,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: x + 7 = 3",
+        options=[
+            Option(id="opt_hi_1", text="x = -4", is_correct=True, numeric_value=-4.0),
+            Option(id="opt_hi_2", text="x = 10", is_correct=False, misconception_tag="tag_sign_error_on_transposition", numeric_value=10.0),
+            Option(id="opt_hi_3", text="x = 4", is_correct=False, misconception_tag="tag_class6_integer_subtraction", numeric_value=4.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_leq_hi_01",
+        level_1_hint="[ड्राफ्ट] +7 को दाईं ओर ले जाने पर -7 बनता है।",
+        level_2_partial_step="[ड्राफ्ट] x = 3 - 7",
+        level_3_worked_step="[ड्राफ्ट] x = -4",
+        review_record=make_draft_rr()
+    ))
+
+    questions.append(Question(
+        id="q_c8_leq_te_01",
+        concept="c8_math_linear_eq_one_var",
+        difficulty=0.3,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: x + 7 = 3",
+        options=[
+            Option(id="opt_te_1", text="x = -4", is_correct=True, numeric_value=-4.0),
+            Option(id="opt_te_2", text="x = 10", is_correct=False, misconception_tag="tag_sign_error_on_transposition", numeric_value=10.0),
+            Option(id="opt_te_3", text="x = 4", is_correct=False, misconception_tag="tag_class6_integer_subtraction", numeric_value=4.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_leq_te_01",
+        level_1_hint="[డ్రాఫ్ట్] +7 ని కుడివైపుకు తరలిస్తే -7 అవుతుంది.",
+        level_2_partial_step="[డ్రాఫ్ట్] x = 3 - 7",
+        level_3_worked_step="[డ్రాఫ్ట్] x = -4",
+        review_record=make_draft_rr()
+    ))
     lessons = [
         # Foundational micro-lessons per concept
         Lesson(

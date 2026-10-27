@@ -28,3 +28,13 @@ class ContentPack(BaseModel):
     questions: List[Question] = Field(default_factory=list)
     lessons: List[Lesson] = Field(default_factory=list)
     hints: List[HintLadder] = Field(default_factory=list)
+
+    def get_question(self, q_id: str) -> Optional[Question]:
+        return next((q for q in self.questions if q.id == q_id), None)
+
+    def get_lesson(self, l_id: str) -> Optional[Lesson]:
+        return next((l for l in self.lessons if l.id == l_id), None)
+
+    def get_concept(self, c_id: str) -> Optional[Concept]:
+        return next((c for c in self.concepts if c.id == c_id), None)
+
