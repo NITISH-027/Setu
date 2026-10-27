@@ -21,8 +21,23 @@ export default function App() {
       {/* Main Header */}
       <header className="app-header">
         <div className="brand-section">
-          <div className="logo-badge">SETU</div>
-          <div className="brand-title">Adaptive Learning</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="logo-badge">SETU</div>
+            <div className="brand-title">Adaptive Learning</div>
+          </div>
+
+          {/* Medium Language Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
+            >
+              <option value="en">English (Supported)</option>
+              <option value="hi">हिंदी (Unreviewed)</option>
+              <option value="te">తెలుగు (Unreviewed)</option>
+            </select>
+          </div>
         </div>
 
         <nav className="nav-tabs">
@@ -57,19 +72,6 @@ export default function App() {
             Paper Mode
           </button>
         </nav>
-
-        {/* Medium Language Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ fontSize: '12px', padding: '4px 8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
-          >
-            <option value="en">English (Supported)</option>
-            <option value="hi">हिंदी (Unreviewed Draft)</option>
-            <option value="te">తెలుగు (Unreviewed Draft)</option>
-          </select>
-        </div>
       </header>
 
       {/* Main View Area */}

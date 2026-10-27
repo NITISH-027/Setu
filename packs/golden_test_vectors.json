@@ -1,0 +1,138 @@
+{
+  "bkt_sequence": [
+    {
+      "step": 0,
+      "input_mastery": 0.2,
+      "is_correct": true,
+      "output_mastery": 0.6
+    },
+    {
+      "step": 1,
+      "input_mastery": 0.6,
+      "is_correct": false,
+      "output_mastery": 0.2842
+    },
+    {
+      "step": 2,
+      "input_mastery": 0.2842,
+      "is_correct": true,
+      "output_mastery": 0.695
+    },
+    {
+      "step": 3,
+      "input_mastery": 0.695,
+      "is_correct": true,
+      "output_mastery": 0.9245
+    },
+    {
+      "step": 4,
+      "input_mastery": 0.9245,
+      "is_correct": true,
+      "output_mastery": 0.9848
+    },
+    {
+      "step": 5,
+      "input_mastery": 0.9848,
+      "is_correct": false,
+      "output_mastery": 0.9066
+    }
+  ],
+  "sm2_sequence": [
+    {
+      "quality": 4,
+      "interval_days": 1.0,
+      "ease_factor": 2.5,
+      "consecutive_successes": 1
+    },
+    {
+      "quality": 5,
+      "interval_days": 3.0,
+      "ease_factor": 2.6,
+      "consecutive_successes": 2
+    },
+    {
+      "quality": 5,
+      "interval_days": 7.8,
+      "ease_factor": 2.7,
+      "consecutive_successes": 3
+    },
+    {
+      "quality": 2,
+      "interval_days": 1.0,
+      "ease_factor": 2.38,
+      "consecutive_successes": 0
+    },
+    {
+      "quality": 4,
+      "interval_days": 1.0,
+      "ease_factor": 2.38,
+      "consecutive_successes": 1
+    }
+  ],
+  "hypothesis_sequence": [
+    {
+      "step": 1,
+      "heuristic_score": 1,
+      "evidence_band": "Medium",
+      "status": "open"
+    },
+    {
+      "step": 2,
+      "heuristic_score": 2,
+      "evidence_band": "High",
+      "status": "supported"
+    },
+    {
+      "step": 3,
+      "heuristic_score": 1,
+      "evidence_band": "not sure",
+      "status": "undecided"
+    }
+  ],
+  "sequencer_results": [
+    {
+      "input": {
+        "stuck_attempts": 2
+      },
+      "action": "FLAG_TEACHER_STUCK",
+      "rule_id": "rule_stuck_attempts_flag",
+      "reason": "Student is stuck after multiple attempts. Teacher assistance flagged."
+    },
+    {
+      "input": {
+        "bridge_recheck_fails": 2,
+        "current_stage": "bridge_recheck"
+      },
+      "action": "FLAG_TEACHER_REPEATED_FAIL",
+      "rule_id": "rule_bridge_recheck_repeated_fail",
+      "reason": "Student failed the bridge check repeatedly. Flagging teacher for 10-minute clinic intervention."
+    },
+    {
+      "input": {
+        "bridge_recheck_passed": true,
+        "current_stage": "bridge_recheck"
+      },
+      "action": "RETURN_TO_ORIGINAL_TOPIC",
+      "rule_id": "rule_bridge_recheck_pass",
+      "reason": "Student passed the bridge re-check! Returning to original topic."
+    },
+    {
+      "input": {
+        "bridge_recheck_passed": false,
+        "current_stage": "bridge_recheck"
+      },
+      "action": "STAY_ON_GAP",
+      "rule_id": "rule_bridge_recheck_fail",
+      "reason": "Student did not pass the bridge check. Remaining on gap concept for reinforcement."
+    },
+    {
+      "input": {
+        "evidence_band": "not sure",
+        "current_stage": "probe"
+      },
+      "action": "REQUEST_MORE_PROBES",
+      "rule_id": "rule_probe_conflicting_evidence",
+      "reason": "Diagnostic probe evidence is thin or conflicting ('not sure'). Gathering additional probes before deciding."
+    }
+  ]
+}
