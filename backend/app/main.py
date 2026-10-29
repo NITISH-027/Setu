@@ -1905,3 +1905,12 @@ def update_editor_pack_item(
 def get_printable_sheet(concept_id: str, session: SessionDB = Depends(require_teacher)):
     sheet = paper_manager.generate_printable_sheet(concept_id)
     return sheet.to_html()
+
+
+# --- Demo deployment: serve the built frontend from the same origin ---
+# Placed after all API routes so /api/* and /health keep precedence.
+from fastapi.staticfiles import StaticFiles
+FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+if os.path.isdir(FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+

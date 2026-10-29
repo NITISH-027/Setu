@@ -33,11 +33,11 @@ def seed():
 
     try:
         # Generate random credentials per run
-        admin_pass = secrets.token_urlsafe(12)
-        teacher_8a_pass = secrets.token_urlsafe(12)
-        teacher_8b_pass = secrets.token_urlsafe(12)
-        reviewer_pass = secrets.token_urlsafe(12)
-        student_pin = f"{secrets.randbelow(9000) + 1000}"
+        admin_pass = os.getenv("SETU_DEMO_ADMIN_PASS") or secrets.token_urlsafe(12)
+        teacher_8a_pass = os.getenv("SETU_DEMO_TEACHER_8A_PASS") or secrets.token_urlsafe(12)
+        teacher_8b_pass = os.getenv("SETU_DEMO_TEACHER_8B_PASS") or secrets.token_urlsafe(12)
+        reviewer_pass = os.getenv("SETU_DEMO_REVIEWER_PASS") or secrets.token_urlsafe(12)
+        student_pin = os.getenv("SETU_DEMO_STUDENT_PIN") or f"{secrets.randbelow(9000) + 1000}"
 
         # 1. Admin account
         admin = db.query(UserDB).filter(UserDB.username == "admin").first()
@@ -180,16 +180,20 @@ def seed():
 
         db.commit()
 
-        print("=" * 60)
-        print("EXPLICIT SYNTHETIC DEMO CREDENTIALS (GENERATED ONCE)")
-        print("=" * 60)
-        print(f"Admin:    username: admin           password: {admin_pass}")
-        print(f"Teacher:  username: teacher_8a      password: {teacher_8a_pass} (Class 8-A)")
-        print(f"Teacher:  username: teacher_8b      password: {teacher_8b_pass} (Class 8-B)")
-        print(f"Reviewer: username: reviewer_sunita password: {reviewer_pass}")
-        print(f"Student:  student_id: {stu_id}      PIN: {student_pin} (Device: dev_demo_tablet)")
-        print("=" * 60)
-        print("These credentials are NOT stored in source code or docs.")
+        if os.getenv("RENDER", "").lower() == "true":
+            # Hosted run: never write demo credentials to cloud logs.
+            print("Synthetic demo seed complete. Credentials are managed via SETU_DEMO_* env vars.")
+        else:
+            print("=" * 60)
+            print("EXPLICIT SYNTHETIC DEMO CREDENTIALS (GENERATED ONCE)")
+            print("=" * 60)
+            print(f"Admin:    username: admin           password: {admin_pass}")
+            print(f"Teacher:  username: teacher_8a      password: {teacher_8a_pass} (Class 8-A)")
+            print(f"Teacher:  username: teacher_8b      password: {teacher_8b_pass} (Class 8-B)")
+            print(f"Reviewer: username: reviewer_sunita password: {reviewer_pass}")
+            print(f"Student:  student_id: {stu_id}      PIN: {student_pin} (Device: dev_demo_tablet)")
+            print("=" * 60)
+            print("These credentials are NOT stored in source code or docs.")
     finally:
         db.close()
 
