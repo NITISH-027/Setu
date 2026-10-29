@@ -10,6 +10,20 @@ export default function App() {
   const [devSimulateOffline, setDevSimulateOffline] = useState(false);
   const [isSystemOnline, setIsSystemOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [language, setLanguage] = useState('en');
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('setu_theme') || 'emerald';
+    } catch {
+      return 'emerald';
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('setu_theme', theme);
+    } catch {}
+  }, [theme]);
 
   useEffect(() => {
     const handleOnline = () => setIsSystemOnline(true);
@@ -42,12 +56,28 @@ export default function App() {
             <div className="brand-title">Adaptive Learning</div>
           </div>
 
-          {/* Medium Language Switcher */}
+          {/* Theme & Language Selectors */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <select
+              id="theme-select"
+              data-testid="theme-select"
+              aria-label="Color Theme"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              <option value="emerald">🌿 Emerald Jade</option>
+              <option value="amethyst">✨ Velvet Amethyst</option>
+              <option value="amber">🔥 Amber Sunset</option>
+            </select>
+
+            {/* Medium Language Switcher (Failure 5) */}
+            <select
+              id="language-select"
+              data-testid="language-select"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
+              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
             >
               <option value="en">English (Supported)</option>
               <option value="hi">हिंदी (Unreviewed Draft)</option>
@@ -101,6 +131,8 @@ export default function App() {
           <StudentView
             devSimulateOffline={devSimulateOffline}
             onToggleDevOffline={() => setDevSimulateOffline(!devSimulateOffline)}
+            language={language}
+            onLanguageChange={setLanguage}
           />
         )}
         {activeTab === 'teacher' && <TeacherView />}

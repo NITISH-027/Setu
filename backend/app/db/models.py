@@ -41,6 +41,8 @@ class StudentDB(Base):
     medium_language = Column(String, default="en")
     pin_hash = Column(String, nullable=False)
     salt = Column(String, nullable=False)
+    failed_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     consent_status = Column(String, default="not requested")
 
@@ -137,6 +139,7 @@ class TombstoneDB(Base):
     opaque_key = Column(String, unique=True, index=True, nullable=False)
     subject_key = Column(String, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
     status = Column(String, default="pending")  # 'pending', 'applied', 'purged'
     pending_devices = Column(Integer, default=0)
     purged_at = Column(DateTime, nullable=True)
@@ -150,6 +153,38 @@ class DeviceDB(Base):
     registered_at = Column(DateTime, default=datetime.utcnow)
     last_sync_at = Column(DateTime, default=datetime.utcnow)
     device_purge_token = Column(String, index=True, nullable=True)
+
+
+class DeviceSubjectDB(Base):
+    """
+    FIX 1: Tracks per device which student subject_keys have been active on it.
+    Opaque subject_key ONLY. Never stores student_id or any PII.
+    """
+    __tablename__ = "device_subjects"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    device_id = Column(String, index=True, nullable=False)
+    subject_key = Column(String, index=True, nullable=False)
+    last_seen_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint('device_id', 'subject_key', name='uq_device_subject'),)
+
+
+class TombstoneDeliveryDB(Base):
+    """
+    FIX 1: Per-device, per-tombstone delivery and acknowledgment record.
+    Tracks whether a device that held this subject_key has received and acknowledged the purge.
+    Never stores student_id or reason text.
+    """
+    __tablename__ = "tombstone_deliveries"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tombstone_id = Column(Integer, index=True, nullable=False)
+    opaque_tombstone_key = Column(String, index=True, nullable=False)
+    device_id = Column(String, index=True, nullable=False)
+    subject_key = Column(String, index=True, nullable=False)
+    status = Column(String, default="pending")  # 'pending', 'acknowledged'
+    delivered_at = Column(DateTime, nullable=True)
+    acknowledged_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint('tombstone_id', 'device_id', name='uq_tombstone_device'),)
 
 
 

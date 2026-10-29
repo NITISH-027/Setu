@@ -100,6 +100,15 @@ class SimulationHarness:
         results: List[SimulationRunResult] = []
         failures: List[Dict[str, Any]] = []
 
+        # Determine starting concept that actually exercises the planted misconception
+        start_concept = None
+        for q in self.pack.questions:
+            if not getattr(q, 'is_probe', False) and any(opt.misconception_tag == planted_misconception for opt in q.options):
+                start_concept = q.concept
+                break
+        if not start_concept:
+            start_concept = "c8_math_rational_ops"
+
         for i in range(num_students):
             seed = base_seed + i
             rng = random.Random(seed)
@@ -113,8 +122,8 @@ class SimulationHarness:
 
             engine = AdaptiveEngine(self.pack)
             student = Student(pseudonymous_id=learner.student_id, class_id=learner.class_id, pin_hash="h")
-            plan = Plan(student_id=student.pseudonymous_id, class_id=student.class_id, current_concept_id="c8_math_linear_eq_one_var")
-            mastery = MasteryState(student_id=student.pseudonymous_id, concept_id="c8_math_linear_eq_one_var")
+            plan = Plan(student_id=student.pseudonymous_id, class_id=student.class_id, current_concept_id=start_concept)
+            mastery = MasteryState(student_id=student.pseudonymous_id, concept_id=start_concept)
             hyp = None
 
             identified_gap = None

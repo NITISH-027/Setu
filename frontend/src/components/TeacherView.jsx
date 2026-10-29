@@ -55,7 +55,6 @@ export default function TeacherView() {
   const fetchDashboard = async () => {
     if (!authToken) return;
     setErrorMessage('');
-    setActionSuccess('');
     try {
       const res = await fetch(`/api/teacher/class/${selectedClass}`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
@@ -75,8 +74,13 @@ export default function TeacherView() {
 
   const handleApplyOverride = async (e) => {
     e.preventDefault();
-    if (!overrideReason.trim()) {
+    const trimmed = overrideReason.trim();
+    if (!trimmed) {
       setErrorMessage('Override reason is mandatory and cannot be empty.');
+      return;
+    }
+    if (trimmed.length < 3) {
+      setErrorMessage('Teacher override reason must be at least 3 characters.');
       return;
     }
 
@@ -92,7 +96,7 @@ export default function TeacherView() {
           student_id: overrideModal.student_id,
           concept_id: overrideModal.concept_id || 'c8_math_rational_ops',
           action: overrideAction,
-          reason: overrideReason.trim()
+          reason: trimmed
         })
       });
 
@@ -100,6 +104,7 @@ export default function TeacherView() {
         setActionSuccess(`Override successfully applied for ${overrideModal.student_id}. Logged with mandatory reason.`);
         setOverrideModal(null);
         setOverrideReason('');
+        setErrorMessage('');
         fetchDashboard();
       } else {
         const err = await res.json().catch(() => ({}));
@@ -218,10 +223,10 @@ export default function TeacherView() {
         </div>
       )}
 
-      {/* Access Denied Alert for Negative Test Demonstration */}
-      {errorMessage && (
+      {/* Access Denied / Error Alert */}
+      {errorMessage && !overrideModal && (
         <div style={{ marginTop: '16px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '16px', borderRadius: '8px', color: '#fda4af' }}>
-          <strong>Class Scoping Boundary:</strong> {errorMessage}
+          <strong>Error:</strong> {errorMessage}
         </div>
       )}
 
@@ -245,11 +250,77 @@ export default function TeacherView() {
                   <span className="badge-heuristic">Suggested intervention</span>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Students: {clinic.students.join(', ')}
+                  Students: {(clinic.students || clinic.student_ids || []).join(', ')}
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Grouped by Supported Gap */}
+      {dashboard && (
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>
+            Students Grouped by Supported Gap
+          </h3>
+          {Object.keys(dashboard.grouped_by_gap || {}).length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No supported gap groups currently.</p>
+          ) : (
+            Object.entries(dashboard.grouped_by_gap).map(([gapId, students]) => (
+              <div key={gapId} style={{ marginBottom: '16px', padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ fontSize: '14px', color: 'var(--accent-purple)', marginBottom: '8px' }}>
+                  Gap: {gapId} ({students.length} students)
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {students.map((st) => (
+                    <div key={st.student_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-primary)', padding: '10px', borderRadius: '6px' }}>
+                      <div>
+                        <strong>{st.student_id}</strong> • Stage: {st.current_stage} • Concept: {st.current_concept_id}
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{st.suggested_plan_reason}</div>
+                      </div>
+                      <button
+                        id={`override-btn-${st.student_id}`}
+                        data-testid={`override-btn-${st.student_id}`}
+                        onClick={() => setOverrideModal({ student_id: st.student_id, concept_id: st.gap_concept_id || st.current_concept_id })}
+                        className="btn-secondary"
+                        style={{ fontSize: '12px' }}
+                      >
+                        Override
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Undecided Students */}
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>
+            Undecided Students (Thin / Conflicting Evidence or In-Progress)
+          </h3>
+          {(!dashboard.undecided_students || dashboard.undecided_students.length === 0) ? (
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No undecided students.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {dashboard.undecided_students.map((st) => (
+                <div key={st.student_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <div>
+                    <strong>{st.student_id}</strong> • Stage: {st.current_stage} • Reason: {st.suggested_plan_reason}
+                  </div>
+                  <button
+                    id={`override-btn-${st.student_id}`}
+                    data-testid={`override-btn-${st.student_id}`}
+                    onClick={() => setOverrideModal({ student_id: st.student_id, concept_id: st.current_concept_id })}
+                    className="btn-secondary"
+                    style={{ fontSize: '12px' }}
+                  >
+                    Override
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -260,6 +331,11 @@ export default function TeacherView() {
             <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>
               Teacher Pedagogical Override: {overrideModal.student_id}
             </h3>
+            {errorMessage && (
+              <div id="override-error-msg" style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '10px 12px', borderRadius: '6px', color: '#fda4af', fontSize: '13px', marginBottom: '12px' }}>
+                {errorMessage}
+              </div>
+            )}
             <form onSubmit={handleApplyOverride} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Action</label>
@@ -277,6 +353,7 @@ export default function TeacherView() {
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mandatory Pedagogical Reason</label>
                 <textarea
+                  id="override-reason-input"
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
                   placeholder="Explain why the algorithmic sequence is being overridden..."
@@ -286,10 +363,10 @@ export default function TeacherView() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setOverrideModal(null)} className="btn-secondary">
+                <button type="button" onClick={() => { setOverrideModal(null); setErrorMessage(''); }} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="action-btn" style={{ width: 'auto' }}>
+                <button id="apply-override-btn" type="submit" className="action-btn" style={{ width: 'auto' }}>
                   Log & Apply Override
                 </button>
               </div>

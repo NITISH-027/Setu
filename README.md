@@ -20,13 +20,13 @@ All shipped items are author-drafted and unreviewed by default in accordance wit
 | Metric | Shipped Count | Status Label |
 |---|---|---|
 | **Total Concepts** | 20 | 7 Active (Class 8), 13 Spine (Classes 6, 7, 9, 10 labeled `graph-only`) |
-| **Questions** | 89 | At least 8 questions and 2 probes per active concept; wrong options tagged |
-| **Micro-Lessons** | 27 | Foundational & targeted bridges in English, Hindi drafts (5), Telugu drafts (5) |
-| **Hint Ladders** | 89 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) per question |
-| **Total Items Tracked** | 205 | Questions (89), Lessons (27), Hint Ladders (89) |
+| **Questions** | 101 | Active questions and probes across concepts; wrong options tagged |
+| **Micro-Lessons** | 39 | Foundational & targeted bridges in English, Hindi drafts, Telugu drafts |
+| **Hint Ladders** | 101 | 3-tier ladder (level 1 hint, level 2 partial step, level 3 worked step) per question |
+| **Total Items Tracked** | 241 | Questions (101), Lessons (39), Hint Ladders (101) |
 | **Human Reviewed Items** | 0 (0.0%) | `author-drafted, unreviewed` (No human review claims fabricated) |
 | **Curriculum Alignment** | Intended NCERT | Labeled: *"intended NCERT alignment, unverified until references and content are checked"* |
-| **Supported Languages** | 1 (`en`) | Hindi (`hi`: 5 questions, 5 lessons) and Telugu (`te`: 5 questions, 5 lessons) included as unreviewed drafts |
+| **Supported Languages** | 1 (`en`) | Hindi and Telugu drafts included as unreviewed drafts |
 
 ---
 
@@ -68,36 +68,56 @@ Setu provides an offline-first architecture for rural and low-connectivity schoo
 
 ---
 
+## Prerequisites & System Requirements
+- **Python**: **Python 3.11 or newer** is strictly required (`numpy 2.4.6` and `scipy 1.17.1` wheel metadata declares `Requires-Python >= 3.11`). The script `scripts/verify_fresh_install.py` checks the interpreter version before running.
+- **Node.js**: Node.js 18.0 or newer.
+- **Browser**: Google Chrome / Chromium for Playwright browser-level E2E tests.
+
+---
+
 ## Quickstart & Complete Test Verification
 
-### 1. Run Complete Backend & Integration Tests (67 passed)
+### 1. Fresh Installation & Environment Verification
+```bash
+python scripts/verify_fresh_install.py
+```
+Checks Python interpreter (>= 3.11), verifies dependencies, executes backend tests, builds the frontend bundle, and runs JS/Python engine parity.
+
+### 2. Run Complete Backend & Integration Tests
 ```bash
 python -m pytest tests/ -v
 ```
 
-### 2. Run Negative-Control Auth Probes (9/9 passed)
+### 3. Run Negative-Control Auth Probes
 ```bash
 python scripts/negative_control_auth_probes.py
 ```
 
-### 3. Run JavaScript Engine Parity Tests (40/40 checks passed)
+### 4. Run JavaScript Engine Parity Tests (42 Primitive Parity Assertions)
+Verifies mathematical and algorithmic logic parity for engine primitives (BKT, SM-2, sequencer, hypothesis) between Python and JavaScript engines; does not claim complete UI parity:
 ```bash
 cd frontend && npm run test:parity
 ```
 
-### 4. Run Real Browser E2E & Offline Playwright Suite (6/6 passed)
+### 5. Run Real Browser E2E & Offline Playwright Suite (14 Shipped Browser Tests)
 ```bash
 cd frontend && npx playwright test
 ```
-Executes all 6 browser tests against the real FastAPI backend and Vite preview server:
+Executes the shipped browser test suite (14 browser tests across acceptance journeys, mobile viewports, and offline flows) against the real FastAPI backend and Vite preview server on fresh SQLite test database:
+- `acceptance_journeys.spec.js`: Tests A through L covering the full learning journey, stuck override, fast learner, teacher bulk entry, student data export, and content editor schema validator.
 - `layout_and_tabs.spec.js`: Rendered layout and 0 horizontal overflow across all 5 tabs at 360px and 390px.
 - `e2e.spec.js`: Mobile navigation and viewports at 360px and 390px.
+- `offline_deletion_device.spec.js`: Real browser student deletion flow — student A signs in online on Device 1, caches data, goes offline, deleted via real teacher route, reconnects with purge-only token, IndexedDB wiped, offline sign-in fails, acknowledged on server, and second device unaffected.
 - `offline_flow.spec.js`: Comprehensive 10-step offline lifecycle (online login -> offline disconnect -> reload -> offline login -> 3 questions answered & graded locally via JS engine -> IndexedDB reload persistence -> reconnect & authoritative server sync).
 - `reset_wipe.spec.js`: Stale/unregistered device RESET response causing complete client IndexedDB wipe.
 
-### 5. Generate Clean Submission ZIP
+### 6. Generate Clean Submission ZIP (Verified, Excluded Paths Checked)
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/package.ps1
+```
+Or with Python:
+```bash
+python scripts/build_submission_zip.py
 ```
 Or on Linux:
 ```bash

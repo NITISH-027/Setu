@@ -70,10 +70,32 @@ Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel
 # Clean up staging
 Remove-Item -Recurse -Force (Join-Path $rootDir "scratch\package_staging")
 
-Write-Host "`n=== CLEAN PACKAGING COMPLETE ==="
-Write-Host "Total files packaged: $($includedFiles.Count)"
-Write-Host "ZIP Location: $zipPath"
-Write-Host "ZIP Size: $((Get-Item $zipPath).Length / 1KB) KB"
+# Verify ZIP file contents: fail if any excluded path appears
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+$violations = @()
+$zipEntries = @()
+foreach ($entry in $archive.Entries) {
+    $zipEntries += $entry.FullName
+    foreach ($pattern in $excludePatterns) {
+        if ($entry.FullName -match $pattern) {
+            $violations += "VIOLATION: Excluded pattern '$pattern' matched '$($entry.FullName)'"
+        }
+    }
+}
+$archive.Dispose()
 
-Write-Host "`nPackaged Files Summary:"
-$includedFiles | Sort-Object | ForEach-Object { Write-Host "  $_" }
+if ($violations.Count -gt 0) {
+    Write-Error "PACKAGING VERIFICATION FAILED: Excluded paths found inside ${zipPath}:`n$($violations -join "`n")"
+    Remove-Item -Force $zipPath
+    exit 1
+}
+
+Write-Host "`n=== CLEAN PACKAGING COMPLETE ==="
+Write-Host "Total files packaged: $($zipEntries.Count)"
+Write-Host "ZIP Location: $zipPath"
+Write-Host "ZIP Size: $([math]::Round(((Get-Item $zipPath).Length / 1MB), 2)) MB"
+Write-Host "Exclusion Verification: PASSED (zero excluded paths found)"
+
+Write-Host "`nComplete Packaged Files List:"
+$zipEntries | Sort-Object | ForEach-Object { Write-Host "  $_" }

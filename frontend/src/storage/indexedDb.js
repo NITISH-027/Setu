@@ -228,6 +228,56 @@ export async function wipeAllStudentData() {
   });
 }
 
+export async function deleteStudentBySubjectKey(subjectKey) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['profiles', 'learning_states', 'attempts', 'sync_queue'], 'readwrite');
+    const profileStore = tx.objectStore('profiles');
+    const req = profileStore.getAll();
+    req.onsuccess = () => {
+      const profiles = req.result || [];
+      const target = profiles.find((p) => p.subject_key === subjectKey);
+      if (!target) {
+        return resolve({ deleted: false });
+      }
+      const targetStudentId = target.student_id;
+      profileStore.delete(targetStudentId);
+      tx.objectStore('learning_states').delete(targetStudentId);
+
+      const attemptsStore = tx.objectStore('attempts');
+      const attReq = attemptsStore.getAll();
+      attReq.onsuccess = () => {
+        (attReq.result || []).forEach((att) => {
+          if (att.student_id === targetStudentId || att.subject_key === subjectKey) {
+            attemptsStore.delete(att.attempt_id);
+          }
+        });
+      };
+
+      const queueStore = tx.objectStore('sync_queue');
+      const queueReq = queueStore.getAll();
+      queueReq.onsuccess = () => {
+        (queueReq.result || []).forEach((q) => {
+          if (q.student_id === targetStudentId || q.subject_key === subjectKey) {
+            queueStore.delete(q.attempt_id);
+          }
+        });
+      };
+    };
+    tx.oncomplete = () => resolve({ deleted: true });
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function getOrCreateDeviceId() {
+  let devId = await getMeta('device_id');
+  if (!devId) {
+    devId = 'dev_demo_tablet';
+    await setMeta('device_id', devId);
+  }
+  return devId;
+}
+
 // ==========================================
 // Metadata Store
 // ==========================================

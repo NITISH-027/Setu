@@ -8,6 +8,9 @@ const screenshotsDir = path.resolve(__dirname, '..', '..', 'screenshots');
 
 test.describe('FIX 4: Stale Device Reset & Client IndexedDB Wipe', () => {
   test('Browser receives RESET-required response on sync and completely wipes IndexedDB student data', async ({ page }) => {
+    page.on('console', msg => console.log('RESET PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.log('RESET PAGE ERROR:', err.message));
+
     // 1. Visit app and sign in online as student
     await page.goto('http://localhost:4173/');
     await expect(page.locator('.brand-title')).toBeVisible();
@@ -79,11 +82,9 @@ test.describe('FIX 4: Stale Device Reset & Client IndexedDB Wipe', () => {
     expect(beforeWipe.sync_queue).toBeGreaterThan(0);
     expect(beforeWipe.profiles).toBeGreaterThan(0);
 
-    // 3. Reconnect online, intercept sync route to return RESET response (stale or unregistered device policy)
-    await page.context().setOffline(false);
-    await expect(page.locator('#connection-status-badge')).toHaveText('Online');
-
+    // 3. Intercept sync route to return RESET response (stale or unregistered device policy) BEFORE reconnecting
     await page.route('**/api/privacy/sync', async (route) => {
+      console.log('RESET TEST: Intercepted /api/privacy/sync request!');
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -94,12 +95,25 @@ test.describe('FIX 4: Stale Device Reset & Client IndexedDB Wipe', () => {
       });
     });
 
-    // 4. Click sync button
-    await page.click('#sync-now-btn');
+    console.log('RESET TEST: Setting offline false...');
+    await page.context().setOffline(false);
+    await expect(page.locator('#connection-status-badge')).toHaveText('Online');
+    console.log('RESET TEST: Reconnected online!');
+
+    // 4. Trigger sync (either automatic on reconnect or click button if visible)
+    const syncBtn = page.locator('#sync-now-btn');
+    if (await syncBtn.isVisible()) {
+      console.log('RESET TEST: Sync button is visible, waiting for enabled and clicking...');
+      await syncBtn.click({ timeout: 5000 }).catch(err => console.log('RESET TEST: Sync button click caught:', err.message));
+    }
 
     // 5. Verify UI logs out student and displays reset message
-    await expect(page.locator('#student-status-message')).toContainText('Device cache reset required', { timeout: 10000 });
+    console.log('RESET TEST: Waiting for reset message...');
+    const statusMsg = page.locator('#student-status-message');
+    await expect(statusMsg).toBeVisible({ timeout: 15000 });
+    await expect(statusMsg).toContainText('Device cache reset required');
     await expect(page.locator('#student-pin-input')).toBeVisible();
+    console.log('RESET TEST: Student logged out and reset message verified!');
 
     // 6. Verify IndexedDB is completely wiped
     const afterWipe = await page.evaluate(async () => {

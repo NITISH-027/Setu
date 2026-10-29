@@ -1,12 +1,28 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const screenshotsDir = path.resolve(__dirname, '..', '..', 'screenshots');
 
 test.describe('Mobile Viewport & Phone Layout Tests', () => {
+
+  test.beforeEach(async () => {
+    try {
+      const scriptPath = path.resolve(__dirname, '..', '..', 'scripts', 'seed_e2e_fixtures.py');
+      execSync(`python "${scriptPath}"`, {
+        env: {
+          ...process.env,
+          SETU_TEST_ENV: '1',
+          DATABASE_URL: 'sqlite:///./setu_test.db'
+        }
+      });
+    } catch (e) {
+      console.warn('Seed reset warning:', e.message);
+    }
+  });
 
   test('Layout and navigation at 360px viewport', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 640 });
@@ -49,16 +65,19 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_390px.png'), fullPage: true });
 
     // Switch to Teacher Dashboard and sign in as teacher
-    await page.click('text=Teacher Dashboard');
+    await page.click('#tab-teacher');
     await expect(page.locator('text=Teacher Sign-In')).toBeVisible();
     await page.fill('#teacher-username-input', 'tea_e2e_8a');
     await page.fill('#teacher-password-input', 'tea_e2e_pass');
-    await page.click('#teacher-signin-btn');
-    await expect(page.locator('text=Teacher Control Dashboard')).toBeVisible();
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/auth/login')),
+      page.click('#teacher-signin-btn')
+    ]);
+    await expect(page.locator('text=Teacher Control Dashboard')).toBeVisible({ timeout: 15000 });
     await page.screenshot({ path: path.join(screenshotsDir, 'teacher_dashboard.png'), fullPage: true });
 
     // Switch to Student App and sign in
-    await page.click('text=Student App (Phone)');
+    await page.goto('http://localhost:4173/');
     await expect(page.locator('text=Student Sign-In')).toBeVisible();
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');

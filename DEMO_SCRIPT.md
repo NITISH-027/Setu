@@ -1,53 +1,53 @@
 # Setu 3-Minute Demo Video Script
-**Setting**: Screen recording with voiceover (No real children, strictly synthetic demo students).  
-**Total Target Time**: 2 minutes 50 seconds.
+**Setting**: Screen recording with voiceover (No real children; strictly synthetic demo profiles).  
+**Target Time**: 2 minutes 50 seconds.  
+**Honesty Disclaimers**: All content is author-drafted and unreviewed (0.0% reviewed). Mastery estimates are hand-set and uncalibrated. No compliance claims are made.
 
 ---
 
-### [0:00 - 0:25] Opening: Context & Core Claim
-- **Visual**: Setu UI loaded on screen (`http://localhost:5173`). Showing the Student App in phone-width container (460px) and honest badge labels.
+### [0:00 - 0:25] Opening: Context & Honest Claims
+- **Visual**: Setu UI loaded on screen (`http://localhost:5173`). Showing the Student App in mobile view (390px) with clearly visible honest badges: *Stage: Solve*, *Mastery: uncalibrated, hand-set*, and footer disclaimer: *"A wrong answer is a hypothesis, not a diagnosis. Inside an authored concept graph."*
 - **Voiceover**:  
-  *"This is Setu, a teacher-controlled adaptive learning system built for Classes 6 to 10 for the Code Kernel '26 hackathon.  
-  Our core claim: Setu finds the likely prerequisite gap behind a wrong answer, with evidence and stated uncertainty, inside an authored concept graph.  
-  Notice our rule of honesty right away: a wrong answer is a working hypothesis, not a diagnosis. Two numbers are never conflated: BKT mastery estimate is clearly labeled 'uncalibrated, hand-set', while evidence score is a rule-based heuristic labeled 'heuristic evidence score'. All profiles shown today are synthetic."*
+  *"This is Setu, an adaptive learning system built for Classes 6 to 10 that keeps the teacher firmly in command.  
+  Our core claim: Setu identifies the likely prerequisite gap behind a student's mistake, with evidence and stated uncertainty, inside an authored concept graph.  
+  We make no inflated claims: mastery estimates are clearly labeled 'uncalibrated, hand-set', evidence is a 'rule-based heuristic', and our CBSE Class 8 content is author-drafted and unreviewed. Today's demonstration uses strictly synthetic student profiles."*
 
 ---
 
-### [0:25 - 1:05] Student Flow: Wrong Answer → Hypothesis → Probes → Trace
-- **Visual**: Student `stu_demo_01` attempts equation: `x + 7 = 3`. Clicks option `x = 4` (integer subtraction misconception).
+### [0:25 - 1:15] Student Screen: Wrong Answer → Hypothesis → Probes → Micro-Lesson
+- **Visual**: Student attempts Class 8 Linear Equations question: `Solve for x: x + 7 = 14`. Selects wrong option with transposition misconception.
 - **Voiceover**:  
-  *"Our synthetic student answers `x = 4`. Notice what happens: the system does NOT jump to a conclusion. It opens a hypothesis with score band 'Low' and initiates a focused prerequisite probe.  
-  Next question: the probe checks Class 6 integers: 'What is 3 - 7?'. The student chooses `4`.  
-  Now that probe evidence supports the gap, Setu traverses the prerequisite graph backwards. It traces the struggle from Class 8 Linear Equations back to the Class 6 foundational concept: 'Addition and Subtraction of Integers'. This is an evidence-backed trace within our authored graph, not an unverified claim of causation."*
+  *"The student makes an initial mistake on standard practice. Rather than assuming a diagnosis, Setu opens a working hypothesis with score band 'Low' and transitions to a diagnostic probe.  
+  The stage badge changes to 'probe' with an explicit banner: 'Diagnostic Probe: Checking foundational prerequisite understanding'.  
+  Notice our crucial engine design: diagnostic probes do NOT penalize the student on the stuck counter.  
+  The student attempts the diagnostic probe. Because probe evidence confirms the struggle with integer operations, Setu traverses the prerequisite graph back to Class 6 addition and subtraction of integers.  
+  Next, the student is served a dedicated micro-lesson screen in their selected language. The screen provides clear instruction, a language status badge, and an explicit 'Continue' button."*
 
 ---
 
-### [1:05 - 1:40] Bridge Micro-Lesson → Re-Check Routing
-- **Visual**: PWA displays the micro-lesson bridge explaining negative integer subtraction on a number line, then moves to Bridge Re-Check.
+### [1:15 - 1:50] Bridge Re-Check & Return to Original Topic
+- **Visual**: Student clicks 'Continue' on the lesson screen. The stage badge transitions to 'bridge_recheck'. Student answers correctly. The screen returns to 'solve' stage with the message 'Returned to original topic: Practice resumed'.
 - **Voiceover**:  
-  *"Setu delivers a short, simple micro-lesson bridge. Once reviewed, it administers a short adaptive re-check.  
-  On passing the re-check, the student returns to their original topic. If they struggle repeatedly, the rule sequencer flags the teacher for small-group intervention."*
+  *"Clicking Continue explicitly advances the learning plan to Bridge Re-check. Here, the student answers a focused prerequisite verification question.  
+  Upon answering correctly, Setu closes the bridge and returns the student directly to their original Class 8 topic with an updated mastery estimate.  
+  Had the student struggled repeatedly on the bridge or consecutive solve attempts, the system would immediately transition to a Teacher Flag screen rather than trapping the student in an endless loop."*
 
 ---
 
-### [1:40 - 2:15] Teacher Dashboard: Grouped Gaps, Uncertainty & Override
-- **Visual**: Switch to 'Teacher Dashboard' tab. Select Class 8-A.
+### [1:50 - 2:25] Teacher Control Dashboard: Shared Gaps, Clinics & Overrides
+- **Visual**: Teacher signs in with teacher credentials for Class 8-A. The dashboard displays Override Rate, Supported Gap Groups, and Recommended 10-Minute Small-Group Clinics.
 - **Voiceover**:  
-  *"Switching to the Teacher Dashboard. A teacher sees only their assigned class. Notice the grouping: students who share the supported Class 6 integer gap are grouped together, and Setu recommends a 10-minute targeted clinic.  
-  Crucially, look at the Undecided section: students with thin or conflicting probe evidence are labeled 'not sure' and kept separate—never forced into a false diagnosis.  
-  The teacher stays in full command. With one click, the teacher can override any plan, assign a new topic, or mark a gap closed, with a mandatory reason logged for parent remedial reports. Notice our override rate metric updating in real time as our primary quality signal."*
+  *"Switching to the Teacher Dashboard. A teacher sees only their assigned class—cross-class access strictly returns HTTP 403.  
+  Students who share a confirmed foundational gap are grouped together, and Setu recommends a targeted 10-minute remedial clinic.  
+  Students with conflicting or thin probe evidence are kept separate under 'Undecided' labeled 'not sure'—preventing algorithmic over-diagnosis.  
+  Teachers can override any plan with one click: assigning a concept, marking a gap cleared, or requesting reinforcement. Every override requires a mandatory logged reason, updating the teacher override rate in real time as our primary quality metric."*
 
 ---
 
-### [2:15 - 2:35] India Fit: Offline PWA & Sibling PIN
-- **Visual**: Click 'Mode: Disconnected (Offline)'. Submit an answer. Show attempt stored in local sync queue. Reconnect and click 'Sync'.
+### [2:25 - 2:50] Paper Mode Bulk Entry & Offline-First Resiliency
+- **Visual**: Switch to 'Paper Mode' tab. Teacher enters student responses from paper sheets. Real server processing confirms graded count and student state updates. Switch to 'Data & Privacy' tab to show student data export with zero secret leakage.
 - **Voiceover**:  
-  *"Setu is engineered for Indian contexts. It functions as an offline-first PWA with local IndexedDB storage. Students on low-data connections can complete an entire week's practice completely offline. When network returns, queued writes synchronize smoothly. Shared family phones are protected with sibling PIN profiles and lockout protection."*
-
----
-
-### [2:35 - 2:50] Privacy & Data Controls: Deletion & Opaque Tombstones
-- **Visual**: Switch to 'Data & Privacy' tab. Click 'Purge Student'. Show opaque tombstone generated and pending device sync status.
-- **Voiceover**:  
-  *"Finally, our data protection controls. Deleting a student removes their learning payload across server databases and caches. Offline devices are managed via opaque tombstones holding zero student identifiers. Notice that the server visibly states 'Deletion pending on 1 device' until the device syncs and purges its local cache. No false claims of full deletion are ever made while a tombstone is pending.  
-  Setu keeps technology honest, transparent, and under the teacher's control. Thank you."*
+  *"For low-resource classrooms, Paper Mode allows teachers to bulk-enter physical test responses directly through the grading engine.  
+  On shared family phones, Setu operates completely offline as a PWA using local IndexedDB storage, synchronizing securely when connectivity returns.  
+  Students and teachers can export their learning logs at any time with complete data isolation and zero secret leakage.  
+  Setu keeps adaptive learning transparent, honest, and under teacher command. Thank you."*

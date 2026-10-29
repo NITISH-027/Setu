@@ -71,6 +71,9 @@ class PackValidator:
                 message=f"Misconception tag '{tag}' is referenced in wrong options but has no corresponding probe question."
             ))
 
+        # 4. Check hints structural and mathematical integrity
+        self._validate_hints(pack, issues)
+
         is_valid = len([i for i in issues if i.severity == "ERROR"]) == 0
         return PackValidationResult(is_valid=is_valid, issues=issues)
 
@@ -203,3 +206,83 @@ class PackValidator:
                     ))
             except ValueError:
                 pass
+
+    def _validate_hints(self, pack: ContentPack, issues: List[ValidationIssue]):
+        """
+        Validate hints:
+        1. Non-empty steps (level 1, level 2, level 3).
+        2. No dangling question references.
+        3. Level 3 worked step does not contradict the declared correct option.
+        """
+        import re
+        if not hasattr(pack, "hints") or not pack.hints:
+            return
+
+        q_map = {q.id: q for q in pack.questions}
+
+        for h in pack.hints:
+            if h.question_id not in q_map:
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    code="DANGLING_HINT",
+                    message=f"Hint references non-existent question '{h.question_id}'.",
+                    item_id=h.question_id
+                ))
+                continue
+
+            if not h.level_1_hint or not h.level_1_hint.strip():
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    code="EMPTY_HINT_STEP",
+                    message=f"Hint for question '{h.question_id}' has empty level 1 hint.",
+                    item_id=h.question_id
+                ))
+            if not h.level_2_partial_step or not h.level_2_partial_step.strip():
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    code="EMPTY_HINT_STEP",
+                    message=f"Hint for question '{h.question_id}' has empty level 2 partial step.",
+                    item_id=h.question_id
+                ))
+            if not h.level_3_worked_step or not h.level_3_worked_step.strip():
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    code="EMPTY_HINT_STEP",
+                    message=f"Hint for question '{h.question_id}' has empty level 3 worked step.",
+                    item_id=h.question_id
+                ))
+
+            # Mathematical / answer contradiction check
+            q = q_map[h.question_id]
+            correct_opt = next((o for o in q.options if o.is_correct), None)
+            if correct_opt and h.level_3_worked_step:
+                opt_text = correct_opt.text.strip()
+                l3 = h.level_3_worked_step
+
+                opt_var_match = re.search(r"\b([a-zA-Z])\s*=\s*([-+]?\d+)\b", opt_text)
+                if opt_var_match:
+                    var, val = opt_var_match.group(1), opt_var_match.group(2)
+                    hint_final_nums = re.findall(r"=\s*([-+]?\d+)\b", l3)
+                    if hint_final_nums and hint_final_nums[-1] != val:
+                        issues.append(ValidationIssue(
+                            severity="ERROR",
+                            code="HINT_ANSWER_CONTRADICTION",
+                            message=(
+                                f"Hint for '{h.question_id}' concludes with value '{hint_final_nums[-1]}', "
+                                f"contradicting correct option '{var} = {val}'."
+                            ),
+                            item_id=h.question_id
+                        ))
+                elif re.match(r"^[-+]?\d+$", opt_text):
+                    opt_val = opt_text
+                    hint_final_nums = re.findall(r"=\s*([-+]?\d+)\b", l3)
+                    if hint_final_nums and hint_final_nums[-1] != opt_val:
+                        issues.append(ValidationIssue(
+                            severity="ERROR",
+                            code="HINT_ANSWER_CONTRADICTION",
+                            message=(
+                                f"Hint for '{h.question_id}' concludes with value '{hint_final_nums[-1]}', "
+                                f"contradicting correct option '{opt_val}'."
+                            ),
+                            item_id=h.question_id
+                        ))

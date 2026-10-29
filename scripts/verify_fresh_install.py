@@ -25,6 +25,15 @@ def main():
     print("  SETU FRESH INSTALLATION VERIFICATION")
     print("=" * 60)
 
+    # 0. Check interpreter version first (numpy 2.4.6 and scipy 1.17.1 declare Requires-Python >= 3.11)
+    print(f"Detected Python Interpreter: {sys.executable}")
+    print(f"Detected Python Version: {sys.version}")
+    if sys.version_info < (3, 11):
+        print(f"\nERROR: Python 3.11 or newer is required by Setu dependencies (found {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}).")
+        print("Please upgrade your Python interpreter to Python 3.11 or newer before running Setu.")
+        sys.exit(1)
+    print(f"SUCCESS: Python version check passed ({sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro} >= 3.11)\n")
+
     # 1. Verify Python backend dependencies
     run_cmd(
         f'"{sys.executable}" -m pytest --version',
@@ -44,6 +53,13 @@ def main():
         "npm run build",
         cwd=frontend_dir,
         description="Build frontend Vite production bundle"
+    )
+
+    # 4. Run JS/Python parity check suite
+    run_cmd(
+        "node test_parity.js",
+        cwd=frontend_dir,
+        description="Run JS/Python engine parity test suite"
     )
 
     print("\n" + "=" * 60)

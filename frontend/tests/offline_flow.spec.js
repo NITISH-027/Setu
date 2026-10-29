@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,6 +10,13 @@ const screenshotsDir = path.resolve(__dirname, '..', '..', 'screenshots');
 test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
 
   test('Comprehensive offline learn-solve-grade flow with real network disconnection and sync', async ({ page, context }) => {
+    // Reset stu_e2e_01 attempts and plan so it starts fresh for this test
+    const backendDir = path.resolve(__dirname, '..', '..', 'backend');
+    execSync(
+      `python -c "import sqlite3; con = sqlite3.connect('setu_test.db'); cur = con.cursor(); cur.execute('DELETE FROM attempts WHERE student_id=\\'stu_e2e_01\\''); cur.execute('UPDATE plans SET current_stage=\\'solve\\', stuck_attempts_count=0, bridge_recheck_fails=0 WHERE student_id=\\'stu_e2e_01\\''); con.commit(); con.close()"`,
+      { cwd: backendDir }
+    );
+
     page.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()));
     page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
 
@@ -99,6 +107,14 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await expect(page.locator('#connection-status-badge')).toHaveText('Offline');
     await page.screenshot({ path: path.join(screenshotsDir, '05b_offline_signin_success.png'), fullPage: true });
 
+    // 5c. Verify offline hints appear (Fix 4)
+    await expect(page.locator('#request-hint-btn')).toBeVisible();
+    await page.click('#request-hint-btn');
+    await expect(page.locator('#hint-display-card')).toBeVisible();
+    const hintText = await page.locator('#hint-level-1-text').textContent();
+    expect(hintText.trim().length).toBeGreaterThan(0);
+    await page.screenshot({ path: path.join(screenshotsDir, '05c_offline_hint_displayed.png'), fullPage: true });
+
     // ----------------------------------------------------
     // STEP 6: Answer at least 3 questions offline including one wrong answer
     // ----------------------------------------------------
@@ -180,7 +196,111 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await expect(page.locator('#queued-count-badge')).toHaveText('Queued: 0', { timeout: 15000 });
     await expect(page.locator('#mastery-estimate-badge')).toBeVisible();
     await expect(page.locator('#sync-now-btn')).toHaveText('Queue Empty');
+
+    // BLOCKER FIX: Verify server has actually saved the synced attempts (not discarded!)
+    const out = execSync(
+      `python -c "import sqlite3; con = sqlite3.connect('setu_test.db'); cur = con.cursor(); cur.execute('SELECT COUNT(*) FROM attempts WHERE student_id=\\'stu_e2e_01\\''); print(cur.fetchone()[0]); con.close()"`,
+      { cwd: backendDir }
+    ).toString().trim();
+    const serverAttemptCount = parseInt(out, 10);
+    expect(serverAttemptCount).toBeGreaterThanOrEqual(3);
+
+    // Verify phone/server state agreement after sync (Fix 2)
+    const localLearningState = await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        const req = indexedDB.open('SetuOfflineDB', 1);
+        req.onsuccess = () => {
+          const db = req.result;
+          const tx = db.transaction('learning_states', 'readonly');
+          const getReq = tx.objectStore('learning_states').get('stu_e2e_01');
+          getReq.onsuccess = () => {
+            const res = getReq.result;
+            resolve(res ? (res.state || res) : null);
+          };
+        };
+      });
+    });
+    expect(localLearningState).toBeTruthy();
+    expect(localLearningState.concept_id).toBe('c8_math_linear_eq_one_var');
+    expect(localLearningState.stage).toBeDefined();
+
     await page.screenshot({ path: path.join(screenshotsDir, '10_synced_authoritative_mastery.png'), fullPage: true });
+  });
+
+  test('Offline bridge re-check selects questions from gapConcept not primary topic', async ({ page, context }) => {
+    // Test Fix 1: Ensure bridge re-check offline selects question from gapConcept
+    page.on('console', msg => console.log('T2 LOG:', msg.text()));
+    page.on('pageerror', err => console.log('T2 ERROR:', err.message));
+    const backendDir = path.resolve(__dirname, '..', '..', 'backend');
+
+    // 1. Visit app and sign in online to cache pack
+    await page.goto('http://localhost:4173/');
+    await page.fill('#student-id-input', 'stu_e2e_02');
+    await page.fill('#student-pin-input', '9876');
+    await page.click('#student-signin-btn');
+    await expect(page.locator('.info-card')).toBeVisible({ timeout: 10000 });
+
+    // Wait until pack and profile are stored in IndexedDB
+    await page.waitForFunction(async () => {
+      return new Promise((resolve) => {
+        const req = indexedDB.open('SetuOfflineDB', 1);
+        req.onsuccess = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('packs') || !db.objectStoreNames.contains('profiles')) return resolve(false);
+          const tx = db.transaction(['packs', 'profiles'], 'readonly');
+          const pReq = tx.objectStore('packs').get('8-A');
+          const prReq = tx.objectStore('profiles').get('stu_e2e_02');
+          let hasPack = false;
+          let hasProfile = false;
+          pReq.onsuccess = () => { if (pReq.result) hasPack = true; };
+          prReq.onsuccess = () => { if (prReq.result) hasProfile = true; };
+          tx.oncomplete = () => resolve(hasPack && hasProfile);
+          tx.onerror = () => resolve(false);
+        };
+        req.onerror = () => resolve(false);
+      });
+    }, null, { timeout: 15000 });
+
+    // Seed offline learning_states directly into IndexedDB for bridge_recheck with gapConcept
+    await page.evaluate(async () => {
+      return new Promise((resolve) => {
+        const req = indexedDB.open('SetuOfflineDB', 1);
+        req.onsuccess = () => {
+          const db = req.result;
+          const tx = db.transaction('learning_states', 'readwrite');
+          tx.objectStore('learning_states').put({
+            student_id: 'stu_e2e_02',
+            state: {
+              stage: 'bridge_recheck',
+              concept_id: 'c8_math_linear_eq_one_var',
+              gap_concept_id: 'c6_math_integers_add_sub',
+              mastery: 0.35,
+              stuck_attempts: 0,
+              bridge_recheck_fails: 0
+            },
+            updated_at: new Date().toISOString()
+          });
+          tx.oncomplete = () => resolve(true);
+        };
+      });
+    });
+
+    // 2. Go offline
+    await context.setOffline(true);
+    await page.reload();
+
+    // 3. Sign in offline
+    await page.fill('#student-id-input', 'stu_e2e_02');
+    await page.fill('#student-pin-input', '9876');
+    await page.click('#student-signin-btn');
+
+    // 4. Verify stage is bridge_recheck
+    await expect(page.locator('.badge-stage')).toHaveText('bridge_recheck', { timeout: 10000 });
+
+    // 5. Verify the question presented belongs to the prerequisite gapConcept ('c6_math_integers_add_sub'), NOT 'c8_math_linear_eq_one_var'
+    await expect(page.locator('#question-card')).toBeVisible();
+    const activeConcept = await page.locator('#question-card').getAttribute('data-concept');
+    expect(activeConcept).toBe('c6_math_integers_add_sub');
   });
 
 });

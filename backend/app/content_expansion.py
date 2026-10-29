@@ -1125,4 +1125,345 @@ def get_expansion_items() -> Tuple[List[Question], List[Lesson], List[HintLadder
         review_record=make_draft_rr()
     ))
 
+    # =========================================================================
+    # FIX 6: Extended Hindi and Telugu Drafts across all Active Class 8 Concepts
+    # Marked 'author-drafted, unreviewed'
+    # =========================================================================
+
+    # 1. c8_math_rational_ops (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_rat_hi_01",
+        concept="c8_math_rational_ops",
+        difficulty=0.3,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: (2/5) + (1/5)",
+        options=[
+            Option(id="opt_hi_1", text="3/5", is_correct=True, numeric_value=0.6),
+            Option(id="opt_hi_2", text="3/10", is_correct=False, misconception_tag="tag_adding_denominators_directly", numeric_value=0.3),
+            Option(id="opt_hi_3", text="2/25", is_correct=False, misconception_tag="tag_reciprocal_error_division", numeric_value=0.08)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_rat_hi_01",
+        level_1_hint="[ड्राफ्ट] जब हर समान हों, तो केवल अंशों को जोड़ें।",
+        level_2_partial_step="[ड्राफ्ट] (2 + 1) / 5 = 3 / 5",
+        level_3_worked_step="[ड्राफ्ट] उत्तर 3/5 है।",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_rat_te_01",
+        concept="c8_math_rational_ops",
+        difficulty=0.3,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: (2/5) + (1/5)",
+        options=[
+            Option(id="opt_te_1", text="3/5", is_correct=True, numeric_value=0.6),
+            Option(id="opt_te_2", text="3/10", is_correct=False, misconception_tag="tag_adding_denominators_directly", numeric_value=0.3),
+            Option(id="opt_te_3", text="2/25", is_correct=False, misconception_tag="tag_reciprocal_error_division", numeric_value=0.08)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_rat_te_01",
+        level_1_hint="[డ్రాఫ్ట్] హారాలు సమానంగా ఉన్నప్పుడు లవాలను మాత్రమే కూడండి.",
+        level_2_partial_step="[డ్రాఫ్ట్] (2 + 1) / 5 = 3 / 5",
+        level_3_worked_step="[డ్రాఫ్ట్] సమాధానం 3/5.",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_rat_01",
+        concept="c8_math_rational_ops",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] समान हर वाले परिमेय संख्याओं का जोड़: केवल अंशों को जोड़ें, हर अपरिवर्तित रहता है।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_rat_01",
+        concept="c8_math_rational_ops",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] సమాన హారాలు గల అకరణీయ సంఖ్యల సంకలనం: లవాలను మాత్రమే కూడాలి, హారం మారదు.",
+        review_record=make_draft_rr()
+    ))
+
+    # 2. c8_math_linear_eq_variables_both_sides (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_leq_both_hi_01",
+        concept="c8_math_linear_eq_variables_both_sides",
+        difficulty=0.4,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: 5x + 3 = 2x + 12",
+        options=[
+            Option(id="opt_hi_1", text="x = 3", is_correct=True, numeric_value=3.0),
+            Option(id="opt_hi_2", text="x = 5", is_correct=False, misconception_tag="tag_sign_error_on_transposition", numeric_value=5.0),
+            Option(id="opt_hi_3", text="x = 2", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=2.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_leq_both_hi_01",
+        level_1_hint="[ड्राफ्ट] 2x को बाईं ओर और 3 को दाईं ओर ले जाएं।",
+        level_2_partial_step="[ड्राफ्ट] 5x - 2x = 12 - 3 => 3x = 9",
+        level_3_worked_step="[ड्राफ्ट] x = 9 / 3 = 3",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_leq_both_te_01",
+        concept="c8_math_linear_eq_variables_both_sides",
+        difficulty=0.4,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: 5x + 3 = 2x + 12",
+        options=[
+            Option(id="opt_te_1", text="x = 3", is_correct=True, numeric_value=3.0),
+            Option(id="opt_te_2", text="x = 5", is_correct=False, misconception_tag="tag_sign_error_on_transposition", numeric_value=5.0),
+            Option(id="opt_te_3", text="x = 2", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=2.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_leq_both_te_01",
+        level_1_hint="[డ్రాఫ్ట్] 2x ను ఎడమవైపునకు, 3 ను కుడివైపునకు బదిలీ చేయండి.",
+        level_2_partial_step="[డ్రాఫ్ట్] 5x - 2x = 12 - 3 => 3x = 9",
+        level_3_worked_step="[డ్రాఫ్ట్] x = 9 / 3 = 3",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_leq_both_01",
+        concept="c8_math_linear_eq_variables_both_sides",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] दोनों पक्षों में चर: चर पदों को एक पक्ष में और अचर पदों को दूसरे पक्ष में पक्षांतरित करें।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_leq_both_01",
+        concept="c8_math_linear_eq_variables_both_sides",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] ఇరువైపులా చరరాశులు: చరరాశి పదాలను ఒకవైపు, స్థిరపదాలను మరొకవైపునకు తీసుకురండి.",
+        review_record=make_draft_rr()
+    ))
+
+    # 3. c8_math_squares_square_roots (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_sq_hi_01",
+        concept="c8_math_squares_square_roots",
+        difficulty=0.3,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: √144 का मान क्या है?",
+        options=[
+            Option(id="opt_hi_1", text="12", is_correct=True, numeric_value=12.0),
+            Option(id="opt_hi_2", text="72", is_correct=False, misconception_tag="tag_squaring_as_doubling", numeric_value=72.0),
+            Option(id="opt_hi_3", text="14", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=14.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_sq_hi_01",
+        level_1_hint="[ड्राफ्ट] किस संख्या को स्वयं से गुणा करने पर 144 मिलता है?",
+        level_2_partial_step="[ड्राफ्ट] 12 × 12 = 144",
+        level_3_worked_step="[ड्राफ्ट] √144 = 12",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_sq_te_01",
+        concept="c8_math_squares_square_roots",
+        difficulty=0.3,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: √144 విలువ ఎంత?",
+        options=[
+            Option(id="opt_te_1", text="12", is_correct=True, numeric_value=12.0),
+            Option(id="opt_te_2", text="72", is_correct=False, misconception_tag="tag_squaring_as_doubling", numeric_value=72.0),
+            Option(id="opt_te_3", text="14", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=14.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_sq_te_01",
+        level_1_hint="[డ్రాఫ్ట్] ఏ సంఖ్యను అదే సంఖ్యతో గుణిస్తే 144 వస్తుంది?",
+        level_2_partial_step="[డ్రాఫ్ట్] 12 × 12 = 144",
+        level_3_worked_step="[డ్రాఫ్ట్] √144 = 12",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_sq_01",
+        concept="c8_math_squares_square_roots",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] वर्गमूल: वर्गमूल वह संख्या है जिसका वर्ग मूल संख्या के बराबर होता है (12² = 144 => √144 = 12)।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_sq_01",
+        concept="c8_math_squares_square_roots",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] వర్గమూలం: ఒక సంఖ్యను అదే సంఖ్యతో గుణించినప్పుడు వచ్చే లబ్దమే వర్గం (12² = 144 => √144 = 12).",
+        review_record=make_draft_rr()
+    ))
+
+    # 4. c8_math_exponents_powers (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_exp_hi_01",
+        concept="c8_math_exponents_powers",
+        difficulty=0.4,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: 3² × 3³ का मान घातांक रूप में क्या है?",
+        options=[
+            Option(id="opt_hi_1", text="3⁵", is_correct=True),
+            Option(id="opt_hi_2", text="3⁶", is_correct=False, misconception_tag="tag_multiplying_bases_adding_exponents_wrong"),
+            Option(id="opt_hi_3", text="9⁵", is_correct=False, misconception_tag="tag_multiplying_bases_adding_exponents_wrong")
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_exp_hi_01",
+        level_1_hint="[ड्राफ्ट] जब आधार समान हो, तो गुणा में घातांक जुड़ते हैं।",
+        level_2_partial_step="[ड्राफ्ट] 3^(2 + 3) = 3⁵",
+        level_3_worked_step="[ड्राफ्ट] उत्तर 3⁵ है।",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_exp_te_01",
+        concept="c8_math_exponents_powers",
+        difficulty=0.4,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: 3² × 3³ విలువ ఘాతాంక రూపంలో ఎంత?",
+        options=[
+            Option(id="opt_te_1", text="3⁵", is_correct=True),
+            Option(id="opt_te_2", text="3⁶", is_correct=False, misconception_tag="tag_multiplying_bases_adding_exponents_wrong"),
+            Option(id="opt_te_3", text="9⁵", is_correct=False, misconception_tag="tag_multiplying_bases_adding_exponents_wrong")
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_exp_te_01",
+        level_1_hint="[డ్రాఫ్ట్] భూములు సమానంగా ఉన్నప్పుడు గుణకారంలో ఘాతాలను కూడండి.",
+        level_2_partial_step="[డ్రాఫ్ట్] 3^(2 + 3) = 3⁵",
+        level_3_worked_step="[డ్రాఫ్ట్] సమాధానం 3⁵.",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_exp_01",
+        concept="c8_math_exponents_powers",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] घातांकों का नियम: aᵐ × aⁿ = aᵐ⁺ⁿ। समान आधार होने पर घातांक जुड़ जाते हैं।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_exp_01",
+        concept="c8_math_exponents_powers",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] ఘాతాంకాల నియమం: aᵐ × aⁿ = aᵐ⁺ⁿ. భూములు సమానంగా ఉంటే ఘాతాలు కలుస్తాయి.",
+        review_record=make_draft_rr()
+    ))
+
+    # 5. c8_math_algebraic_identities (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_alg_id_hi_01",
+        concept="c8_math_algebraic_identities",
+        difficulty=0.5,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: (x + 3)² का विस्तार क्या है?",
+        options=[
+            Option(id="opt_hi_1", text="x² + 6x + 9", is_correct=True),
+            Option(id="opt_hi_2", text="x² + 9", is_correct=False, misconception_tag="tag_missing_middle_term_identity"),
+            Option(id="opt_hi_3", text="x² + 6x + 6", is_correct=False, misconception_tag="tag_missing_middle_term_identity")
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_alg_id_hi_01",
+        level_1_hint="[ड्राफ्ट] सर्वसमिका लागू करें: (a + b)² = a² + 2ab + b²।",
+        level_2_partial_step="[ड्राफ्ट] x² + 2(x)(3) + 3²",
+        level_3_worked_step="[ड्राफ्ट] x² + 6x + 9",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_alg_id_te_01",
+        concept="c8_math_algebraic_identities",
+        difficulty=0.5,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: (x + 3)² విస్తరణ ఏమిటి?",
+        options=[
+            Option(id="opt_te_1", text="x² + 6x + 9", is_correct=True),
+            Option(id="opt_te_2", text="x² + 9", is_correct=False, misconception_tag="tag_missing_middle_term_identity"),
+            Option(id="opt_te_3", text="x² + 6x + 6", is_correct=False, misconception_tag="tag_missing_middle_term_identity")
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_alg_id_te_01",
+        level_1_hint="[డ్రాఫ్ట్] సర్వసమీకరణం ఉపయోగించండి: (a + b)² = a² + 2ab + b².",
+        level_2_partial_step="[డ్రాఫ్ట్] x² + 2(x)(3) + 3²",
+        level_3_worked_step="[డ్రాఫ్ట్] x² + 6x + 9",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_alg_id_01",
+        concept="c8_math_algebraic_identities",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] बीजीय सर्वसमिका: (a + b)² = a² + 2ab + b²। मध्य पद 2ab को कभी मत भूलें।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_alg_id_01",
+        concept="c8_math_algebraic_identities",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] బీజీయ సర్వసమీకరణం: (a + b)² = a² + 2ab + b². మధ్య పదం 2ab ఎల్లప్పుడూ రాయాలి.",
+        review_record=make_draft_rr()
+    ))
+
+    # 6. c8_math_comparing_quantities_percentages (Hindi & Telugu drafts)
+    questions.append(Question(
+        id="q_c8_pct_hi_01",
+        concept="c8_math_comparing_quantities_percentages",
+        difficulty=0.4,
+        language="hi",
+        question_text="[ड्राफ्ट] हल कीजिए: 200 का 25% कितना होगा?",
+        options=[
+            Option(id="opt_hi_1", text="50", is_correct=True, numeric_value=50.0),
+            Option(id="opt_hi_2", text="25", is_correct=False, misconception_tag="tag_percent_as_raw_value", numeric_value=25.0),
+            Option(id="opt_hi_3", text="8", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=8.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_pct_hi_01",
+        level_1_hint="[ड्राफ्ट] 25% का अर्थ है (25 / 100)।",
+        level_2_partial_step="[ड्राफ्ट] (25 / 100) × 200",
+        level_3_worked_step="[ड्राफ्ट] 25 × 2 = 50",
+        review_record=make_draft_rr()
+    ))
+    questions.append(Question(
+        id="q_c8_pct_te_01",
+        concept="c8_math_comparing_quantities_percentages",
+        difficulty=0.4,
+        language="te",
+        question_text="[డ్రాఫ్ట్] సాధించండి: 200 లో 25% ఎంత?",
+        options=[
+            Option(id="opt_te_1", text="50", is_correct=True, numeric_value=50.0),
+            Option(id="opt_te_2", text="25", is_correct=False, misconception_tag="tag_percent_as_raw_value", numeric_value=25.0),
+            Option(id="opt_te_3", text="8", is_correct=False, misconception_tag="tag_dividing_instead_of_subtracting", numeric_value=8.0)
+        ],
+        review_record=make_draft_rr()
+    ))
+    hints.append(HintLadder(
+        question_id="q_c8_pct_te_01",
+        level_1_hint="[డ్రాఫ్ట్] 25% అనగా (25 / 100).",
+        level_2_partial_step="[డ్రాఫ్ట్] (25 / 100) × 200",
+        level_3_worked_step="[డ్రాఫ్ట్] 25 × 2 = 50",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_hi_draft_pct_01",
+        concept="c8_math_comparing_quantities_percentages",
+        language="hi",
+        content="[ड्राफ्ट - असमीक्षित] प्रतिशत गणना: किसी संख्या का X% = (X / 100) × संख्या।",
+        review_record=make_draft_rr()
+    ))
+    lessons.append(Lesson(
+        id="les_te_draft_pct_01",
+        concept="c8_math_comparing_quantities_percentages",
+        language="te",
+        content="[డ్రాఫ్ట్ - సమీక్షించబడలేదు] శాతం లెక్కించు విధానం: ఒక సంఖ్య యొక్క X% = (X / 100) × ఆ సంఖ్య.",
+        review_record=make_draft_rr()
+    ))
+
     return questions, lessons, hints

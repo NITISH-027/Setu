@@ -39,6 +39,7 @@ class ClinicSuggestion(BaseModel):
     concept_name: str
     recommended_duration_minutes: int = 10
     student_ids: List[str]
+    students: List[str] = Field(default_factory=list)
     suggested_micro_lesson_id: Optional[str] = None
     reason: str
 
@@ -135,10 +136,20 @@ class TeacherService:
                 evidence_details=evidence_items
             )
 
-            # Check if student is undecided / not sure
-            if hyp and (hyp.evidence_band == EvidenceBand.NOT_SURE or hyp.status == HypothesisStatus.UNDECIDED):
+            # Check if student is undecided, stuck, or has a confirmed shared gap
+            is_stuck = plan.stuck_attempts_count >= 2 or plan.bridge_recheck_fails >= 2
+            is_not_sure = hyp and (hyp.evidence_band == EvidenceBand.NOT_SURE or hyp.status == HypothesisStatus.UNDECIDED)
+
+            if is_stuck:
+                card.suggested_plan_reason = f"Student stuck (intervention flagged): {plan.reason}"
                 undecided_students.append(card)
-            elif plan.gap_concept_id and hyp and hyp.status == HypothesisStatus.SUPPORTED:
+            elif is_not_sure:
+                card.suggested_plan_reason = f"Thin/conflicting probe evidence ('not sure'): {plan.reason}"
+                undecided_students.append(card)
+            elif plan.gap_concept_id and (
+                plan.current_stage in (StageEnum.LEARN, StageEnum.BRIDGE_RECHECK) or
+                (hyp and (hyp.status == HypothesisStatus.SUPPORTED or hyp.heuristic_score >= 1))
+            ):
                 # Group by shared gap
                 grouped_by_gap.setdefault(plan.gap_concept_id, []).append(card)
             else:
@@ -154,6 +165,7 @@ class TeacherService:
                     concept_name=gap_cid.replace("_", " ").title(),
                     recommended_duration_minutes=10,
                     student_ids=[c.student_id for c in student_cards],
+                    students=[c.student_id for c in student_cards],
                     suggested_micro_lesson_id=f"les_{gap_cid}",
                     reason=f"{len(student_cards)} student(s) identified with supported gap on '{gap_cid}'."
                 ))
@@ -186,7 +198,7 @@ class TeacherService:
     ) -> Tuple[Plan, TeacherOverride]:
         """
         Applies a teacher override with mandatory reason.
-        Modifies plan and logs override.
+        Modifies plan, resets stuck counters, and logs override.
         """
         if not self.verify_class_access(teacher_id, class_id):
             raise PermissionError(f"Teacher '{teacher_id}' cannot override plans for class '{class_id}'.")
@@ -201,13 +213,22 @@ class TeacherService:
         )
         self.overrides.append(override)
 
-        # Update student plan
+        # Update student plan and always reset stuck counters on override
+        student_plan.stuck_attempts_count = 0
+        student_plan.bridge_recheck_fails = 0
+
         if action == "assign_concept":
             student_plan.current_concept_id = concept_id
             student_plan.current_stage = StageEnum.SOLVE
             student_plan.gap_concept_id = None
-        elif action == "close_gap":
+        elif action in ("mark_cleared", "close_gap"):
             student_plan.gap_concept_id = None
+            student_plan.current_stage = StageEnum.SOLVE
+        elif action == "reinforce":
+            if student_plan.gap_concept_id:
+                student_plan.current_concept_id = student_plan.gap_concept_id
+            elif concept_id:
+                student_plan.current_concept_id = concept_id
             student_plan.current_stage = StageEnum.SOLVE
         elif action == "skip_to_enrichment":
             student_plan.current_stage = StageEnum.ENRICHMENT

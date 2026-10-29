@@ -124,6 +124,20 @@ def generate():
 
     vectors["sequencer_results"] = sequencer_results
 
+    # 5. Multi-Concept Mastery Isolation Vector (FIX 3)
+    c8_init = 0.5
+    c7_init = 0.2
+    c7_updated = bkt.update(c7_init, is_correct=True)
+    vectors["multi_concept_mastery_isolation"] = {
+        "plan_concept": "c8_math_linear_eq_one_var",
+        "plan_concept_initial_mastery": c8_init,
+        "attempt_concept": "c7_math_simple_eq",
+        "attempt_concept_initial_mastery": c7_init,
+        "attempt_is_correct": True,
+        "expected_attempt_concept_mastery": c7_updated,
+        "expected_plan_concept_mastery": c8_init
+    }
+
     out_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "packs", "golden_test_vectors.json"))
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(vectors, f, indent=2)

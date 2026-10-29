@@ -135,3 +135,53 @@ def test_duplicate_options_flagged():
     )
     result = validator.validate(pack)
     assert any(w.code == "DUPLICATE_OPTION" for w in result.warnings())
+
+
+def test_validator_validates_hints():
+    from app.models.content import HintLadder
+    validator = PackValidator()
+
+    q = Question(
+        id="q_hint_test",
+        concept="c1",
+        question_text="Solve: x + 7 = 14",
+        options=[
+            Option(id="o1", text="7", is_correct=True),
+            Option(id="o2", text="21", is_correct=False, misconception_tag="tag_transposition")
+        ],
+        probe_for_misconception="tag_transposition"
+    )
+
+    bad_hint = HintLadder(
+        question_id="q_hint_test",
+        level_1_hint="Subtract 7",
+        level_2_partial_step="x = 3 - 7",
+        level_3_worked_step="Calculate 3 - 7: x = -4."  # Contradicts option '7'!
+    )
+
+    pack = ContentPack(
+        concepts=[Concept(id="c1", name="Equations", class_level=8)],
+        questions=[q],
+        hints=[bad_hint]
+    )
+
+    result = validator.validate(pack)
+    assert not result.is_valid
+    errors = result.errors()
+    assert any(e.code == "HINT_ANSWER_CONTRADICTION" for e in errors)
+
+    # Now with valid hint
+    good_hint = HintLadder(
+        question_id="q_hint_test",
+        level_1_hint="Subtract 7",
+        level_2_partial_step="x = 14 - 7",
+        level_3_worked_step="Calculate 14 - 7: x = 7."
+    )
+    pack_good = ContentPack(
+        concepts=[Concept(id="c1", name="Equations", class_level=8)],
+        questions=[q],
+        hints=[good_hint]
+    )
+    result_good = validator.validate(pack_good)
+    assert result_good.is_valid
+

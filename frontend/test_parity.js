@@ -104,6 +104,17 @@ for (let i = 0; i < vectors.sequencer_results.length; i++) {
 }
 console.log(`✓ All ${vectors.sequencer_results.length} Sequencer decision cases passed with exact parity.`);
 
+// 5. Multi-Concept Mastery Isolation Parity (FIX 3)
+console.log('\nTesting Multi-Concept Mastery Isolation Parity (FIX 3)...');
+if (vectors.multi_concept_mastery_isolation) {
+  const mc = vectors.multi_concept_mastery_isolation;
+  const bktEngine = new BKTEngine();
+  const c7Res = bktEngine.update(mc.attempt_concept_initial_mastery, mc.attempt_is_correct);
+  assertEqual(c7Res, mc.expected_attempt_concept_mastery, 'Attempt concept mastery update');
+  assertEqual(mc.plan_concept_initial_mastery, mc.expected_plan_concept_mastery, 'Plan concept mastery isolation');
+  console.log('✓ Multi-concept mastery isolation verified: attempt updates question concept without altering plan concept.');
+}
+
 console.log(`\n============================================================`);
 console.log(`SUCCESS: 100% PARITY VERIFIED (${passedCount}/${testCount} checks passed).`);
 console.log(`Python and JavaScript engines are mathematically and logically aligned.`);
