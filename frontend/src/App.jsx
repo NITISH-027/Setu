@@ -4,12 +4,14 @@ import TeacherView from './components/TeacherView';
 import PrivacyView from './components/PrivacyView';
 import ReviewView from './components/ReviewView';
 import PaperModeView from './components/PaperModeView';
+import GuidedTourModal from './components/GuidedTourModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('student');
   const [devSimulateOffline, setDevSimulateOffline] = useState(false);
   const [isSystemOnline, setIsSystemOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [language, setLanguage] = useState('en');
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('setu_theme') || 'emerald';
@@ -56,8 +58,18 @@ export default function App() {
             <div className="brand-title">Adaptive Learning</div>
           </div>
 
-          {/* Theme & Language Selectors */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Theme & Language Selectors & Guided Tour */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <button
+              id="guided-tour-btn"
+              data-testid="guided-tour-btn"
+              onClick={() => setIsTourOpen(true)}
+              className="guided-tour-btn"
+              title="Open 3-minute guided walkthrough for judges"
+            >
+              ✨ Guided Tour (3 min)
+            </button>
+
             <select
               id="theme-select"
               data-testid="theme-select"
@@ -151,6 +163,16 @@ export default function App() {
           Content is <em>author-drafted, unreviewed</em>. Demo controls only, not a legal or school compliance claim.
         </div>
       </footer>
+
+      {/* Guided Tour Modal for Judges */}
+      <GuidedTourModal
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setIsTourOpen(false);
+        }}
+      />
     </>
   );
 }
