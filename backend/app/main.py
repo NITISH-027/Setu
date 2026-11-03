@@ -454,7 +454,7 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
     if device_id:
         dev = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
         if not dev:
-            # Device is newly registered with this student's login
+            # 2. New device (never seen before): create it, generate its purge token, and return it
             device_purge_token = secrets.token_hex(24)
             dev = DeviceDB(
                 device_id=device_id,
@@ -464,31 +464,27 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
             db.add(dev)
             db.commit()
         else:
-            # Existing device: check student-to-device ownership before returning purge token
-            dev_sub_existing = db.query(DeviceSubjectDB).filter(
-                DeviceSubjectDB.device_id == device_id,
-                DeviceSubjectDB.subject_key == student.subject_key
-            ).first()
-            pin_prof_existing = db.query(PinProfileDB).filter(
-                PinProfileDB.device_id == device_id,
-                PinProfileDB.student_id == student_id
-            ).first()
-
-            if not dev_sub_existing and not pin_prof_existing:
-                # Device exists but is not bound to this student
-                raise HTTPException(
-                    status_code=403,
-                    detail="Authentication failed: device association could not be verified."
-                )
-
+            # 3. Existing device: update device class & sync time
             dev.class_id = student.class_id
             dev.last_sync_at = datetime.utcnow()
             if not dev.device_purge_token:
                 dev.device_purge_token = secrets.token_hex(24)
-            device_purge_token = dev.device_purge_token
             db.commit()
 
-        # FIX 1: Track per device which student subject_keys have been active on it (opaque keys only)
+            # Return the device's purge token ONLY if a PinProfileDB record for (device_id, student_id)
+            # already exists for this student on this device (a provisioned profile, e.g. seeded).
+            # If no such provisioned profile exists, return no purge token (null/None).
+            has_provisioned_profile = db.query(PinProfileDB).filter(
+                PinProfileDB.device_id == device_id,
+                PinProfileDB.student_id == student_id
+            ).first() is not None
+
+            if has_provisioned_profile:
+                device_purge_token = dev.device_purge_token
+            else:
+                device_purge_token = None
+
+        # FIX 1: Always create or refresh DeviceSubjectDB binding for this student on this device (activity tracking)
         dev_sub = db.query(DeviceSubjectDB).filter(
             DeviceSubjectDB.device_id == device_id,
             DeviceSubjectDB.subject_key == student.subject_key
