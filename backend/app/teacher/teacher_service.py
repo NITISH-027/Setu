@@ -92,7 +92,9 @@ class TeacherService:
         self,
         teacher_id: str,
         class_id: str,
-        students_data: List[Dict[str, Any]]
+        students_data: List[Dict[str, Any]],
+        total_decisions: Optional[int] = None,
+        total_overrides: Optional[int] = None
     ) -> ClassDashboardView:
         """
         Retrieves the scoped class dashboard.
@@ -170,10 +172,19 @@ class TeacherService:
                     reason=f"{len(student_cards)} student(s) identified with supported gap on '{gap_cid}'."
                 ))
 
-        # Compute override rate
-        total_decisions = max(self.decision_counts.get(class_id, 0), len(students_data))
-        class_overrides = [o for o in self.overrides if o.class_id == class_id]
-        override_rate = round(len(class_overrides) / total_decisions, 3) if total_decisions > 0 else 0.0
+        # Compute override rate from persisted counts when provided, or fallback to in-memory counts
+        if total_decisions is None:
+            decisions_count = self.decision_counts.get(class_id, 0)
+        else:
+            decisions_count = total_decisions
+
+        if total_overrides is None:
+            class_overrides = [o for o in self.overrides if o.class_id == class_id]
+            overrides_count = len(class_overrides)
+        else:
+            overrides_count = total_overrides
+
+        override_rate = round(overrides_count / decisions_count, 3) if decisions_count > 0 else 0.0
 
         return ClassDashboardView(
             class_id=class_id,
@@ -182,8 +193,8 @@ class TeacherService:
             undecided_students=undecided_students,
             suggested_clinics=suggested_clinics,
             override_rate=override_rate,
-            total_decisions=total_decisions,
-            total_overrides=len(class_overrides)
+            total_decisions=decisions_count,
+            total_overrides=overrides_count
         )
 
     def apply_override(
@@ -275,7 +286,15 @@ class TeacherService:
         self.gap_closed_records.append(record)
         return record
 
-    def compute_override_rate(self, class_id: str) -> float:
-        class_overrides = [o for o in self.overrides if o.class_id == class_id]
-        total_decisions = max(1, self.decision_counts.get(class_id, 1))
-        return round(len(class_overrides) / total_decisions, 4)
+    def compute_override_rate(
+        self,
+        class_id: str,
+        total_decisions: Optional[int] = None,
+        total_overrides: Optional[int] = None
+    ) -> float:
+        decisions_count = self.decision_counts.get(class_id, 0) if total_decisions is None else total_decisions
+        if total_overrides is None:
+            overrides_count = len([o for o in self.overrides if o.class_id == class_id])
+        else:
+            overrides_count = total_overrides
+        return round(overrides_count / decisions_count, 4) if decisions_count > 0 else 0.0

@@ -802,8 +802,18 @@ def get_teacher_class_dashboard(
                 "hypothesis": hyp
             })
 
+    # Compute decisions and overrides from persisted database tables for the class
+    total_decisions = db.query(DecisionDB).filter(DecisionDB.class_id == class_id).count()
+    total_overrides = db.query(TeacherOverrideDB).filter(TeacherOverrideDB.class_id == class_id).count()
+
     try:
-        dashboard = teacher_service.get_class_dashboard(session.user_id, class_id, class_students_data)
+        dashboard = teacher_service.get_class_dashboard(
+            session.user_id,
+            class_id,
+            class_students_data,
+            total_decisions=total_decisions,
+            total_overrides=total_overrides
+        )
         return dashboard.model_dump()
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
