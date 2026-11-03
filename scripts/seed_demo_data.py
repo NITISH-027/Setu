@@ -51,9 +51,6 @@ def seed():
                 is_seeded=True
             )
             db.add(admin)
-        else:
-            admin.password_hash = hash_password(admin_pass)
-            admin.is_seeded = True
 
         # 2. Teacher 8-A account
         t1 = db.query(UserDB).filter(UserDB.username == "teacher_8a").first()
@@ -67,9 +64,6 @@ def seed():
                 is_seeded=True
             )
             db.add(t1)
-        else:
-            t1.password_hash = hash_password(teacher_8a_pass)
-            t1.is_seeded = True
 
         # 3. Teacher 8-B account
         t2 = db.query(UserDB).filter(UserDB.username == "teacher_8b").first()
@@ -83,9 +77,6 @@ def seed():
                 is_seeded=True
             )
             db.add(t2)
-        else:
-            t2.password_hash = hash_password(teacher_8b_pass)
-            t2.is_seeded = True
 
         # 4. Reviewer account
         rev = db.query(UserDB).filter(UserDB.username == "reviewer_sunita").first()
@@ -99,9 +90,6 @@ def seed():
                 is_seeded=True
             )
             db.add(rev)
-        else:
-            rev.password_hash = hash_password(reviewer_pass)
-            rev.is_seeded = True
 
         # 5. Synthetic student in Class 8-A
         stu_id = "stu_demo_01"
@@ -122,9 +110,6 @@ def seed():
                 consent_status="not requested"
             )
             db.add(stu)
-        else:
-            stu.pin_hash = pin_h
-            stu.salt = salt
 
         plan = db.query(PlanDB).filter(PlanDB.student_id == stu_id).first()
         if not plan:
@@ -174,9 +159,6 @@ def seed():
                 salt=salt
             )
             db.add(prof)
-        else:
-            prof.pin_hash = pin_h
-            prof.salt = salt
 
         db.commit()
 

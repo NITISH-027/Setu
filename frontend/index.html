@@ -3,13 +3,149 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Setu | Teacher-Controlled Adaptive Learning</title>
-    <meta name="description" content="Setu finds the likely prerequisite gap behind a wrong answer, with evidence and stated uncertainty, inside an authored concept graph." />
-    <meta name="theme-color" content="#1e293b" />
+    <title>Setu (सेतु) | Teacher-Controlled Adaptive Learning for Middle-School Maths</title>
+    <meta name="description" content="Setu treats a student's wrong answer as a hypothesis about a prerequisite gap, serves diagnostic probes, targeted micro-lessons, and bridge re-checks on shared devices, and keeps the teacher in full command." />
+    <meta name="theme-color" content="#10b981" />
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph & Social Metadata -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Setu (सेतु) - Teacher-Controlled Adaptive Learning" />
+    <meta property="og:description" content="A wrong answer is a hypothesis, not a diagnosis. Setu diagnoses prerequisite gaps across an authored concept graph on shared classroom devices." />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Setu (सेतु) - Teacher-Controlled Adaptive Learning" />
+    <meta name="twitter:description" content="Teacher-controlled adaptive learning prototype for middle-school maths on shared classroom devices." />
+
+    <!-- Structured Data (JSON-LD: SoftwareApplication & FAQPage) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Setu",
+          "alternateName": "सेतु",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web, PWA, Chrome, Android, Desktop",
+          "description": "Teacher-controlled adaptive learning system for middle-school mathematics on shared classroom devices. Diagnoses prerequisite gaps behind errors through an authored concept graph, delivers targeted micro-lessons, and preserves full teacher oversight.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Setu?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Setu (सेतु) is a prototype adaptive learning system designed for middle-school mathematics in Indian classrooms. Rather than treating a wrong answer as a final diagnosis or penalising the student, Setu treats a wrong answer as a hypothesis regarding a potential prerequisite gap, testing foundational concepts before guiding the student back to original practice."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does adaptivity work in Setu?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "When an error occurs during practice, Setu opens a hypothesis and traverses an authored concept graph to deliver diagnostic probes (e.g. Class 6 integer operations before Class 8 linear equations). If evidence supports a prerequisite gap, the student receives a focused 2-minute micro-lesson and a bridge re-check question before resuming original-topic practice. Teachers review all heuristic evidence and retain strict pedagogical authority to override any placement."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who is Setu designed for?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Setu is designed for middle-school students (Classes 6 to 10 maths) and their teachers, particularly in resource-constrained environments using shared classroom tablets or family mobile phones with low connectivity."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What student data does Setu store?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Setu stores zero direct student PII: no names, phone numbers, email addresses, or physical locations. Students use pseudonymous identifiers with salted PIN hashes. On-device local storage supports offline work and cryptographic tombstones deliver zero-PII deletions across registered devices."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are the limitations of this build?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "This prototype uses an authored CBSE Class 8 Linear Equations spine rather than full curriculum coverage. Bayesian Knowledge Tracing (BKT) estimates are uncalibrated and hand-set. Learning content is author-drafted and unreviewed, and the interface provides demo controls rather than legal compliance certifications."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Real, Machine-Readable Prerendered Landing Content (Hydrated by React on load) -->
+    <div id="root">
+      <div id="prerendered-landing" style="max-width: 960px; margin: 0 auto; padding: 24px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; line-height: 1.6;">
+        <header style="border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px;">
+          <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">Setu (सेतु)</h1>
+          <p style="font-size: 16px; font-weight: 600; color: #059669; margin: 0;">Teacher-Controlled Adaptive Learning for Middle-School Maths</p>
+        </header>
+
+        <section style="margin-bottom: 24px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">What Setu Solves</h2>
+          <blockquote style="margin: 0 0 12px 0; padding: 12px 16px; background: #f8fafc; border-left: 4px solid #10b981; font-style: italic; color: #334155;">
+            "A wrong answer is a starting point, not a diagnosis. Setu checks a possible prerequisite gap, offers a focused lesson when the evidence supports it, and guides the student back to practice. Teachers can review the evidence and intervene."
+          </blockquote>
+          <p style="margin: 0 0 8px 0; color: #475569;">
+            In middle-school classrooms where devices are shared, students often struggle with advanced topics due to unaddressed foundational prerequisites. Rather than endlessly repeating high-grade questions, Setu steps back through an authored concept graph to probe prerequisite mastery, delivers focused 2-minute micro-lessons, administers bridge re-checks, and smoothly returns the student to practice.
+          </p>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">The 4-Beat Learning Journey</h2>
+          <ol style="padding-left: 20px; margin: 0 0 12px 0; color: #334155;">
+            <li style="margin-bottom: 6px;"><strong>Wrong Answer on Practice:</strong> Student makes an error on an original concept (e.g. sign transposition in linear equations).</li>
+            <li style="margin-bottom: 6px;"><strong>Prerequisite Diagnostic Probe:</strong> Engine evaluates foundational concepts without penalizing practice counters.</li>
+            <li style="margin-bottom: 6px;"><strong>Focused Micro-Lesson:</strong> When probe evidence supports a gap, a concise bridge lesson is presented.</li>
+            <li style="margin-bottom: 6px;"><strong>Bridge Re-Check & Return:</strong> Verification question confirms understanding; upon passing, practice resumes on the original topic.</li>
+          </ol>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Teacher Command & Shared Devices</h2>
+          <p style="margin: 0 0 8px 0; color: #475569;">
+            Teachers retain full pedagogical command. The teacher dashboard clusters students by shared prerequisite gap for recommended 10-minute small-group clinics, highlights thin/conflicting evidence cases, and enables logged teacher overrides. For low-connectivity classrooms, Setu functions offline via service workers and local caching, while paper-based practice can be entered through Paper Mode.
+          </p>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Frequently Asked Questions</h2>
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">What is Setu?</h3>
+            <p style="margin: 0; font-size: 14px; color: #475569;">Setu is an adaptive learning system designed for middle-school mathematics on shared classroom devices, turning student errors into diagnostic hypotheses.</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">How does adaptivity work?</h3>
+            <p style="margin: 0; font-size: 14px; color: #475569;">It probes prerequisite concepts across an authored knowledge graph, suggests focused bridge lessons when supported by evidence, and tracks mastery.</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">What data does Setu store?</h3>
+            <p style="margin: 0; font-size: 14px; color: #475569;">Zero direct PII: pseudonymous IDs only, salted PIN hashes, and cryptographic tombstones for device deletion synchronization.</p>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">What are the limitations of this build?</h3>
+            <p style="margin: 0; font-size: 14px; color: #475569;">Content is an authored Class 8 CBSE Linear Equations spine; BKT estimates are uncalibrated and hand-set; content is author-drafted and unreviewed; demo controls only.</p>
+          </div>
+        </section>
+
+        <footer style="border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 13px; color: #64748b;">
+          <strong>Honest Disclaimers:</strong> Content is an authored Class 8 CBSE Linear Equations spine, not complete Class 6-10 curriculum coverage. BKT estimates are uncalibrated and hand-set. Content is author-drafted and unreviewed. Demo controls only.
+        </footer>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {

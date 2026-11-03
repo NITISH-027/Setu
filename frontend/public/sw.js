@@ -43,6 +43,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never intercept or serve app-shell fallback for /api/ routes
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   // Navigation requests: Serve cached HTML immediately or fallback on network error
   if (event.request.mode === 'navigate') {
     event.respondWith(

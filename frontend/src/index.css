@@ -184,6 +184,33 @@ body {
   gap: 14px;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.header-select {
+  font-size: 11px;
+  padding: 4px 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.header-select.theme-select {
+  max-width: 140px;
+}
+
+.header-select.language-select {
+  max-width: 140px;
+}
+
 .logo-badge {
   background: var(--accent-gradient);
   color: #ffffff;
@@ -594,6 +621,26 @@ textarea:focus {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .header-select.theme-select {
+    max-width: 125px;
+    font-size: 10.5px;
+  }
+
+  .header-select.language-select {
+    max-width: 125px;
+    font-size: 10.5px;
   }
 
   .nav-tabs {

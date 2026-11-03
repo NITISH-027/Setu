@@ -15,8 +15,67 @@ export default function PaperModeView() {
   const [submissionErrors, setSubmissionErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePrintWorksheet = () => {
-    window.open(`/api/paper/sheet/${selectedConcept}`, '_blank');
+  const handlePrintWorksheet = async () => {
+    setAuthError('');
+    let token = teacherToken;
+
+    if (!token) {
+      if (!teacherUsername.trim() || !teacherPassword.trim()) {
+        setAuthError('Please enter teacher username and password to generate and print worksheets.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: teacherUsername.trim(), password: teacherPassword.trim() })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.access_token;
+          setTeacherToken(token);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          setAuthError(err.detail || 'Authentication failed. Please verify teacher credentials.');
+          return;
+        }
+      } catch {
+        setAuthError('Network error authenticating teacher for printable sheet.');
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch(`/api/paper/sheet/${selectedConcept}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setAuthError(err.detail || `Failed to fetch printable sheet (${res.status}).`);
+        return;
+      }
+
+      const htmlContent = await res.text();
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      } else {
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.target = '_blank';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      }
+    } catch {
+      setAuthError('Network error fetching printable worksheet.');
+    }
   };
 
   const handleAddRow = () => {

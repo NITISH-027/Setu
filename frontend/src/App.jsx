@@ -59,7 +59,7 @@ export default function App() {
           </div>
 
           {/* Theme & Language Selectors & Guided Tour */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <div className="header-controls">
             <button
               id="guided-tour-btn"
               data-testid="guided-tour-btn"
@@ -76,7 +76,7 @@ export default function App() {
               aria-label="Color Theme"
               value={theme}
               onChange={(e) => setTheme(e.target.value)}
-              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
+              className="header-select theme-select"
             >
               <option value="emerald">🌿 Emerald Jade</option>
               <option value="amethyst">✨ Velvet Amethyst</option>
@@ -89,7 +89,7 @@ export default function App() {
               data-testid="language-select"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              style={{ fontSize: '11px', padding: '4px 6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px' }}
+              className="header-select language-select"
             >
               <option value="en">English (Supported)</option>
               <option value="hi">हिंदी (Unreviewed Draft)</option>

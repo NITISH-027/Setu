@@ -454,6 +454,7 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
     if device_id:
         dev = db.query(DeviceDB).filter(DeviceDB.device_id == device_id).first()
         if not dev:
+            # Device is newly registered with this student's login
             device_purge_token = secrets.token_hex(24)
             dev = DeviceDB(
                 device_id=device_id,
@@ -463,6 +464,23 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
             db.add(dev)
             db.commit()
         else:
+            # Existing device: check student-to-device ownership before returning purge token
+            dev_sub_existing = db.query(DeviceSubjectDB).filter(
+                DeviceSubjectDB.device_id == device_id,
+                DeviceSubjectDB.subject_key == student.subject_key
+            ).first()
+            pin_prof_existing = db.query(PinProfileDB).filter(
+                PinProfileDB.device_id == device_id,
+                PinProfileDB.student_id == student_id
+            ).first()
+
+            if not dev_sub_existing and not pin_prof_existing:
+                # Device exists but is not bound to this student
+                raise HTTPException(
+                    status_code=403,
+                    detail="Authentication failed: device association could not be verified."
+                )
+
             dev.class_id = student.class_id
             dev.last_sync_at = datetime.utcnow()
             if not dev.device_purge_token:
