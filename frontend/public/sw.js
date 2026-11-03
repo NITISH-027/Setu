@@ -1,18 +1,18 @@
 /**
- * Setu Offline PWA Service Worker (FIX 3e).
- * Precaches application shell, manifest, icons, and built hashed assets.
- * Caches API pack requests and falls back cleanly when offline.
+ * Setu Offline PWA Service Worker.
+ * Precaches stable application shell, manifest, and icons.
+ * Network-first for navigation requests and index.html to guarantee fresh code on redeploy.
+ * Cache-first for content-hashed assets and icons, with runtime caching.
+ * Bypasses /api/ routes completely.
  */
 
-const CACHE_NAME = 'setu-cache-v5';
+const CACHE_NAME = 'setu-cache-v6';
 const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/assets/index-Bu61hwtU.js",
-  "/assets/index-peXQbO-B.css"
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -48,55 +48,50 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation requests: Serve cached HTML immediately or fallback on network error
-  if (event.request.mode === 'navigate') {
+  // Navigation requests and /index.html: NETWORK-FIRST to prevent serving stale bundles after redeploy
+  if (event.request.mode === 'navigate' || url.pathname === '/index.html' || url.pathname === '/') {
     event.respondWith(
-      caches.match('/index.html').then((cached) => {
-        if (cached) return cached;
-        return caches.match('/').then((r) => {
-          if (r) return r;
-          return fetch(event.request);
-        });
-      }).catch(() => {
-        return caches.match('/index.html').then((r) => r || caches.match('/'));
-      })
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match('/index.html').then((cached) => cached || caches.match('/'));
+        })
     );
     return;
   }
 
-  // Assets and static files: Pathname match first, then request match, then network
+  // Content-hashed assets under /assets/, manifest, and icons: CACHE-FIRST with runtime cache
   event.respondWith(
-    caches.match(url.pathname).then((cachedByPath) => {
-      if (cachedByPath) {
-        return cachedByPath;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
-      return caches.match(event.request).then((cachedReq) => {
-        if (cachedReq) {
-          return cachedReq;
+      return fetch(event.request).then((networkResponse) => {
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          (url.pathname.includes('/assets/') ||
+            url.pathname.endsWith('.js') ||
+            url.pathname.endsWith('.css') ||
+            url.pathname.endsWith('.png') ||
+            url.pathname.endsWith('.svg') ||
+            url.pathname.endsWith('.json'))
+        ) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        return fetch(event.request).then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            (url.pathname.endsWith('.js') ||
-              url.pathname.endsWith('.css') ||
-              url.pathname.endsWith('.png') ||
-              url.pathname.endsWith('.svg') ||
-              url.pathname.endsWith('.json') ||
-              url.pathname.includes('/assets/'))
-          ) {
-            const toCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, toCache);
-            });
-          }
-          return networkResponse;
-        });
+        return networkResponse;
       });
-    }).catch(() => {
-      if (event.request.mode === 'navigate') {
-        return caches.match('/index.html').then((r) => r || caches.match('/'));
-      }
     })
   );
 });

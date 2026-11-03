@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 export default function PaperModeView() {
   const [selectedConcept, setSelectedConcept] = useState('c8_math_linear_eq_one_var');
-  const [teacherUsername, setTeacherUsername] = useState('teacher_ravi');
-  const [teacherPassword, setTeacherPassword] = useState('teacher123');
+  const [teacherUsername, setTeacherUsername] = useState('');
+  const [teacherPassword, setTeacherPassword] = useState('');
   const [teacherToken, setTeacherToken] = useState(null);
   const [authError, setAuthError] = useState('');
 
@@ -221,7 +221,7 @@ export default function PaperModeView() {
               type="text"
               value={teacherUsername}
               onChange={(e) => setTeacherUsername(e.target.value)}
-              placeholder="Teacher Username"
+              placeholder="teacher username"
               style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
             />
             <input
@@ -229,7 +229,7 @@ export default function PaperModeView() {
               type="password"
               value={teacherPassword}
               onChange={(e) => setTeacherPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="password"
               style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
             />
             <button onClick={handleTeacherLogin} className="btn-secondary">

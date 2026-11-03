@@ -646,7 +646,7 @@ def test_offline_sync_saves_attempts_and_returns_synced_ids(client):
     create_test_student(db, "stu_acc_sync")
     db.close()
 
-    # Sign in online to get access token and device purge token
+    # Sign in online to get access token (on an existing device where student is not pre-provisioned, device_purge_token is None)
     login_res = client.post("/api/auth/pin", json={
         "device_id": "dev_sync_test",
         "student_id": "stu_acc_sync",
@@ -655,11 +655,23 @@ def test_offline_sync_saves_attempts_and_returns_synced_ids(client):
     assert login_res.status_code == 200
     data = login_res.json()
     token = data["access_token"]
-    purge_token = data["device_purge_token"]
+    assert data["device_purge_token"] is None
+
+    # Repeated login of same student on same device returns 200 and still yields device_purge_token None
+    login_res_repeat = client.post("/api/auth/pin", json={
+        "device_id": "dev_sync_test",
+        "student_id": "stu_acc_sync",
+        "pin": "1234"
+    })
+    assert login_res_repeat.status_code == 200
+    assert login_res_repeat.json()["device_purge_token"] is None
+
+    # A GET to /api/device/purge-instructions with only session Bearer token (no device token) returns 401
+    purge_inst_res = client.get("/api/device/purge-instructions", headers={"Authorization": f"Bearer {token}"})
+    assert purge_inst_res.status_code == 401
 
     headers = {
-        "Authorization": f"Bearer {token}",
-        "X-Device-Purge-Token": purge_token
+        "Authorization": f"Bearer {token}"
     }
 
     # Sync 2 queued attempts from offline session
