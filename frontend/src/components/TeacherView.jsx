@@ -13,6 +13,7 @@ export default function TeacherView() {
   const [overrideReason, setOverrideReason] = useState('');
   const [overrideAction, setOverrideAction] = useState('assign_concept');
   const [actionSuccess, setActionSuccess] = useState('');
+  const [testSessions, setTestSessions] = useState([]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -62,6 +63,15 @@ export default function TeacherView() {
       if (res.ok) {
         const data = await res.json();
         setDashboard(data);
+        try {
+          const tRes = await fetch(`/api/teacher/class/${selectedClass}/tests`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (tRes.ok) {
+            const tData = await tRes.json();
+            setTestSessions(tData.test_sessions || []);
+          }
+        } catch { /* test results are additive; dashboard still stands */ }
       } else {
         const err = await res.json().catch(() => ({}));
         setDashboard(null);
@@ -219,6 +229,41 @@ export default function TeacherView() {
               {dashboard.undecided_students?.length || 0}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Thin/conflicting evidence ('not sure')</div>
+          </div>
+        </div>
+      )}
+
+      {/* Adaptive Chapter Test Results (persisted sessions) */}
+      {testSessions.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>
+            Chapter Test Results (Adaptive)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {testSessions.map((s) => (
+              <div key={s.session_id} className="clinic-box" data-testid={`test-session-${s.student_id}`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong>{s.student_id}</strong>
+                  <span className="badge-heuristic">
+                    {s.status === 'completed' ? `${s.correct_count}/${s.answered_count} correct` : `in progress ${s.answered_count}/${s.planned_length}`}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  {s.started_at ? new Date(s.started_at).toLocaleString() : ''}
+                  {s.summary?.weakest_concept_name ? ` • Weakest: ${s.summary.weakest_concept_name}` : ''}
+                </div>
+                {s.summary?.misconception_tags?.length > 0 && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Misconceptions seen: {s.summary.misconception_tags.join(', ')}
+                  </div>
+                )}
+                {s.summary && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Estimates: {s.summary.mastery_label}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

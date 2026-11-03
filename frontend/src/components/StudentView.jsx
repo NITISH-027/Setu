@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TestView from './TestView';
 import { BKTEngine, RuleSequencer, HypothesisEngine, SpacedRepetitionScheduler } from '../engine/index.js';
 import {
   saveOfflinePack,
@@ -43,6 +44,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
   const [currentConcept, setCurrentConcept] = useState('c8_math_linear_eq_one_var');
   const [conceptMasteries, setConceptMasteries] = useState({});
   const [offlinePackData, setOfflinePackData] = useState(null);
+  const [testMode, setTestMode] = useState(false);
 
   // Engines
   const [bktEngine] = useState(() => new BKTEngine());
@@ -1069,6 +1071,21 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
   const item = nextStepData?.item;
   const hintLadder = nextStepData?.hint_ladder;
 
+  if (testMode && effectivelyOnline && token) {
+    return (
+      <TestView
+        studentId={studentId}
+        token={token}
+        onExit={() => {
+          setTestMode(false);
+          // After a completed test the server plan targets the weakest concept;
+          // reloading next-step drops the student straight into it.
+          loadNextStepOnline(token, studentId);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="phone-container">
       {/* Header with real state (FIX 3g) */}
@@ -1130,6 +1147,18 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>
           Last sync: {lastSyncTime}
         </div>
+      )}
+
+      {effectivelyOnline && (
+        <button
+          id="take-chapter-test-btn"
+          data-testid="take-chapter-test-btn"
+          onClick={() => setTestMode(true)}
+          className="btn-secondary"
+          style={{ width: '100%', marginBottom: '8px', fontSize: '13px', padding: '10px' }}
+        >
+          📝 Take Chapter Test (adaptive)
+        </button>
       )}
 
       {/* Visible message for every stage change (Acceptance Test A & Failure 2) */}

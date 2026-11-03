@@ -21,7 +21,8 @@ from app.db import (
     UserDB, SessionDB, StudentDB, PlanDB, MasteryStateDB,
     HypothesisDB, AttemptDB, DecisionDB, TeacherOverrideDB,
     TombstoneDB, DeviceDB, AuditEventDB, ReviewRecordDB, GapClosedRecordDB,
-    PinProfileDB, DeviceSubjectDB, TombstoneDeliveryDB
+    PinProfileDB, DeviceSubjectDB, TombstoneDeliveryDB,
+    TestSessionDB, TestItemDB
 )
 from app.auth.security import (
     hash_password, verify_password, hash_pin, create_session,
@@ -36,6 +37,7 @@ from app.models.student import Student, ConsentStatus
 from app.models.learning import Attempt, Plan, MasteryState, Hypothesis, HypothesisStatus, StageEnum, BKTParameters
 from app.models.content import HintLadder
 from app.engine.adaptive_engine import AdaptiveEngine
+from app.engine.test_engine import AdaptiveTestEngine
 from app.teacher.teacher_service import TeacherService
 from app.paper_mode.paper_mode_generator import PaperModeManager
 from app.validator.coverage_reporter import CoverageReporter
@@ -78,6 +80,7 @@ else:
     pack = build_pack()
 
 engine = AdaptiveEngine(pack)
+test_engine = AdaptiveTestEngine(pack)
 teacher_service = TeacherService()
 paper_manager = PaperModeManager(pack, engine)
 coverage_reporter = CoverageReporter()
@@ -107,6 +110,19 @@ class AttemptPayload(BaseModel):
     concept_id: Optional[str] = None
     time_spent_seconds: Optional[int] = None
     attempt_id: Optional[str] = None
+
+
+class TestStartPayload(BaseModel):
+    concept_ids: Optional[List[str]] = None
+    length: Optional[int] = None
+
+
+class TestAnswerPayload(BaseModel):
+    session_id: str
+    question_id: str
+    selected_option_id: str
+    attempt_id: Optional[str] = None
+    time_spent_seconds: Optional[int] = None
 
 
 class OverridePayload(BaseModel):
@@ -177,7 +193,11 @@ def load_student_domain_state(db: Session, student_id: str):
                 label=mastery_db.mastery_label
             ),
             mastery_label=mastery_db.mastery_label,
-            consecutive_successes=mastery_db.consecutive_successes or 0
+            consecutive_successes=mastery_db.consecutive_successes or 0,
+            last_seen=mastery_db.last_seen,
+            next_review=mastery_db.next_review,
+            interval_days=mastery_db.interval_days if mastery_db.interval_days is not None else 1.0,
+            ease_factor=mastery_db.ease_factor if mastery_db.ease_factor is not None else 2.5
         )
 
     hyp_db = db.query(HypothesisDB).filter(
@@ -232,7 +252,11 @@ def load_or_create_mastery_state(db: Session, student_id: str, concept_id: str) 
             label=m_db.mastery_label
         ),
         mastery_label=m_db.mastery_label,
-        consecutive_successes=m_db.consecutive_successes or 0
+        consecutive_successes=m_db.consecutive_successes or 0,
+        last_seen=m_db.last_seen,
+        next_review=m_db.next_review,
+        interval_days=m_db.interval_days if m_db.interval_days is not None else 1.0,
+        ease_factor=m_db.ease_factor if m_db.ease_factor is not None else 2.5
     )
 
 
@@ -268,6 +292,10 @@ def save_student_domain_state(
             db.add(m_db)
         m_db.mastery_estimate = mastery.mastery_estimate
         m_db.consecutive_successes = mastery.consecutive_successes
+        m_db.last_seen = mastery.last_seen
+        m_db.next_review = mastery.next_review
+        m_db.interval_days = mastery.interval_days
+        m_db.ease_factor = mastery.ease_factor
         if hasattr(mastery, "bkt_params") and mastery.bkt_params:
             m_db.bkt_prior = mastery.bkt_params.prior
             m_db.bkt_learn = mastery.bkt_params.learn
@@ -1929,6 +1957,509 @@ def update_editor_pack_item(
 def get_printable_sheet(concept_id: str, session: SessionDB = Depends(require_teacher)):
     sheet = paper_manager.generate_printable_sheet(concept_id)
     return sheet.to_html()
+
+
+
+
+# ==========================================
+# ADAPTIVE TEST (Learn - Solve - TEST leg)
+# ==========================================
+
+def _test_session_state(db: Session, student: Student, session_db: TestSessionDB) -> Dict[str, Any]:
+    """Current state of a test session: progress, current unanswered item (sanitized), summary if completed."""
+    items = db.query(TestItemDB).filter(
+        TestItemDB.session_id == session_db.id
+    ).order_by(TestItemDB.sequence.asc()).all()
+    answered = [it for it in items if it.answered_at is not None]
+    current = next((it for it in items if it.answered_at is None), None)
+
+    current_payload = None
+    if current:
+        q = pack.get_question(current.question_id)
+        if q:
+            sanitized = sanitize_question_for_client(q.model_dump())
+            concept = pack.get_concept(current.concept_id)
+            current_payload = {
+                "sequence": current.sequence,
+                "concept_id": current.concept_id,
+                "concept_name": concept.name if concept else current.concept_id,
+                "served_reason": current.served_reason,
+                "is_fallback": bool(current.served_is_fallback),
+                "question": sanitized
+            }
+
+    result = {
+        "session_id": session_db.id,
+        "status": session_db.status,
+        "planned_length": session_db.planned_length,
+        "answered_count": len(answered),
+        "concept_ids": json.loads(session_db.concept_ids or "[]"),
+        "excluded_concepts": json.loads(session_db.excluded_concepts or "[]"),
+        "started_at": session_db.started_at.isoformat() if session_db.started_at else None,
+        "completed_at": session_db.completed_at.isoformat() if session_db.completed_at else None,
+        "current_item": current_payload,
+        "summary": json.loads(session_db.summary_json) if session_db.summary_json else None
+    }
+    return result
+
+
+def _serve_next_test_item(db: Session, student: Student, session_db: TestSessionDB) -> Optional[TestItemDB]:
+    """Selects and persists the next adaptive test item, or None when the pool is exhausted."""
+    concept_ids = json.loads(session_db.concept_ids or "[]")
+    items = db.query(TestItemDB).filter(TestItemDB.session_id == session_db.id).all()
+    answered_qids = {it.question_id for it in items}
+    served_by_concept: Dict[str, int] = {}
+    for it in items:
+        served_by_concept[it.concept_id] = served_by_concept.get(it.concept_id, 0) + 1
+
+    # Concepts whose most recent answered item was wrong get priority on ties
+    last_wrong: set = set()
+    by_concept: Dict[str, list] = {}
+    for it in sorted(items, key=lambda i: i.sequence):
+        by_concept.setdefault(it.concept_id, []).append(it)
+    for cid, c_items in by_concept.items():
+        last_answered = next((i for i in reversed(c_items) if i.answered_at is not None), None)
+        if last_answered and last_answered.is_correct is False:
+            last_wrong.add(cid)
+
+    mastery_by_concept: Dict[str, float] = {}
+    prior_attempted: Dict[str, set] = {}
+    for cid in concept_ids:
+        m_db = db.query(MasteryStateDB).filter(
+            MasteryStateDB.student_id == student.pseudonymous_id,
+            MasteryStateDB.concept_id == cid
+        ).first()
+        mastery_by_concept[cid] = m_db.mastery_estimate if m_db else 0.2
+        prior_attempted[cid] = {
+            a[0] for a in db.query(AttemptDB.question_id).filter(
+                AttemptDB.student_id == student.pseudonymous_id,
+                AttemptDB.concept_id == cid
+            ).all()
+        }
+
+    cid, chosen, reason, is_fallback = test_engine.select_next(
+        concept_ids, mastery_by_concept, served_by_concept, last_wrong, answered_qids,
+        student.medium_language or "en"
+    )
+    if not chosen:
+        return None
+
+    # Prefer questions the student has not already attempted in practice,
+    # without breaking the difficulty-adaptive rule when the pool runs dry.
+    unseen_fresh = [q for q in test_engine._items_for(cid, student.medium_language or "en")[0]
+                    if q.id not in answered_qids and q.id not in prior_attempted.get(cid, set())]
+    if unseen_fresh:
+        m = mastery_by_concept.get(cid, 0.2)
+        chosen = min(unseen_fresh, key=lambda q: (abs(q.difficulty - m), q.id))
+
+    item_db = TestItemDB(
+        session_id=session_db.id,
+        student_id=student.pseudonymous_id,
+        sequence=len(items) + 1,
+        question_id=chosen.id,
+        concept_id=cid,
+        served_difficulty=chosen.difficulty,
+        served_reason=reason,
+        served_language=getattr(chosen, "language", "en") or "en",
+        served_is_fallback=is_fallback
+    )
+    db.add(item_db)
+    db.commit()
+    return item_db
+
+
+def _complete_test_session(db: Session, student: Student, plan: Plan, session_db: TestSessionDB) -> Dict[str, Any]:
+    """Writes the persisted summary, schedules spaced reviews, and routes the plan to the weakest concept."""
+    concept_ids = json.loads(session_db.concept_ids or "[]")
+    mastery_before = json.loads(session_db.mastery_before_json or "{}")
+    items = db.query(TestItemDB).filter(TestItemDB.session_id == session_db.id).all()
+    item_dicts = [
+        {"concept_id": it.concept_id, "is_correct": it.is_correct, "misconception_tag": it.misconception_tag}
+        for it in items
+    ]
+
+    mastery_after: Dict[str, float] = {}
+    quality_by_concept: Dict[str, int] = {}
+    for cid in concept_ids:
+        m_db = db.query(MasteryStateDB).filter(
+            MasteryStateDB.student_id == student.pseudonymous_id,
+            MasteryStateDB.concept_id == cid
+        ).first()
+        mastery_after[cid] = m_db.mastery_estimate if m_db else 0.2
+        c_items = [it for it in items if it.concept_id == cid and it.is_correct is not None]
+        if c_items:
+            ratio = sum(1 for i in c_items if i.is_correct) / len(c_items)
+            quality_by_concept[cid] = 4 if ratio >= 0.8 else (3 if ratio >= 0.5 else 2)
+
+    summary = test_engine.summarize(concept_ids, mastery_before, mastery_after, item_dicts)
+
+    # Schedule spaced review per tested concept (SM-2 intervals are untuned - label kept).
+    # This is now durable: next_review/interval/ease persist via save path and direct writes below.
+    for cid, quality in quality_by_concept.items():
+        m_state = load_or_create_mastery_state(db, student.pseudonymous_id, cid)
+        engine.scheduler.schedule_next_review(m_state, quality=quality)
+        m_db = db.query(MasteryStateDB).filter(
+            MasteryStateDB.student_id == student.pseudonymous_id,
+            MasteryStateDB.concept_id == cid
+        ).first()
+        if m_db:
+            m_db.last_seen = m_state.last_seen
+            m_db.next_review = m_state.next_review
+            m_db.interval_days = m_state.interval_days
+            m_db.ease_factor = m_state.ease_factor
+
+    session_db.status = "completed"
+    session_db.completed_at = datetime.utcnow()
+    session_db.summary_json = json.dumps(summary)
+
+    # Post-test routing: the plan now targets the weakest tested concept so the
+    # existing Learn/Solve flow continues there. Recorded as a real decision.
+    weakest = summary.get("weakest_concept_id")
+    if weakest and plan:
+        plan.current_concept_id = weakest
+        plan.current_stage = StageEnum.SOLVE
+        plan.gap_concept_id = None
+        plan.stuck_attempts_count = 0
+        plan.bridge_recheck_fails = 0
+        plan.reason = summary["recommendation"]
+        plan.updated_at = datetime.utcnow()
+        save_student_domain_state(db, student.pseudonymous_id, plan, None, None)
+        db.add(DecisionDB(
+            student_id=student.pseudonymous_id,
+            class_id=student.class_id,
+            action="ROUTE_AFTER_TEST",
+            rule_id="test_weakest_concept_route",
+            reason=summary["recommendation"],
+            stage="solve",
+            timestamp=datetime.utcnow()
+        ))
+
+    db.commit()
+    return summary
+
+
+@app.post("/api/student/{student_id}/test/start")
+def start_adaptive_test(
+    student_id: str,
+    payload: TestStartPayload = Body(default=TestStartPayload()),
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """
+    Starts an adaptive chapter test. Online-only: item selection adapts on the server
+    after every answer. Student-token scoped. If a session is already in progress,
+    returns it for resume instead of starting a duplicate.
+    """
+    verify_student_only_access(session, student_id)
+    student, plan, mastery, hyp = load_student_domain_state(db, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    existing = db.query(TestSessionDB).filter(
+        TestSessionDB.student_id == student_id,
+        TestSessionDB.status == "in_progress"
+    ).order_by(TestSessionDB.started_at.desc()).first()
+    if existing:
+        state = _test_session_state(db, student, existing)
+        state["resumed"] = True
+        return state
+
+    eligible = test_engine.eligible_concepts()
+    if payload.concept_ids:
+        unknown = [c for c in payload.concept_ids if c not in eligible]
+        concept_ids = [c for c in payload.concept_ids if c in eligible]
+        if not concept_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"None of the requested concepts are testable. Not enough assessment questions for: {unknown}"
+            )
+        excluded = unknown
+    else:
+        concept_ids = eligible
+        excluded = test_engine.excluded_concepts()
+
+    length = payload.length or test_engine.DEFAULT_LENGTH
+    length = max(2, min(length, test_engine.MAX_LENGTH))
+
+    mastery_before: Dict[str, float] = {}
+    for cid in concept_ids:
+        m = load_or_create_mastery_state(db, student_id, cid)
+        mastery_before[cid] = m.mastery_estimate
+
+    now = datetime.utcnow()
+    due_reviews = [
+        row.concept_id for row in db.query(MasteryStateDB).filter(
+            MasteryStateDB.student_id == student_id,
+            MasteryStateDB.next_review.isnot(None),
+            MasteryStateDB.next_review <= now
+        ).all()
+    ]
+
+    session_db = TestSessionDB(
+        id=secrets.token_hex(12),
+        student_id=student_id,
+        class_id=student.class_id,
+        concept_ids=json.dumps(concept_ids),
+        excluded_concepts=json.dumps(excluded),
+        planned_length=length,
+        status="in_progress",
+        mastery_before_json=json.dumps(mastery_before)
+    )
+    db.add(session_db)
+    db.commit()
+
+    first_item = _serve_next_test_item(db, student, session_db)
+    if not first_item:
+        raise HTTPException(status_code=400, detail="No assessment questions available for the selected concepts.")
+
+    db.add(DecisionDB(
+        student_id=student_id,
+        class_id=student.class_id,
+        action="ADAPTIVE_TEST_START",
+        rule_id="adaptive_test_start",
+        reason=f"Adaptive chapter test started over {len(concept_ids)} concepts, planned length {length}.",
+        stage="test",
+        timestamp=datetime.utcnow()
+    ))
+    db.commit()
+
+    state = _test_session_state(db, student, session_db)
+    state["resumed"] = False
+    state["due_review_concepts"] = due_reviews
+    return state
+
+
+@app.post("/api/student/{student_id}/test/answer")
+def answer_adaptive_test(
+    student_id: str,
+    payload: TestAnswerPayload,
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """
+    Grades one test answer server-side, persists the attempt/mastery/decision,
+    then serves the next adaptive item or completes the session.
+    Idempotent per student: identical retry returns current state without
+    double-processing; same attempt id with a different payload returns 409.
+    """
+    verify_student_only_access(session, student_id)
+    student, plan, mastery, hyp = load_student_domain_state(db, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    session_db = db.query(TestSessionDB).filter(
+        TestSessionDB.id == payload.session_id,
+        TestSessionDB.student_id == student_id
+    ).first()
+    if not session_db:
+        raise HTTPException(status_code=404, detail="Test session not found for this student.")
+
+    # Idempotency (same contract as /attempt)
+    client_attempt_id = payload.attempt_id
+    stored_attempt_id = f"{student_id}:{client_attempt_id}" if client_attempt_id else None
+    if stored_attempt_id:
+        existing = db.query(AttemptDB).filter(
+            AttemptDB.student_id == student_id,
+            AttemptDB.id == stored_attempt_id
+        ).first()
+        if existing:
+            if existing.question_id == payload.question_id and existing.selected_option_id == payload.selected_option_id:
+                state = _test_session_state(db, student, session_db)
+                state["idempotent_replay"] = True
+                return state
+            raise HTTPException(
+                status_code=409,
+                detail="Conflict: Attempt ID already submitted with a different payload."
+            )
+
+    if session_db.status != "in_progress":
+        raise HTTPException(status_code=409, detail="Test session is already completed.")
+
+    current = db.query(TestItemDB).filter(
+        TestItemDB.session_id == session_db.id,
+        TestItemDB.answered_at.is_(None)
+    ).order_by(TestItemDB.sequence.desc()).first()
+    if not current:
+        raise HTTPException(status_code=409, detail="No pending test item. The session is ready to complete.")
+    if current.question_id != payload.question_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Question '{payload.question_id}' is not the current test item. Answers must follow the served sequence."
+        )
+
+    question = pack.get_question(payload.question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail=f"Question '{payload.question_id}' not found in pack.")
+    matched_option = next((opt for opt in question.options if opt.id == payload.selected_option_id), None)
+    if not matched_option:
+        raise HTTPException(status_code=400, detail=f"Option '{payload.selected_option_id}' does not exist for question '{payload.question_id}'.")
+
+    server_is_correct = matched_option.is_correct
+    server_misconception_tag = matched_option.misconception_tag if not server_is_correct else None
+
+    attempt_db = AttemptDB(
+        id=stored_attempt_id or secrets.token_hex(12),
+        student_id=student_id,
+        subject_key=getattr(student, "subject_key", None),
+        question_id=question.id,
+        concept_id=question.concept,
+        selected_option_id=payload.selected_option_id,
+        is_correct=server_is_correct,
+        misconception_tag=server_misconception_tag,
+        time_spent_seconds=payload.time_spent_seconds,
+        timestamp=datetime.utcnow()
+    )
+    db.add(attempt_db)
+
+    # Persist mastery update for the question's own concept (BKT params stay hand-set, labelled)
+    q_mastery = load_or_create_mastery_state(db, student_id, question.concept)
+    q_mastery.mastery_estimate = engine.bkt.update(q_mastery.mastery_estimate, server_is_correct)
+    save_student_domain_state(db, student_id, None, q_mastery, None)
+
+    current.selected_option_id = payload.selected_option_id
+    current.is_correct = server_is_correct
+    current.misconception_tag = server_misconception_tag
+    current.attempt_id = attempt_db.id
+    current.answered_at = datetime.utcnow()
+    db.commit()
+
+    answered_count = db.query(TestItemDB).filter(
+        TestItemDB.session_id == session_db.id,
+        TestItemDB.answered_at.isnot(None)
+    ).count()
+
+    response: Dict[str, Any] = {
+        "server_graded_correct": server_is_correct,
+        "authoritative_misconception": server_misconception_tag,
+        "updated_mastery": q_mastery.mastery_estimate,
+        "mastery_label": q_mastery.mastery_label,
+        "concept_id": question.concept,
+        "answered_count": answered_count,
+        "planned_length": session_db.planned_length
+    }
+
+    if answered_count >= session_db.planned_length:
+        summary = _complete_test_session(db, student, plan, session_db)
+        db.add(DecisionDB(
+            student_id=student_id,
+            class_id=student.class_id,
+            action="ADAPTIVE_TEST_COMPLETE",
+            rule_id="adaptive_test_complete",
+            reason=f"Adaptive test completed: {summary['total_correct']}/{summary['total_served']} correct.",
+            stage="test",
+            timestamp=datetime.utcnow()
+        ))
+        db.commit()
+        response["completed"] = True
+        response["summary"] = summary
+        return response
+
+    next_item = _serve_next_test_item(db, student, session_db)
+    if not next_item:
+        summary = _complete_test_session(db, student, plan, session_db)
+        db.add(DecisionDB(
+            student_id=student_id,
+            class_id=student.class_id,
+            action="ADAPTIVE_TEST_COMPLETE",
+            rule_id="adaptive_test_pool_exhausted",
+            reason=f"Adaptive test completed early (question pool served): {summary['total_correct']}/{summary['total_served']} correct.",
+            stage="test",
+            timestamp=datetime.utcnow()
+        ))
+        db.commit()
+        response["completed"] = True
+        response["summary"] = summary
+        return response
+
+    db.add(DecisionDB(
+        student_id=student_id,
+        class_id=student.class_id,
+        action="ADAPTIVE_TEST_ITEM",
+        rule_id="adaptive_test_selection",
+        reason=next_item.served_reason,
+        stage="test",
+        timestamp=datetime.utcnow()
+    ))
+    db.commit()
+
+    response["completed"] = False
+    response["session"] = _test_session_state(db, student, session_db)
+    return response
+
+
+@app.get("/api/student/{student_id}/test/active")
+def get_active_test(
+    student_id: str,
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """Returns the student's in-progress test session for resume, or active: null."""
+    verify_student_only_access(session, student_id)
+    student, plan, mastery, hyp = load_student_domain_state(db, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+    existing = db.query(TestSessionDB).filter(
+        TestSessionDB.student_id == student_id,
+        TestSessionDB.status == "in_progress"
+    ).order_by(TestSessionDB.started_at.desc()).first()
+    if not existing:
+        return {"active": None}
+    return {"active": _test_session_state(db, student, existing)}
+
+
+@app.get("/api/student/{student_id}/test/{session_id}")
+def get_test_session(
+    student_id: str,
+    session_id: str,
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """Full state of one of the student's own test sessions, including summary if completed."""
+    verify_student_only_access(session, student_id)
+    student, plan, mastery, hyp = load_student_domain_state(db, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+    session_db = db.query(TestSessionDB).filter(
+        TestSessionDB.id == session_id,
+        TestSessionDB.student_id == student_id
+    ).first()
+    if not session_db:
+        raise HTTPException(status_code=404, detail="Test session not found for this student.")
+    return _test_session_state(db, student, session_db)
+
+
+@app.get("/api/teacher/class/{class_id}/tests")
+def get_class_test_results(
+    class_id: str,
+    session: SessionDB = Depends(require_teacher),
+    db: Session = Depends(get_db)
+):
+    """
+    Teacher view of adaptive test sessions for the class, read from the persisted
+    test_sessions/test_items tables (no in-memory counters). Class scoping enforced.
+    """
+    verify_teacher_class_access(session, class_id, db)
+    sessions_db = db.query(TestSessionDB).filter(
+        TestSessionDB.class_id == class_id
+    ).order_by(TestSessionDB.started_at.desc()).limit(50).all()
+
+    out = []
+    for s in sessions_db:
+        items = db.query(TestItemDB).filter(TestItemDB.session_id == s.id).all()
+        answered = [it for it in items if it.answered_at is not None]
+        out.append({
+            "session_id": s.id,
+            "student_id": s.student_id,
+            "status": s.status,
+            "started_at": s.started_at.isoformat() if s.started_at else None,
+            "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+            "planned_length": s.planned_length,
+            "answered_count": len(answered),
+            "correct_count": sum(1 for it in answered if it.is_correct),
+            "concept_ids": json.loads(s.concept_ids or "[]"),
+            "summary": json.loads(s.summary_json) if s.summary_json else None
+        })
+    return {"class_id": class_id, "test_sessions": out}
 
 
 # --- Demo deployment: serve the built frontend from the same origin ---

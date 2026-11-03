@@ -238,3 +238,40 @@ class PinProfileDB(Base):
     locked_until = Column(DateTime, nullable=True)
     __table_args__ = (UniqueConstraint('device_id', 'student_id', name='uq_device_student'),)
 
+
+
+class TestSessionDB(Base):
+    """Adaptive chapter test session (Round 3: adaptive TEST leg). Additive table."""
+    __tablename__ = "test_sessions"
+    id = Column(String, primary_key=True)
+    student_id = Column(String, index=True, nullable=False)
+    class_id = Column(String, index=True, nullable=False)
+    concept_ids = Column(Text, default="[]")  # JSON list of tested concept ids
+    excluded_concepts = Column(Text, default="[]")  # concepts reported as not testable
+    planned_length = Column(Integer, default=8)
+    status = Column(String, default="in_progress")  # 'in_progress', 'completed'
+    mastery_before_json = Column(Text, default="{}")
+    summary_json = Column(Text, nullable=True)
+    started_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+
+class TestItemDB(Base):
+    """One served item inside an adaptive test session. Additive table."""
+    __tablename__ = "test_items"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String, index=True, nullable=False)
+    student_id = Column(String, index=True, nullable=False)
+    sequence = Column(Integer, nullable=False)
+    question_id = Column(String, nullable=False)
+    concept_id = Column(String, nullable=False)
+    served_difficulty = Column(Float, nullable=False)
+    served_reason = Column(Text, nullable=False)
+    served_language = Column(String, default="en")
+    served_is_fallback = Column(Boolean, default=False)
+    selected_option_id = Column(String, nullable=True)
+    is_correct = Column(Boolean, nullable=True)
+    misconception_tag = Column(String, nullable=True)
+    attempt_id = Column(String, nullable=True)  # links to AttemptDB.id
+    served_at = Column(DateTime, default=datetime.utcnow)
+    answered_at = Column(DateTime, nullable=True)
