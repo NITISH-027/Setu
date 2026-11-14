@@ -25,6 +25,7 @@ from app.db import (
     TestSessionDB, TestItemDB
 )
 from app import demo_reset
+from app.misconception_explainers import get_explainer
 from app.auth.security import (
     hash_password, verify_password, hash_pin, create_session,
     get_current_session, require_teacher, require_admin, require_reviewer,
@@ -891,10 +892,16 @@ def submit_attempt(
 
     save_student_domain_state(db, student_id, plan, updated_question_mastery, hyp)
 
+    # v3 child-side loop: explain WHY the picked option is wrong (author-drafted, unreviewed)
+    explainer = None
+    if not server_is_correct and server_misconception_tag:
+        explainer = get_explainer(server_misconception_tag, language=(student.medium_language or "en"))
+
     return {
         "decision": decision.to_dict(),
         "server_graded_correct": server_is_correct,
         "authoritative_misconception": server_misconception_tag,
+        "misconception_explanation": explainer,
         "updated_mastery": updated_question_mastery.mastery_estimate,
         "mastery_label": updated_question_mastery.mastery_label,
         "concept_id": updated_question_mastery.concept_id,
@@ -974,6 +981,67 @@ def get_teacher_class_dashboard(
         raise HTTPException(status_code=403, detail=str(e))
 
 
+@app.get("/api/teacher/class/{class_id}/attention-summary")
+def get_attention_summary(
+    class_id: str,
+    session: SessionDB = Depends(require_teacher),
+    db: Session = Depends(get_db)
+):
+    """
+    v3 one-screen 'who needs help now': every student in the class who currently
+    needs teacher attention, with the reason, sorted most-urgent first.
+    Designed to remove dashboard hunting: one glance, one list.
+    """
+    verify_teacher_class_access(session, class_id, db)
+    students = db.query(StudentDB).filter(StudentDB.class_id == class_id).all()
+    now = datetime.utcnow()
+    items = []
+    for stu in students:
+        sid = stu.pseudonymous_id
+        plan = db.query(PlanDB).filter(PlanDB.student_id == sid).first()
+        reasons = []
+        urgency = 0
+        if plan:
+            stage = plan.current_stage.value if hasattr(plan.current_stage, "value") else str(plan.current_stage)
+            if stage == "flag":
+                reasons.append("Flagged for 1-on-1 clinic support")
+                urgency = max(urgency, 3)
+            if (plan.bridge_recheck_fails or 0) >= 2:
+                reasons.append(f"Bridge re-check failed {plan.bridge_recheck_fails}x")
+                urgency = max(urgency, 3)
+            if (plan.stuck_attempts_count or 0) >= 2:
+                reasons.append(f"Stuck on {plan.stuck_attempts_count} attempts in a row")
+                urgency = max(urgency, 2)
+        open_hyps = db.query(HypothesisDB).filter(
+            HypothesisDB.student_id == sid, HypothesisDB.status == "open"
+        ).all()
+        if open_hyps:
+            tags = sorted({h.misconception_tag for h in open_hyps})
+            reasons.append(f"Open suspected gap: {', '.join(tags[:3])}")
+            urgency = max(urgency, 1)
+        weakest = db.query(MasteryStateDB).filter(
+            MasteryStateDB.student_id == sid
+        ).order_by(MasteryStateDB.mastery_estimate.asc()).first()
+        if not reasons:
+            continue  # only students who actually need attention
+        items.append({
+            "student_id": sid,
+            "urgency": urgency,
+            "reasons": reasons,
+            "weakest_concept": weakest.concept_id if weakest else None,
+            "weakest_mastery": weakest.mastery_estimate if weakest else None,
+            "mastery_label": weakest.mastery_label if weakest else None,
+        })
+    items.sort(key=lambda x: (-x["urgency"], x["student_id"]))
+    return {
+        "class_id": class_id,
+        "generated_at": now.isoformat(),
+        "students_needing_attention": items,
+        "count": len(items),
+        "note": "Rule-based flags and hand-set estimates, not diagnoses. Verify with the student before acting."
+    }
+
+
 @app.post("/api/teacher/override")
 def apply_teacher_override(
     payload: OverridePayload,
@@ -1029,9 +1097,35 @@ def apply_teacher_override(
     )
     db.add(override_db)
     save_student_domain_state(db, student_id, updated_plan, mastery, hyp)
+
+    # v3 human-in-the-loop: the teacher's judgement feeds the model's starting
+    # estimate for the overridden concept (bounded, hand-set, honestly labelled).
+    mastery_feedback = None
+    ms_row = db.query(MasteryStateDB).filter(
+        MasteryStateDB.student_id == student_id,
+        MasteryStateDB.concept_id == concept_id
+    ).first()
+    if ms_row is None:
+        ms_row = MasteryStateDB(student_id=student_id, concept_id=concept_id, mastery_estimate=0.2)
+        db.add(ms_row)
+        db.flush()
+    before = ms_row.mastery_estimate
+    if action in ("mark_cleared", "close_gap"):
+        ms_row.mastery_estimate = max(before, 0.70)  # teacher says: treat as secure starting point
+    elif action == "reinforce":
+        ms_row.mastery_estimate = min(before, 0.30)  # teacher says: treat as fragile starting point
+    if ms_row.mastery_estimate != before or action in ("mark_cleared", "close_gap", "reinforce"):
+        ms_row.mastery_label = "teacher-adjusted, hand-set"
+        mastery_feedback = {
+            "concept_id": concept_id,
+            "before": before,
+            "after": ms_row.mastery_estimate,
+            "label": ms_row.mastery_label,
+            "note": "Teacher judgement adjusted the starting estimate only; live evidence still updates it afterwards."
+        }
     db.commit()
 
-    return {"override": override.model_dump(), "plan": updated_plan.model_dump()}
+    return {"override": override.model_dump(), "plan": updated_plan.model_dump(), "mastery_feedback": mastery_feedback}
 
 
 @app.post("/api/teacher/bulk-paper-submit")

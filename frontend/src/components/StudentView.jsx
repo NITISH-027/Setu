@@ -35,6 +35,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
   const [queuedCount, setQueuedCount] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [statusMessage, setStatusMessage] = useState('');
+  const [misconceptionExplainer, setMisconceptionExplainer] = useState(null);
 
   // Learning state
   const [nextStepData, setNextStepData] = useState(null);
@@ -727,6 +728,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             setCurrentMastery(result.updated_mastery);
           }
           setStatusMessage(`Server graded: ${result.server_graded_correct ? 'Correct' : 'Incorrect'}. Next step loaded.`);
+          setMisconceptionExplainer(result.server_graded_correct === false ? (result.misconception_explanation || null) : null);
           if (result.server_graded_correct === false && result.authoritative_misconception) {
             const spotText = `I think the mix-up might be: ${prettyTag(result.authoritative_misconception)}. Let me check with one question.`;
             setTrail((prev) => {
@@ -1535,6 +1537,28 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         </span>
       </div>
 
+        {misconceptionExplainer && (
+          <div
+            id="misconception-explainer-card"
+            style={{
+              marginTop: '12px',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              fontSize: '12.5px',
+              lineHeight: '1.5',
+              background: 'rgba(245, 158, 11, 0.10)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              color: 'var(--soft-amber, #fcd34d)'
+            }}
+          >
+            <div style={{ fontWeight: '700', marginBottom: '4px' }}>Why this answer is wrong</div>
+            <div>{misconceptionExplainer.text}</div>
+            <div style={{ fontSize: '10px', marginTop: '6px', color: 'var(--text-muted)' }}>
+              {misconceptionExplainer.is_fallback ? 'Shown in English (Tamil explainer not written yet). ' : ''}
+              Content: {misconceptionExplainer.review_status}.
+            </div>
+          </div>
+        )}
       {statusMessage && (
         <div
           id="student-footer-status-message"

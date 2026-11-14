@@ -81,8 +81,20 @@ export default function TeacherView() {
   useEffect(() => {
     if (authToken) {
       fetchDashboard();
+      fetchAttention();
     }
   }, [authToken, selectedClass]);
+
+  const [attention, setAttention] = useState(null);
+
+  const fetchAttention = async (tok) => {
+    try {
+      const res = await fetch(`/api/teacher/class/${selectedClass}/attention-summary`, {
+        headers: { 'Authorization': `Bearer ${tok || authToken}` }
+      });
+      if (res.ok) setAttention(await res.json());
+    } catch { /* panel is advisory; dashboard still works */ }
+  };
 
   const fetchDashboard = async () => {
     if (!authToken) return;
@@ -250,6 +262,34 @@ export default function TeacherView() {
           </button>
         </div>
       </div>
+
+      {/* v3: Who needs help now - one-screen attention summary */}
+      {attention && (
+        <div id="attention-summary-panel" className="info-card" style={{ marginBottom: '14px', borderLeft: '4px solid var(--accent-primary)' }}>
+          <h3 style={{ fontSize: '15px', marginBottom: '6px' }}>Who needs help now ({attention.count})</h3>
+          {attention.count === 0 && (
+            <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>No student currently flagged, stuck, or with an open suspected gap.</div>
+          )}
+          {attention.students_needing_attention.slice(0, 8).map((s) => (
+            <div key={s.student_id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-color)', fontSize: '12.5px' }}>
+              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                {s.student_id}{s.urgency >= 3 ? ' - urgent' : ''}
+              </div>
+              {s.reasons.map((r, i) => (
+                <div key={i} style={{ color: 'var(--text-secondary)' }}>- {r}</div>
+              ))}
+            </div>
+          ))}
+          {attention.count > 8 && (
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+              + {attention.count - 8} more. {attention.note}
+            </div>
+          )}
+          {attention.count > 0 && attention.count <= 8 && (
+            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '6px' }}>{attention.note}</div>
+          )}
+        </div>
+      )}
 
       {/* Metrics Row */}
       {dashboard && (
