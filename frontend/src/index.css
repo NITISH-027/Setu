@@ -1204,3 +1204,313 @@ textarea:focus {
 }
 
 
+
+/* ===================================================
+   PAATHAI (Hill Path) THEME - Light, Tamil Nadu hills
+   Direction F: learning as a winding hill climb with
+   milestone stones. Default theme for the Round 3 demo.
+   =================================================== */
+
+[data-theme="paathai"] {
+  --theme-name: "paathai";
+  --bg-deep: #dde8cb;
+  --bg-primary: #eef3e2;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-card-hover: #ffffff;
+  --border-color: rgba(74, 124, 46, 0.38);
+  --border-subtle: rgba(74, 124, 46, 0.16);
+  --border-highlight: rgba(74, 124, 46, 0.6);
+  --border-focus: #4a7c2e;
+  --text-primary: #1d3a12;
+  --text-secondary: #3c5a2a;
+  --text-muted: #5f7f4a;
+  --accent-primary: #4a7c2e;
+  --accent-secondary: #6aa84f;
+  --accent-highlight: #e8862e;
+  --accent-purple: #7c5ca0;
+  --accent-amber: #d97706;
+  --accent-emerald: #4a7c2e;
+  --accent-rose: #c2402a;
+  --accent-gradient: linear-gradient(135deg, #5d8f3c 0%, #4a7c2e 55%, #2f4f1a 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #6aa84f 0%, #4a7c2e 100%);
+  --accent-glow: rgba(74, 124, 46, 0.28);
+  --radial-bg-1: rgba(106, 168, 79, 0.16);
+  --radial-bg-2: rgba(232, 134, 46, 0.1);
+  --radial-bg-3: rgba(74, 124, 46, 0.12);
+  --shadow-sm: 0 2px 8px rgba(47, 79, 26, 0.12);
+  --shadow-md: 0 10px 25px -5px rgba(47, 79, 26, 0.2);
+  --shadow-lg: 0 20px 40px -10px rgba(47, 79, 26, 0.28), 0 0 0 1px rgba(74, 124, 46, 0.15);
+  /* Paathai hooks for JSX inline styles */
+  --option-text: #1d3a12;
+  --option-bg: #ffffff;
+  --option-selected-bg: rgba(232, 134, 46, 0.16);
+  --option-selected-border: #e8862e;
+  --badge-online-bg: rgba(74, 124, 46, 0.16);
+  --badge-online-text: #2f4f1a;
+  --badge-offline-bg: rgba(194, 64, 42, 0.12);
+  --badge-offline-text: #a33824;
+  --status-ok: #2f6b1f;
+  --status-err: #b91c1c;
+  --input-bg: #ffffff;
+  --input-text: #1d3a12;
+}
+
+[data-theme="paathai"] body {
+  color: var(--text-primary);
+}
+
+[data-theme="paathai"] .app-header {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 3px solid #4a7c2e;
+  box-shadow: 0 4px 16px rgba(47, 79, 26, 0.12);
+}
+
+[data-theme="paathai"] .brand-title {
+  background: linear-gradient(180deg, #2f4f1a 30%, #5d8f3c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="paathai"] .header-select {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="paathai"] .nav-tabs {
+  background: rgba(74, 124, 46, 0.1);
+  border: 1px solid rgba(74, 124, 46, 0.22);
+}
+
+[data-theme="paathai"] .nav-tab-btn {
+  color: var(--text-secondary);
+}
+
+[data-theme="paathai"] .nav-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(74, 124, 46, 0.12);
+}
+
+[data-theme="paathai"] .nav-tab-btn.active {
+  color: #ffffff;
+}
+
+[data-theme="paathai"] .phone-container {
+  border: 2px solid #4a7c2e;
+  border-radius: 22px;
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="paathai"] .info-card,
+[data-theme="paathai"] .gap-group-card {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="paathai"] .q-text {
+  color: var(--text-primary);
+}
+
+[data-theme="paathai"] .option-btn {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 14px;
+}
+
+[data-theme="paathai"] .option-btn:hover:not(:disabled) {
+  background: #f4f9ec;
+  border-color: var(--border-focus);
+  box-shadow: 0 6px 14px rgba(47, 79, 26, 0.15);
+}
+
+[data-theme="paathai"] .option-btn.selected {
+  background: linear-gradient(135deg, rgba(232, 134, 46, 0.2), rgba(232, 134, 46, 0.1));
+  border-color: #e8862e;
+  color: #7a3d05;
+  box-shadow: 0 0 16px rgba(232, 134, 46, 0.25);
+}
+
+[data-theme="paathai"] .btn-secondary {
+  background: rgba(74, 124, 46, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="paathai"] .btn-secondary:hover {
+  background: rgba(74, 124, 46, 0.16);
+}
+
+[data-theme="paathai"] input[type="text"],
+[data-theme="paathai"] input[type="password"],
+[data-theme="paathai"] select,
+[data-theme="paathai"] textarea {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+}
+
+[data-theme="paathai"] .badge-uncalibrated {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92600a;
+  border-color: rgba(217, 119, 6, 0.4);
+  box-shadow: none;
+}
+
+[data-theme="paathai"] .badge-heuristic {
+  background: rgba(124, 92, 160, 0.1);
+  color: #6b4f8f;
+  border-color: rgba(124, 92, 160, 0.38);
+  box-shadow: none;
+}
+
+[data-theme="paathai"] .badge-stage {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="paathai"] .clinic-box {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-left: 5px solid #e8862e;
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+}
+
+[data-theme="paathai"] .app-footer {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
+  border-top: 2px solid rgba(74, 124, 46, 0.25);
+}
+
+/* ---------- Hill Path Map (milestone stones) ---------- */
+
+.hillmap-wrap {
+  background: linear-gradient(180deg, #f7faef 0%, #eef3e2 100%);
+  border: 1.5px solid rgba(74, 124, 46, 0.38);
+  border-radius: 14px;
+  padding: 8px 10px 4px;
+  margin-bottom: 10px;
+}
+
+.hillmap-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.hillmap-path {
+  stroke: #9cb880;
+  stroke-width: 3;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+}
+
+.hillmap-stone {
+  stroke-width: 2.5;
+}
+
+.hillmap-done {
+  fill: #6aa84f;
+  stroke: #2f4f1a;
+}
+
+.hillmap-visited {
+  fill: #cfe3b8;
+  stroke: #6aa84f;
+}
+
+.hillmap-current {
+  fill: #e8862e;
+  stroke: #7a3d05;
+}
+
+.hillmap-mark {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #ffffff;
+  pointer-events: none;
+}
+
+.hillmap-label {
+  font-size: 8.5px;
+  fill: #3c5a2a;
+  font-weight: 600;
+}
+
+.hillmap-peak {
+  fill: #2f4f1a;
+}
+
+.hillmap-caption {
+  font-size: 11px;
+  color: #5f7f4a;
+  text-align: center;
+  padding: 2px 4px 6px;
+  font-weight: 600;
+}
+
+/* ---------- Diagnosis Trail (Watch Setu think) ---------- */
+
+.trail-wrap {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-left: 4px solid var(--accent-highlight);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.trail-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent-highlight);
+  margin-bottom: 6px;
+}
+
+.trail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.trail-dot {
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+.trail-spot .trail-dot    { background: rgba(232, 134, 46, 0.2); color: #c96a12; }
+.trail-check .trail-dot   { background: rgba(74, 124, 46, 0.14); color: var(--accent-primary); }
+.trail-teach .trail-dot   { background: rgba(74, 124, 46, 0.14); color: var(--accent-primary); }
+.trail-recheck .trail-dot { background: rgba(74, 124, 46, 0.14); color: var(--accent-primary); }
+.trail-win .trail-dot     { background: var(--accent-gradient); color: #ffffff; }
+.trail-flag .trail-dot    { background: rgba(244, 63, 94, 0.18); color: var(--accent-rose); }
+.trail-note .trail-dot    { background: rgba(128, 128, 128, 0.18); color: var(--text-muted); }
+
+.trail-win .trail-text { font-weight: 700; }
+
+.trail-caption {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}

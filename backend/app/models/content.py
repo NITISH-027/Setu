@@ -60,6 +60,10 @@ class Question(BaseModel):
         default=None,
         description="Misconception tag this question acts as a diagnostic probe for"
     )
+    item_type: str = Field(
+        default="diagnostic",
+        description="diagnostic | retest | transfer. 'transfer' = same concept, different format; served once after a passed bridge recheck."
+    )
     review_record: ReviewRecord = Field(default_factory=ReviewRecord)
 
 

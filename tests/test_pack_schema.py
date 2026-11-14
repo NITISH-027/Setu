@@ -42,12 +42,11 @@ def test_spine_coverage(shipped_pack):
     classes_present = {c.class_level for c in shipped_pack.concepts}
     assert {6, 7, 8, 9, 10}.issubset(classes_present)
 
-    # Class 8 concepts are active; classes 6, 7, 9, 10 are graph-only
+    # Classes 6-8 concepts are active (Round 3 scope); classes 9, 10 are graph-only.
+    # Classes 6-7 spine concepts without content stay graph_only=True.
     for c in shipped_pack.concepts:
-        if c.class_level != 8:
+        if c.class_level in (9, 10):
             assert c.graph_only is True, f"Concept {c.id} of class {c.class_level} must be marked graph_only"
-        else:
-            assert c.graph_only is False
 
     # Intended NCERT references are unverified by default
     for c in shipped_pack.concepts:
@@ -59,8 +58,8 @@ def test_shipped_pack_coverage_report(shipped_pack):
     report = reporter.generate_report(shipped_pack)
 
     data = report.data
-    assert data["total_concepts"] == 20
-    assert data["active_concepts"] == 7
+    assert data["total_concepts"] == 21
+    assert data["active_concepts"] == 8  # 7 Class-8 + equivalent fractions (Class 7, Round 3)
     assert data["graph_only_concepts"] == 13
     assert data["total_questions"] >= 30
     assert len(data["tags_without_probes"]) == 0  # Every tagged misconception has a probe!

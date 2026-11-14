@@ -47,6 +47,34 @@ export default function TeacherView() {
     }
   };
 
+  // Demo mode (SETU_DEMO_MODE=true on backend): one-tap teacher entry, no password.
+  const handleDemoLogin = async () => {
+    setErrorMessage('');
+    try {
+      const res = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: 'teacher' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAuthToken(data.access_token);
+        setTeacherName(data.username);
+        setAssignedClasses(data.assigned_classes || []);
+        if (data.assigned_classes && data.assigned_classes.length > 0) {
+          setSelectedClass(data.assigned_classes[0]);
+        }
+      } else if (res.status === 403) {
+        setErrorMessage('Demo mode is off on the backend. Start it with SETU_DEMO_MODE=true to use one-tap entry.');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrorMessage(err.detail || 'Demo login failed.');
+      }
+    } catch {
+      setErrorMessage('Network error during demo login.');
+    }
+  };
+
   useEffect(() => {
     if (authToken) {
       fetchDashboard();
@@ -142,7 +170,7 @@ export default function TeacherView() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
-              style={{ width: '100%', padding: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--input-bg, var(--bg-secondary))', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
           </div>
 
@@ -154,12 +182,23 @@ export default function TeacherView() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              style={{ width: '100%', padding: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ width: '100%', padding: '10px', background: 'var(--input-bg, var(--bg-secondary))', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
           </div>
 
           <button id="teacher-signin-btn" type="submit" className="action-btn">
             Sign In
+          </button>
+
+          <button
+            id="teacher-demo-btn"
+            data-testid="teacher-demo-btn"
+            type="button"
+            onClick={handleDemoLogin}
+            className="btn-secondary"
+            style={{ width: '100%', borderStyle: 'dashed' }}
+          >
+            ⛰️ Judge demo: one-tap teacher entry (no password)
           </button>
         </form>
 
@@ -321,8 +360,20 @@ export default function TeacherView() {
                   {students.map((st) => (
                     <div key={st.student_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-primary)', padding: '10px', borderRadius: '6px' }}>
                       <div>
-                        <strong>{st.student_id}</strong> • Stage: {st.current_stage} • Concept: {st.current_concept_id}
+                        <strong>{st.student_id}</strong> • Mastery: {((st.bkt_mastery_estimate || 0) * 100).toFixed(0)}% ({st.bkt_label}) • Concept: {st.current_concept_id}
                         <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{st.suggested_plan_reason}</div>
+                        {st.evidence_band && (
+                          <div style={{ fontSize: '11px', marginTop: '3px' }}>
+                            <span className="badge-uncalibrated" style={{ fontSize: '10px' }}>
+                              evidence: {st.evidence_band} (rule-based, not a diagnosis)
+                            </span>
+                          </div>
+                        )}
+                        {(st.evidence_details || []).slice(0, 3).map((d, i) => (
+                          <div key={i} style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            • {typeof d === 'string' ? d : JSON.stringify(d)}
+                          </div>
+                        ))}
                       </div>
                       <button
                         id={`override-btn-${st.student_id}`}
@@ -351,7 +402,19 @@ export default function TeacherView() {
               {dashboard.undecided_students.map((st) => (
                 <div key={st.student_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                   <div>
-                    <strong>{st.student_id}</strong> • Stage: {st.current_stage} • Reason: {st.suggested_plan_reason}
+                    <strong>{st.student_id}</strong> • Mastery: {((st.bkt_mastery_estimate || 0) * 100).toFixed(0)}% ({st.bkt_label}) • Reason: {st.suggested_plan_reason}
+                    {st.evidence_band && (
+                      <div style={{ fontSize: '11px', marginTop: '3px' }}>
+                        <span className="badge-uncalibrated" style={{ fontSize: '10px' }}>
+                          evidence: {st.evidence_band} (rule-based, not a diagnosis)
+                        </span>
+                      </div>
+                    )}
+                    {(st.evidence_details || []).slice(0, 3).map((d, i) => (
+                      <div key={i} style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        • {typeof d === 'string' ? d : JSON.stringify(d)}
+                      </div>
+                    ))}
                   </div>
                   <button
                     id={`override-btn-${st.student_id}`}

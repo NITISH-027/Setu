@@ -31,6 +31,7 @@ class AuditEventType(str, Enum):
     RETENTION_RUN = "retention_run"
     TOMBSTONE_APPLIED = "tombstone_applied"
     OVERRIDE = "override"
+    QUICK_CHECK = "quick_check"
 
 
 class AuditLogEvent(BaseModel):

@@ -286,6 +286,35 @@ class TeacherService:
         self.gap_closed_records.append(record)
         return record
 
+    def record_quick_check(
+        self,
+        teacher_id: str,
+        class_id: str,
+        student_id: str,
+        concept_id: str,
+        got_it: bool,
+        mastery_estimate: float,
+        bkt_params
+    ) -> float:
+        """
+        One-tap 'got it / not yet' after a small-group activity.
+        Counts as ONE observation in the child's BKT mastery estimate.
+        """
+        if not self.verify_class_access(teacher_id, class_id):
+            raise PermissionError("Unauthorized class access.")
+
+        from app.engine.bkt import BKTEngine
+        bkt = BKTEngine(bkt_params)
+        new_estimate = bkt.update(mastery_estimate, got_it)
+
+        self.audit_log.append(AuditLogEvent(
+            event_type=AuditEventType.QUICK_CHECK,
+            actor=teacher_id,
+            class_id=class_id,
+            record_count=1
+        ))
+        return new_estimate
+
     def compute_override_rate(
         self,
         class_id: str,

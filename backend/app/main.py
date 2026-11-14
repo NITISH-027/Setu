@@ -82,6 +82,8 @@ else:
 engine = AdaptiveEngine(pack)
 test_engine = AdaptiveTestEngine(pack)
 teacher_service = TeacherService()
+DEMO_MODE = os.getenv("SETU_DEMO_MODE", "false").lower() == "true"
+
 paper_manager = PaperModeManager(pack, engine)
 coverage_reporter = CoverageReporter()
 review_manager = ReviewManager()
@@ -539,6 +541,108 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
         "device_purge_token": device_purge_token,
         "device_id": device_id
     }
+
+
+class QuickCheckPayload(BaseModel):
+    student_id: str
+    concept_id: str
+    got_it: bool
+
+
+@app.post("/api/teacher/class/{class_id}/quick-check")
+def teacher_quick_check(
+    class_id: str,
+    payload: QuickCheckPayload,
+    session: SessionDB = Depends(require_teacher),
+    db: Session = Depends(get_db)
+):
+    """Teacher one-tap 'got it / not yet' -> ONE observation into the child's BKT mastery."""
+    verify_teacher_class_access(session, class_id, db)
+
+    mastery_db = db.query(MasteryStateDB).filter(
+        MasteryStateDB.student_id == payload.student_id,
+        MasteryStateDB.concept_id == payload.concept_id
+    ).first()
+    if not mastery_db:
+        raise HTTPException(status_code=404, detail="No mastery record for this student and concept yet.")
+
+    params = BKTParameters(
+        prior=mastery_db.bkt_prior,
+        learn=mastery_db.bkt_learn,
+        guess=mastery_db.bkt_guess,
+        slip=mastery_db.bkt_slip,
+        label=mastery_db.mastery_label
+    )
+    new_estimate = teacher_service.record_quick_check(
+        teacher_id=session.user_id,
+        class_id=class_id,
+        student_id=payload.student_id,
+        concept_id=payload.concept_id,
+        got_it=payload.got_it,
+        mastery_estimate=mastery_db.mastery_estimate,
+        bkt_params=params
+    )
+    mastery_db.mastery_estimate = new_estimate
+    mastery_db.last_seen = datetime.utcnow()
+    db.commit()
+
+    return {
+        "student_id": payload.student_id,
+        "concept_id": payload.concept_id,
+        "got_it": payload.got_it,
+        "mastery_estimate": new_estimate,
+        "mastery_label": mastery_db.mastery_label
+    }
+
+
+@app.get("/api/auth/demo-students")
+def list_demo_students(db: Session = Depends(get_db)):
+    """Demo mode only: lists student profiles for tap-able cards."""
+    if not DEMO_MODE:
+        raise HTTPException(status_code=403, detail="Demo mode is disabled.")
+    students = db.query(StudentDB).limit(20).all()
+    return {"students": [{"student_id": s.pseudonymous_id, "class_id": s.class_id} for s in students]}
+
+
+@app.post("/api/auth/demo-login")
+def demo_login(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db)):
+    """Demo mode only: one-tap login without password or PIN."""
+    if not DEMO_MODE:
+        raise HTTPException(status_code=403, detail="Demo mode is disabled.")
+    profile = payload.get("profile", "")
+    device_id = payload.get("device_id")
+
+    if profile.startswith("student:"):
+        student_id = profile.split(":", 1)[1]
+        student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Unknown student profile.")
+        session = create_session(db, role="student", student_id=student_id, device_id=device_id)
+        return {
+            "authenticated": True,
+            "access_token": session.token,
+            "token_type": "bearer",
+            "role": "student",
+            "student_id": student_id,
+            "class_id": student.class_id,
+            "subject_key": student.subject_key,
+            "device_id": device_id
+        }
+
+    if profile == "teacher":
+        user = db.query(UserDB).filter(UserDB.role.in_(["teacher", "admin"])).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="No teacher account exists yet.")
+        session = create_session(db, user_id=user.id, role=user.role, device_id=device_id)
+        return {
+            "access_token": session.token,
+            "token_type": "bearer",
+            "role": user.role,
+            "username": user.username,
+            "assigned_classes": user.get_classes()
+        }
+
+    raise HTTPException(status_code=400, detail="Unknown demo profile. Use 'student:<id>' or 'teacher'.")
 
 
 @app.post("/api/auth/logout")

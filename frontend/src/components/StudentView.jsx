@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import TestView from './TestView';
 import { BKTEngine, RuleSequencer, HypothesisEngine, SpacedRepetitionScheduler } from '../engine/index.js';
+import HillPathMap from './HillPathMap';
+import DiagnosisTrail from './DiagnosisTrail';
 import {
   saveOfflinePack,
   getOfflinePack,
@@ -45,6 +47,17 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
   const [conceptMasteries, setConceptMasteries] = useState({});
   const [offlinePackData, setOfflinePackData] = useState(null);
   const [testMode, setTestMode] = useState(false);
+  const [demoStudents, setDemoStudents] = useState(null);
+  const [trail, setTrail] = useState([]);
+
+  // Diagnosis trail ("Watch Setu think"): only real engine decisions are recorded.
+  const pushTrail = (kind, text) => {
+    if (!text) return;
+    setTrail((prev) => {
+      if (prev.length > 0 && prev[prev.length - 1].text === text) return prev;
+      return [...prev.slice(-5), { kind, text }];
+    });
+  };
 
   // Engines
   const [bktEngine] = useState(() => new BKTEngine());
@@ -95,6 +108,64 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       }
     }
   }, [language]);
+
+  // tag_eqf_add_same_to_both -> "Add same to both"
+  const prettyTag = (tag) => {
+    if (!tag) return '';
+    return tag.replace(/^tag_[a-z]+_/, '').replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+  };
+
+  // Demo mode (SETU_DEMO_MODE=true on backend): list tap-able student profiles.
+  // Silently stays hidden when the backend says demo mode is off (403) or is unreachable.
+  useEffect(() => {
+    if (!authenticated && effectivelyOnline) {
+      fetch('/api/auth/demo-students')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setDemoStudents(d && d.students && d.students.length > 0 ? d.students : null))
+        .catch(() => setDemoStudents(null));
+    }
+  }, [authenticated, effectivelyOnline]);
+
+  // One-tap demo sign-in: no PIN, per-child profile separation kept (each tap = one child).
+  const handleDemoLogin = async (demoStudentId, demoClassId) => {
+    try {
+      const devId = await getOrCreateDeviceId();
+      const res = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: `student:${demoStudentId}`, device_id: devId })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setStatusMessage(err.detail || 'Demo login failed.');
+        return;
+      }
+      const data = await res.json();
+      setStudentId(demoStudentId);
+      setAuthenticated(true);
+      setToken(data.access_token);
+      const studentClass = data.class_id || demoClassId || '8-A';
+      setClassId(studentClass);
+      setStatusMessage('');
+      // Cache offline pack for this child, same as PIN sign-in
+      try {
+        const packRes = await fetch(`/api/student/${demoStudentId}/offline-pack`, {
+          headers: { 'Authorization': `Bearer ${data.access_token}` }
+        });
+        if (packRes.ok) {
+          const packData = await packRes.json();
+          await saveOfflinePack(studentClass, packData);
+          setOfflinePackData(packData);
+        }
+      } catch (err) {
+        console.warn('Offline pack pre-caching error:', err);
+      }
+      await loadNextStepOnline(data.access_token, demoStudentId);
+      await refreshQueueCount();
+    } catch {
+      setStatusMessage('Network error during demo login.');
+    }
+  };
 
   const refreshQueueCount = async () => {
     try {
@@ -254,6 +325,17 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         }
         if (data.step?.stage) {
           setPrevStage(currentStage);
+          if (data.step.stage !== currentStage) {
+            const stageKind = {
+              diagnose: 'check',
+              probe: 'check',
+              learn: 'teach',
+              bridge_recheck: 'recheck',
+              transfer: 'recheck',
+              flag_teacher: 'flag'
+            }[data.step.stage];
+            if (stageKind) pushTrail(stageKind, data.step.reason || `Moving to ${data.step.stage}.`);
+          }
           setCurrentStage(data.step.stage);
         }
 
@@ -641,6 +723,18 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             setCurrentMastery(result.updated_mastery);
           }
           setStatusMessage(`Server graded: ${result.server_graded_correct ? 'Correct' : 'Incorrect'}. Next step loaded.`);
+          if (result.server_graded_correct === false && result.authoritative_misconception) {
+            const spotText = `I think the mix-up might be: ${prettyTag(result.authoritative_misconception)}. Let me check with one question.`;
+            setTrail((prev) => {
+              const alreadySpotted = prev.some((ev) => ev.text === spotText);
+              const next = alreadySpotted
+                ? { kind: 'check', text: `Confirmed - the same mix-up showed up again. Setu is more sure now (still a hypothesis).` }
+                : { kind: 'spot', text: spotText };
+              return [...prev.slice(-5), next];
+            });
+          } else if (result.server_graded_correct === true && (currentStage === 'bridge_recheck' || currentStage === 'transfer')) {
+            pushTrail('win', 'That fixed it - the idea works in a new form too. Back to your topic!');
+          }
           await loadNextStepOnline(token, studentId);
           await refreshQueueCount();
           return;
@@ -661,6 +755,12 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
     const matchedOpt = fullQuestion?.options.find((o) => o.id === selectedOptId);
     const localIsCorrect = matchedOpt?.is_correct || false;
     const localMiscTag = matchedOpt?.misconception_tag || null;
+    if (!localIsCorrect && localMiscTag) {
+      pushTrail('spot', `I think the mix-up might be: ${prettyTag(localMiscTag)}. Let me check with one question.`);
+    }
+    if (localIsCorrect && (currentStage === 'bridge_recheck' || currentStage === 'transfer')) {
+      pushTrail('win', 'That fixed it - the idea works in a new form too. Back to your topic!');
+    }
     const targetConcept = fullQuestion?.concept || cId;
 
     // FIX 3: Update BKT mastery for the question's OWN concept
@@ -969,8 +1069,8 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             id="connection-status-badge"
             className="badge-uncalibrated"
             style={{
-              background: effectivelyOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              color: effectivelyOnline ? '#6ee7b7' : '#fca5a5'
+              background: effectivelyOnline ? 'var(--badge-online-bg, rgba(16, 185, 129, 0.2))' : 'var(--badge-offline-bg, rgba(239, 68, 68, 0.2))',
+              color: effectivelyOnline ? 'var(--badge-online-text, #6ee7b7)' : 'var(--badge-offline-text, #fca5a5)'
             }}
           >
             {effectivelyOnline ? 'Online' : 'Offline'}
@@ -994,9 +1094,9 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               style={{
                 width: '100%',
                 padding: '10px',
-                background: 'var(--bg-secondary)',
+                background: 'var(--input-bg, var(--bg-secondary))',
                 border: '1px solid var(--border-color)',
-                color: '#fff',
+                color: 'var(--input-text, #fff)',
                 borderRadius: '6px'
               }}
             />
@@ -1015,9 +1115,9 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               style={{
                 width: '100%',
                 padding: '10px',
-                background: 'var(--bg-secondary)',
+                background: 'var(--input-bg, var(--bg-secondary))',
                 border: '1px solid var(--border-color)',
-                color: '#fff',
+                color: 'var(--input-text, #fff)',
                 borderRadius: '6px'
               }}
             />
@@ -1033,13 +1133,34 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           </button>
         </form>
 
+        {demoStudents && (
+          <div id="demo-student-picker" data-testid="demo-student-picker" style={{ marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '10px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+              Judge demo (no PIN): tap a student. Each profile keeps its own progress.
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {demoStudents.map((s) => (
+                <button
+                  key={s.student_id}
+                  type="button"
+                  className="btn-secondary"
+                  data-testid={`demo-login-${s.student_id}`}
+                  onClick={() => handleDemoLogin(s.student_id, s.class_id)}
+                >
+                  {s.student_id} ({s.class_id})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {statusMessage && (
           <div
             id="student-status-message"
             style={{
               marginTop: '12px',
               fontSize: '12px',
-              color: statusMessage.includes('Correct') ? '#6ee7b7' : '#fca5a5',
+              color: statusMessage.includes('Correct') ? 'var(--status-ok, #6ee7b7)' : 'var(--status-err, #fca5a5)',
               background: 'rgba(0,0,0,0.3)',
               padding: '8px',
               borderRadius: '4px'
@@ -1101,8 +1222,8 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               fontSize: '11px',
               padding: '2px 8px',
               borderRadius: '12px',
-              background: effectivelyOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              color: effectivelyOnline ? '#6ee7b7' : '#fca5a5',
+              background: effectivelyOnline ? 'var(--badge-online-bg, rgba(16, 185, 129, 0.2))' : 'var(--badge-offline-bg, rgba(239, 68, 68, 0.2))',
+              color: effectivelyOnline ? 'var(--badge-online-text, #6ee7b7)' : 'var(--badge-offline-text, #fca5a5)',
               fontWeight: '600'
             }}
           >
@@ -1122,6 +1243,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               setCurrentStage('solve');
               setPrevStage(null);
               setConceptMasteries({});
+              setTrail([]);
               setStatusMessage('');
             }}
             className="btn-secondary"
@@ -1142,6 +1264,10 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           Queued: {queuedCount}
         </span>
       </div>
+
+      <HillPathMap masteries={conceptMasteries} currentConcept={currentConcept} />
+
+      <DiagnosisTrail events={trail} />
 
       {lastSyncTime && (
         <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>
@@ -1303,14 +1429,14 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
                   justifyContent: 'space-between',
                   padding: '10px',
                   borderRadius: '6px',
-                  background: selectedOptId === opt.id ? 'rgba(56, 189, 248, 0.2)' : 'var(--bg-secondary)',
-                  border: selectedOptId === opt.id ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                  color: '#fff',
+                  background: selectedOptId === opt.id ? 'var(--option-selected-bg, rgba(56, 189, 248, 0.2))' : 'var(--option-bg, var(--bg-secondary))',
+                  border: selectedOptId === opt.id ? '1px solid var(--option-selected-border, #38bdf8)' : '1px solid var(--border-color)',
+                  color: 'var(--option-text, #fff)',
                   textAlign: 'left'
                 }}
               >
                 <span>{opt.text}</span>
-                {selectedOptId === opt.id && <span style={{ color: 'var(--accent-blue)' }}>●</span>}
+                {selectedOptId === opt.id && <span style={{ color: 'var(--option-selected-border, #38bdf8)' }}>●</span>}
               </button>
             ))}
           </div>

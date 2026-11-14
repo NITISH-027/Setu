@@ -25,6 +25,7 @@ class StageEnum(str, Enum):
     SOLVE = "solve"
     TEST = "test"
     BRIDGE_RECHECK = "bridge_recheck"
+    TRANSFER = "transfer"
     MOVE_AHEAD = "move_ahead"
     ENRICHMENT = "enrichment"
 

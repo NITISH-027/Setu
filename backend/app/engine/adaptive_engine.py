@@ -10,7 +10,7 @@ Coordinates:
 - Move Ahead (fast learners skip drill on sufficient mastery)
 """
 
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, Any, List, Optional, Tuple, Set
 from datetime import datetime
 
 from app.models.pack import ContentPack
@@ -165,6 +165,34 @@ class AdaptiveEngine:
                 return en_probes, True
         return self.probes_by_tag.get(misconception_tag, []), False
 
+    def get_transfer_item_for_student(
+        self,
+        concept_id: Optional[str],
+        medium_language: str,
+        seen_question_ids: Optional[Set[str]] = None
+    ) -> Optional[Question]:
+        """
+        Returns one unanswered 'transfer' item for the concept (same concept,
+        different format), preferring the student's medium language, else None.
+        """
+        if not concept_id:
+            return None
+        seen_ids = set(seen_question_ids or [])
+        lang = medium_language or "en"
+        candidates = [
+            q for q in self.pack.questions
+            if q.concept == concept_id
+            and getattr(q, "item_type", "diagnostic") == "transfer"
+            and q.id not in seen_ids
+        ]
+        for q in candidates:
+            if getattr(q, "language", "en") == lang:
+                return q
+        for q in candidates:
+            if getattr(q, "language", "en") == "en":
+                return q
+        return candidates[0] if candidates else None
+
     def get_lesson_for_student(
         self,
         misconception_tag: Optional[str],
@@ -275,6 +303,24 @@ class AdaptiveEngine:
                 plan.bridge_recheck_fails += 1
             else:
                 plan.bridge_recheck_fails = 0
+                # TRANSFER STEP: a passed recheck alone does not prove learning.
+                transfer_q = self.get_transfer_item_for_student(
+                    plan.gap_concept_id or attempt.concept_id,
+                    getattr(student, "medium_language", "en") or "en"
+                )
+                if transfer_q is not None:
+                    plan.current_stage = StageEnum.TRANSFER
+                    recheck_passed = None
+        elif plan.current_stage == StageEnum.TRANSFER:
+            if attempt.is_correct:
+                recheck_passed = True
+            else:
+                recheck_passed = None
+                if not attempt.misconception_tag:
+                    # No misconception information: relearn the gap concept.
+                    plan.current_stage = StageEnum.LEARN
+                # If the wrong transfer answer carries a misconception tag, a
+                # hypothesis was opened above and the sequencer probes it first.
 
         # 4. Check if gap is supported by tracing
         gap_supported = False
@@ -307,7 +353,7 @@ class AdaptiveEngine:
             eval_consecutive_successes = orig_m.consecutive_successes if orig_m else 0
 
         sequencer_state = {
-            "current_stage": plan.current_stage,
+            "current_stage": StageEnum.BRIDGE_RECHECK if plan.current_stage == StageEnum.TRANSFER else plan.current_stage,
             "stuck_attempts": plan.stuck_attempts_count,
             "bridge_recheck_fails": plan.bridge_recheck_fails,
             "bridge_recheck_passed": recheck_passed,
@@ -457,6 +503,25 @@ class AdaptiveEngine:
                 else:
                     active_hypothesis.evidence_band = EvidenceBand.NOT_SURE
                     plan.current_stage = StageEnum.SOLVE
+
+        # 1b. Transfer Stage: serve the transfer item after a passed bridge recheck
+        if plan.current_stage == StageEnum.TRANSFER:
+            transfer_q = self.get_transfer_item_for_student(
+                plan.gap_concept_id or plan.current_concept_id,
+                medium_lang,
+                seen_ids
+            )
+            if transfer_q is not None:
+                return NextStepResult(
+                    stage=StageEnum.TRANSFER,
+                    item_type="question",
+                    item=transfer_q,
+                    reason="Bridge check passed. One transfer question in a different format before returning to the original topic.",
+                    bkt_mastery=mastery_state.mastery_estimate,
+                    bkt_label=mastery_state.mastery_label,
+                    hypothesis=active_hypothesis
+                )
+            # No transfer item authored: fall through to normal handling.
 
         # 2. Learn Stage (Micro-lesson)
         if plan.current_stage == StageEnum.LEARN:

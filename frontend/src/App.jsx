@@ -14,9 +14,9 @@ export default function App() {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem('setu_theme') || 'emerald';
+      return localStorage.getItem('setu_theme') || 'paathai';
     } catch {
-      return 'emerald';
+      return 'paathai';
     }
   });
 
@@ -78,6 +78,7 @@ export default function App() {
               onChange={(e) => setTheme(e.target.value)}
               className="header-select theme-select"
             >
+              <option value="paathai">⛰️ Paathai (Hill Path)</option>
               <option value="emerald">🌿 Emerald Jade</option>
               <option value="amethyst">✨ Velvet Amethyst</option>
               <option value="amber">🔥 Amber Sunset</option>
@@ -93,6 +94,7 @@ export default function App() {
             >
               <option value="en">English (Supported)</option>
               <option value="hi">हिंदी (Unreviewed Draft)</option>
+              <option value="ta">தமிழ் (Unreviewed Draft)</option>
               <option value="te">తెలుగు (Unreviewed Draft)</option>
             </select>
           </div>
