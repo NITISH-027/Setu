@@ -196,7 +196,7 @@ export default function PaperModeView() {
           <select
             value={selectedConcept}
             onChange={(e) => setSelectedConcept(e.target.value)}
-            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
           >
             <option value="c8_math_linear_eq_one_var">Linear Equations in One Variable (Class 8)</option>
             <option value="c8_math_rational_ops">Operations on Rational Numbers (Class 8)</option>
@@ -222,7 +222,7 @@ export default function PaperModeView() {
               value={teacherUsername}
               onChange={(e) => setTeacherUsername(e.target.value)}
               placeholder="teacher username"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <input
               id="teacher-paper-password"
@@ -230,13 +230,13 @@ export default function PaperModeView() {
               value={teacherPassword}
               onChange={(e) => setTeacherPassword(e.target.value)}
               placeholder="password"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <button onClick={handleTeacherLogin} className="btn-secondary">
               Sign In
             </button>
           </div>
-          {authError && <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px' }}>{authError}</div>}
+          {authError && <div style={{ fontSize: '12px', color: 'var(--soft-red, #fca5a5)', marginTop: '6px' }}>{authError}</div>}
         </div>
       )}
 
@@ -265,7 +265,7 @@ export default function PaperModeView() {
                 placeholder="Student Pseudonym"
                 value={row.student_id}
                 onChange={(e) => handleUpdateRow(idx, 'student_id', e.target.value)}
-                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
               />
               <input
                 id={`bulk-question-id-${idx}`}
@@ -274,7 +274,7 @@ export default function PaperModeView() {
                 placeholder="Question ID"
                 value={row.question_id}
                 onChange={(e) => handleUpdateRow(idx, 'question_id', e.target.value)}
-                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
               />
               <input
                 id={`bulk-option-id-${idx}`}
@@ -283,13 +283,13 @@ export default function PaperModeView() {
                 placeholder="Option ID (opt_1, etc.)"
                 value={row.selected_option_id}
                 onChange={(e) => handleUpdateRow(idx, 'selected_option_id', e.target.value)}
-                style={{ width: '120px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                style={{ width: '120px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
               />
               {bulkEntries.length > 1 && (
                 <button
                   onClick={() => handleRemoveRow(idx)}
                   className="btn-secondary"
-                  style={{ fontSize: '10px', padding: '4px 6px', color: '#fca5a5', borderColor: '#fca5a5' }}
+                  style={{ fontSize: '10px', padding: '4px 6px', color: 'var(--soft-red, #fca5a5)', borderColor: 'var(--soft-red, #fca5a5)' }}
                 >
                   ✕
                 </button>
@@ -314,7 +314,7 @@ export default function PaperModeView() {
           <div
             id="bulk-paper-success"
             data-testid="bulk-paper-success"
-            style={{ marginTop: '12px', fontSize: '13px', color: '#6ee7b7', background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+            style={{ marginTop: '12px', fontSize: '13px', color: 'var(--soft-green, #6ee7b7)', background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}
           >
             <strong>Server Confirmed:</strong> Processed {submissionResult.processed_count} physical paper sheet responses through AdaptiveEngine.
             <div style={{ marginTop: '8px', overflowX: 'auto' }}>
@@ -331,7 +331,7 @@ export default function PaperModeView() {
                   {submissionResult.results.map((res, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '6px', fontWeight: '600' }}>{res.student_id}</td>
-                      <td style={{ padding: '6px', color: res.is_correct ? '#6ee7b7' : '#fca5a5' }}>
+                      <td style={{ padding: '6px', color: res.is_correct ? 'var(--soft-green, #6ee7b7)' : 'var(--soft-red, #fca5a5)' }}>
                         {res.is_correct ? 'Correct' : 'Incorrect'}
                       </td>
                       <td style={{ padding: '6px' }}>{res.next_step?.stage || 'solve'}</td>
@@ -349,7 +349,7 @@ export default function PaperModeView() {
           <div
             id="bulk-paper-errors"
             data-testid="bulk-paper-errors"
-            style={{ marginTop: '12px', fontSize: '13px', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+            style={{ marginTop: '12px', fontSize: '13px', color: 'var(--soft-red, #fca5a5)', background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
           >
             <strong>Bulk Submission Errors:</strong>
             <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>

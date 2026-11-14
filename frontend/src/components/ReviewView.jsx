@@ -216,20 +216,20 @@ export default function ReviewView() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Reviewer Username"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <button type="submit" className="action-btn" style={{ width: 'auto' }}>
               Sign In
             </button>
           </form>
-          {loginError && <div style={{ fontSize: '12px', color: '#fca5a5', marginTop: '6px' }}>{loginError}</div>}
+          {loginError && <div style={{ fontSize: '12px', color: 'var(--soft-red, #fca5a5)', marginTop: '6px' }}>{loginError}</div>}
         </div>
       )}
 
@@ -264,7 +264,7 @@ export default function ReviewView() {
 
           <div className="info-card">
             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>HUMAN REVIEWED PERCENT</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: coverage.percent_human_reviewed > 0 ? 'var(--accent-emerald)' : '#fcd34d' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: coverage.percent_human_reviewed > 0 ? 'var(--accent-emerald)' : 'var(--soft-amber, #fcd34d)' }}>
               {coverage.percent_human_reviewed}%
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -286,14 +286,14 @@ export default function ReviewView() {
               value={attestationStatement}
               onChange={(e) => setAttestationStatement(e.target.value)}
               placeholder="Attestation statement..."
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <button type="submit" className="action-btn" style={{ width: 'auto' }}>
               Record Human Attestation
             </button>
           </form>
           {attestationMessage && (
-            <div style={{ marginTop: '10px', fontSize: '12px', color: '#6ee7b7' }}>
+            <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--soft-green, #6ee7b7)' }}>
               {attestationMessage}
             </div>
           )}
@@ -321,7 +321,7 @@ export default function ReviewView() {
               data-testid="editor-item-select"
               value={selectedItemId}
               onChange={(e) => handleSelectItem(e.target.value)}
-              style={{ padding: '6px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+              style={{ padding: '6px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
             >
               <optgroup label="Questions">
                 {(editorPack.questions || []).map((q) => (
@@ -357,7 +357,7 @@ export default function ReviewView() {
                 fontSize: '12px',
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-color)',
-                color: '#e2e8f0',
+                color: 'var(--soft-slate, #e2e8f0)',
                 borderRadius: '6px'
               }}
             />
@@ -380,7 +380,7 @@ export default function ReviewView() {
             <div
               id="editor-success-message"
               data-testid="editor-success-message"
-              style={{ marginTop: '12px', fontSize: '13px', color: '#6ee7b7', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+              style={{ marginTop: '12px', fontSize: '13px', color: 'var(--soft-green, #6ee7b7)', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}
             >
               ✓ {editorSuccess}
             </div>
@@ -390,7 +390,7 @@ export default function ReviewView() {
             <div
               id="editor-error-message"
               data-testid="editor-error-message"
-              style={{ marginTop: '12px', fontSize: '13px', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+              style={{ marginTop: '12px', fontSize: '13px', color: 'var(--soft-red, #fca5a5)', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
             >
               ⚠ {editorError}
             </div>

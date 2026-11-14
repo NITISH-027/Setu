@@ -486,7 +486,7 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                     <span className="flow-chip">Adaptive Graph Traversal</span>
                     <span className="badge-heuristic" style={{ fontSize: '10px' }}>Hypothesis Check</span>
                   </div>
-                  <h3 style={{ fontSize: '15px', color: '#f59e0b', marginBottom: '8px' }}>
+                  <h3 style={{ fontSize: '15px', color: 'var(--soft-amber2, #f59e0b)', marginBottom: '8px' }}>
                     ⚠️ Possible prerequisite gap detected
                   </h3>
                   <p style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
@@ -495,7 +495,7 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                   <p style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)', marginTop: '6px' }}>
                     Instead of repeatedly drilling the student on Class 8 equations, Setu steps back to check foundational Class 6 prerequisites without penalizing the student's mastery score.
                   </p>
-                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '6px', margin: '12px 0', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ background: 'var(--inset-bg, rgba(0,0,0,0.3))', padding: '10px', borderRadius: '6px', margin: '12px 0', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Target Prerequisite Concept</div>
                     <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Subtraction of Integers (Class 6: c6_int_sub)</strong>
                   </div>
@@ -594,7 +594,7 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                   <h3 style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '8px' }}>
                     📖 Concept Bridge: Subtraction of Integers
                   </h3>
-                  <blockquote style={{ background: 'rgba(0,0,0,0.3)', borderLeft: '3px solid var(--accent-primary)', padding: '10px 14px', margin: '10px 0', fontSize: '13px', lineHeight: '1.5', color: '#e2e8f0', fontStyle: 'normal' }}>
+                  <blockquote style={{ background: 'var(--inset-bg, rgba(0,0,0,0.3))', borderLeft: '3px solid var(--accent-primary)', padding: '10px 14px', margin: '10px 0', fontSize: '13px', lineHeight: '1.5', color: 'var(--soft-slate, #e2e8f0)', fontStyle: 'normal' }}>
                     "Prerequisite Bridge (Class 6 Integers): When subtracting a larger positive integer from a smaller one, the result is negative (e.g. 3 - 7 = -4). Move left on the number line."
                   </blockquote>
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
@@ -645,7 +645,7 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                   {bridgeChoice === '-7' && (
                     <div className="preview-feedback-box correct">
                       <div><strong>✓ Correct!</strong> 5 - 12 = -7.</div>
-                      <div style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.25)', borderRadius: '4px', fontSize: '12px' }}>
+                      <div style={{ marginTop: '6px', padding: '6px 8px', background: 'var(--inset-bg, rgba(0,0,0,0.25))', borderRadius: '4px', fontSize: '12px' }}>
                         📈 <strong>Illustrative Mastery Increase:</strong> Integer Subtraction: 20% → 45% (illustrative only).
                       </div>
                       <div style={{ marginTop: '6px', fontSize: '12px' }}>
@@ -770,14 +770,14 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                 </p>
 
                 <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '8px 10px', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--inset-bg, rgba(0,0,0,0.2))', padding: '8px 10px', borderRadius: '6px' }}>
                     <div>
                       <strong style={{ fontSize: '12.5px' }}>stu_demo_01</strong>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         Stage: probe • Reason: Sign transposition on linear equations
                       </div>
                       {teacherOverrides['stu_demo_01'] && (
-                        <div style={{ fontSize: '11px', color: '#a7f3d0', marginTop: '2px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--soft-green, #a7f3d0)', marginTop: '2px' }}>
                           ✓ Overridden: "{teacherOverrides['stu_demo_01']}"
                         </div>
                       )}
@@ -796,14 +796,14 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                     </button>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '8px 10px', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--inset-bg, rgba(0,0,0,0.2))', padding: '8px 10px', borderRadius: '6px' }}>
                     <div>
                       <strong style={{ fontSize: '12.5px' }}>stu_coll_A</strong>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         Stage: learn • Reason: Subtraction direction inverted
                       </div>
                       {teacherOverrides['stu_coll_A'] && (
-                        <div style={{ fontSize: '11px', color: '#a7f3d0', marginTop: '2px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--soft-green, #a7f3d0)', marginTop: '2px' }}>
                           ✓ Overridden: "{teacherOverrides['stu_coll_A']}"
                         </div>
                       )}
@@ -833,14 +833,14 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
                   Algorithmic confidence threshold not met; requires human teacher evaluation or more practice items.
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '8px 10px', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--inset-bg, rgba(0,0,0,0.2))', padding: '8px 10px', borderRadius: '6px' }}>
                   <div>
                     <strong style={{ fontSize: '12.5px' }}>stu_demo_02</strong>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       Stage: solve • Reason: Inconsistent probe responses (evidence undecided)
                     </div>
                     {teacherOverrides['stu_demo_02'] && (
-                      <div style={{ fontSize: '11px', color: '#a7f3d0', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--soft-green, #a7f3d0)', marginTop: '2px' }}>
                         ✓ Overridden: "{teacherOverrides['stu_demo_02']}"
                       </div>
                     )}
@@ -862,7 +862,7 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
 
               {/* Interactive Override Dialog */}
               {activeOverrideTarget && (
-                <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--accent-primary)', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+                <div style={{ background: 'var(--inset-bg, rgba(0,0,0,0.5))', border: '1px solid var(--accent-primary)', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
                   <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '6px' }}>
                     Pedagogical Override for {activeOverrideTarget.studentId}
                   </h4>

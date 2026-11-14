@@ -182,14 +182,14 @@ export default function PrivacyView() {
               value={adminUsername}
               onChange={(e) => setAdminUsername(e.target.value)}
               placeholder="Username"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <input
               type="password"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               placeholder="Password"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
             />
             <button type="submit" className="action-btn" style={{ width: 'auto' }}>
               Sign In
@@ -211,7 +211,7 @@ export default function PrivacyView() {
             value={deleteTargetId}
             onChange={(e) => setDeleteTargetId(e.target.value)}
             placeholder="Student Pseudonym"
-            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
           />
 
           <button
@@ -225,10 +225,10 @@ export default function PrivacyView() {
         </div>
 
         {deletionReport && (
-          <div style={{ marginTop: '16px', padding: '14px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ marginTop: '16px', padding: '14px', background: 'var(--inset-bg, rgba(0,0,0,0.3))', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <strong>Tombstone Status Report</strong>
-              <span style={{ fontSize: '12px', color: deletionReport.is_fully_deleted_everywhere ? '#6ee7b7' : '#fcd34d' }}>
+              <span style={{ fontSize: '12px', color: deletionReport.is_fully_deleted_everywhere ? 'var(--soft-green, #6ee7b7)' : 'var(--soft-amber, #fcd34d)' }}>
                 {deletionReport.is_fully_deleted_everywhere ? 'Fully Purged Across Stores' : 'Pending Device Sync'}
               </span>
             </div>
@@ -248,7 +248,7 @@ export default function PrivacyView() {
         )}
 
         {syncStatus && (
-          <div style={{ marginTop: '10px', fontSize: '12px', color: '#6ee7b7' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--soft-green, #6ee7b7)' }}>
             {syncStatus}
           </div>
         )}
@@ -300,7 +300,7 @@ export default function PrivacyView() {
                             fontSize: '11px',
                             fontWeight: '600',
                             background: d.status === 'acknowledged' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: d.status === 'acknowledged' ? '#6ee7b7' : '#fcd34d'
+                            color: d.status === 'acknowledged' ? 'var(--soft-green, #6ee7b7)' : 'var(--soft-amber, #fcd34d)'
                           }}
                         >
                           {d.status === 'acknowledged' ? 'Acknowledged' : 'Pending Sync'}
@@ -341,7 +341,7 @@ export default function PrivacyView() {
             placeholder="Student Pseudonym (e.g. stu_001)"
             value={exportStudentId}
             onChange={(e) => setExportStudentId(e.target.value)}
-            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
           />
           <button
             id="export-student-btn"
@@ -360,13 +360,13 @@ export default function PrivacyView() {
             id="export-json-container"
             style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
           >
-            <div style={{ fontSize: '12px', color: '#6ee7b7', fontWeight: '600', marginBottom: '6px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--soft-green, #6ee7b7)', fontWeight: '600', marginBottom: '6px' }}>
               ✓ Export Successful (No secrets included):
             </div>
             <pre
               id="export-json-output"
               data-testid="export-json-output"
-              style={{ fontSize: '12px', color: '#cbd5e1', overflowX: 'auto', margin: 0 }}
+              style={{ fontSize: '12px', color: 'var(--soft-slate2, #cbd5e1)', overflowX: 'auto', margin: 0 }}
             >
               {JSON.stringify(exportResult, null, 2)}
             </pre>
@@ -377,7 +377,7 @@ export default function PrivacyView() {
           <div
             id="export-error-output"
             data-testid="export-error-output"
-            style={{ fontSize: '12px', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+            style={{ fontSize: '12px', color: 'var(--soft-red, #fca5a5)', background: 'rgba(239, 68, 68, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}
           >
             {exportError}
           </div>

@@ -109,7 +109,7 @@ export default function TestView({ studentId, token, onExit }) {
             reported at the end, not hidden.
           </p>
         </div>
-        {error && <p style={{ color: '#fca5a5', fontSize: '12px' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--soft-red, #fca5a5)', fontSize: '12px' }}>{error}</p>}
         <button id="start-test-btn" data-testid="start-test-btn" onClick={startTest} disabled={busy}
           className="action-btn" style={{ marginTop: '12px', width: '100%', padding: '12px' }}>
           {busy ? 'Starting...' : 'Start Adaptive Test'}
@@ -147,9 +147,9 @@ export default function TestView({ studentId, token, onExit }) {
                 disabled={busy || feedback !== null}
                 style={{
                   textAlign: 'left', padding: '10px 12px', borderRadius: '8px', fontSize: '14px',
-                  border: selectedOptId === opt.id ? '2px solid #34d399' : '1px solid var(--border-color)',
-                  background: selectedOptId === opt.id ? 'rgba(52, 211, 153, 0.12)' : 'var(--bg-primary)',
-                  color: '#fff', cursor: 'pointer'
+                  border: selectedOptId === opt.id ? '2px solid var(--option-selected-border, #34d399)' : '1px solid var(--border-color)',
+                  background: selectedOptId === opt.id ? 'var(--option-selected-bg, rgba(52, 211, 153, 0.12))' : 'var(--option-bg, var(--bg-primary))',
+                  color: 'var(--option-text, #fff)', cursor: 'pointer'
                 }}
               >
                 {opt.text}
@@ -160,12 +160,12 @@ export default function TestView({ studentId, token, onExit }) {
         {feedback && (
           <p id="test-feedback" style={{
             marginTop: '10px', fontSize: '14px', fontWeight: '600',
-            color: feedback === 'correct' ? '#6ee7b7' : '#fca5a5'
+            color: feedback === 'correct' ? 'var(--soft-green, #6ee7b7)' : 'var(--soft-red, #fca5a5)'
           }}>
             {feedback === 'correct' ? 'Correct - the next question adapts upward.' : 'Not quite - recorded for your report.'}
           </p>
         )}
-        {error && <p style={{ color: '#fca5a5', fontSize: '12px' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--soft-red, #fca5a5)', fontSize: '12px' }}>{error}</p>}
         <button id="submit-test-answer" data-testid="submit-test-answer" onClick={submitAnswer}
           disabled={!selectedOptId || busy || feedback !== null}
           className="action-btn" style={{ marginTop: '12px', width: '100%', padding: '12px' }}>

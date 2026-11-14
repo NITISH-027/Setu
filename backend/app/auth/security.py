@@ -68,6 +68,14 @@ def get_current_session(
     token = auth.credentials
     session = db.query(SessionDB).filter(SessionDB.token == token).first()
     if not session or session.expires_at < datetime.utcnow():
+        if session is not None:
+            try:
+                from app import demo_reset
+                if demo_reset.is_demo_session(db, token):
+                    # Expired demo session = judge idle timeout: restore idle demo profiles.
+                    demo_reset.sweep_idle_demo_profiles(db)
+            except Exception:
+                pass  # never block a 401 on demo hygiene
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired session token"

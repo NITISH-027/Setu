@@ -275,3 +275,17 @@ class TestItemDB(Base):
     attempt_id = Column(String, nullable=True)  # links to AttemptDB.id
     served_at = Column(DateTime, default=datetime.utcnow)
     answered_at = Column(DateTime, nullable=True)
+
+
+class DemoSessionDB(Base):
+    """Round 3 judge-demo hygiene: marks sessions created via /api/auth/demo-login.
+
+    Separate additive table (no migration of the sessions table needed).
+    Rows are markers only; they let demo mode know which seeded profiles were
+    actually entered via one-tap demo login, so idle ones can be reset to the
+    seeded starting state. Written ONLY when SETU_DEMO_MODE=true.
+    """
+    __tablename__ = "demo_sessions"
+    token = Column(String, primary_key=True)
+    student_id = Column(String, index=True, nullable=True)  # NULL for demo teacher entry
+    created_at = Column(DateTime, default=datetime.utcnow)

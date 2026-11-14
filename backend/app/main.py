@@ -24,6 +24,7 @@ from app.db import (
     PinProfileDB, DeviceSubjectDB, TombstoneDeliveryDB,
     TestSessionDB, TestItemDB
 )
+from app import demo_reset
 from app.auth.security import (
     hash_password, verify_password, hash_pin, create_session,
     get_current_session, require_teacher, require_admin, require_reviewer,
@@ -87,6 +88,18 @@ DEMO_MODE = os.getenv("SETU_DEMO_MODE", "false").lower() == "true"
 paper_manager = PaperModeManager(pack, engine)
 coverage_reporter = CoverageReporter()
 review_manager = ReviewManager()
+
+
+@app.on_event("startup")
+def capture_demo_baseline():
+    """Judge-demo hygiene: snapshot seeded state as the demo reset baseline."""
+    if DEMO_MODE:
+        db = SessionLocal()
+        try:
+            n = demo_reset.capture_snapshot(db)
+            print(f"DEMO MODE: reset baseline captured for {n} profiles.")
+        finally:
+            db.close()
 
 
 @app.on_event("startup")
@@ -403,7 +416,7 @@ def login_user(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
             db.add(DeviceDB(device_id=device_id, class_id=class_id))
             db.commit()
 
-    session = create_session(db, user_id=user.id, role=user.role, device_id=device_id)
+    session = create_session(db, user_id=user.id, role=user.role, device_id=device_id, duration_hours=(2 if DEMO_MODE else 24))
     return {
         "access_token": session.token,
         "token_type": "bearer",
@@ -530,7 +543,7 @@ def verify_pin(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
             dev_sub.last_seen_at = datetime.utcnow()
         db.commit()
 
-    session = create_session(db, role="student", student_id=student_id, device_id=device_id)
+    session = create_session(db, role="student", student_id=student_id, device_id=device_id, duration_hours=(2 if DEMO_MODE else 24))
     return {
         "authenticated": True,
         "access_token": session.token,
@@ -617,9 +630,12 @@ def demo_login(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
         student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
         if not student:
             raise HTTPException(status_code=404, detail="Unknown student profile.")
-        session = create_session(db, role="student", student_id=student_id, device_id=device_id)
+        session = create_session(db, role="student", student_id=student_id, device_id=device_id, duration_hours=2)
+        demo_reset.mark_demo_session(db, session.token, student_id=student_id)
         return {
             "authenticated": True,
+            "demo": True,
+            "demo_session_hours": 2,
             "access_token": session.token,
             "token_type": "bearer",
             "role": "student",
@@ -633,10 +649,13 @@ def demo_login(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
         user = db.query(UserDB).filter(UserDB.role.in_(["teacher", "admin"])).first()
         if not user:
             raise HTTPException(status_code=404, detail="No teacher account exists yet.")
-        session = create_session(db, user_id=user.id, role=user.role, device_id=device_id)
+        session = create_session(db, user_id=user.id, role=user.role, device_id=device_id, duration_hours=2)
+        demo_reset.mark_demo_session(db, session.token, student_id=None)
         return {
             "access_token": session.token,
             "token_type": "bearer",
+            "demo": True,
+            "demo_session_hours": 2,
             "role": user.role,
             "username": user.username,
             "assigned_classes": user.get_classes()
@@ -648,7 +667,11 @@ def demo_login(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
 @app.post("/api/auth/logout")
 def logout_user(session: SessionDB = Depends(get_current_session), db: Session = Depends(get_db)):
     """Session hygiene (FIX 1h): invalidates token upon logout."""
+    was_demo = demo_reset.is_demo_session(db, session.token)
     invalidate_session(db, session.token)
+    if was_demo:
+        # Judge-demo hygiene: restore any demo profile whose last live session just ended.
+        demo_reset.sweep_idle_demo_profiles(db)
     return {"status": "logged_out"}
 
 

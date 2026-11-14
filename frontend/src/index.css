@@ -1514,3 +1514,144 @@ textarea:focus {
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* ===================================================
+   PAATHAI CONTRAST FIXES (Round 3, 14 Nov)
+   The original surfaces were designed dark-on-dark.
+   These overrides give every notice, badge, callout,
+   chip and feedback box a WCAG-AA-readable light form.
+   Dark themes are untouched (all rules are scoped).
+   =================================================== */
+
+/* Soft ink hooks used by JSX inline styles */
+[data-theme="paathai"] {
+  --soft-red: #b91c1c;
+  --soft-rose: #be123c;
+  --soft-green: #166534;
+  --soft-slate: #334155;
+  --soft-slate2: #475569;
+  --soft-amber: #92600a;
+  --soft-amber2: #b45309;
+  --soft-yellow: #a16207;
+  --soft-purple: #7e22ce;
+  --soft-sky: #0369a1;
+  --inset-bg: rgba(29, 58, 18, 0.06);
+}
+
+/* Guided tour modal */
+[data-theme="paathai"] .tour-modal-content {
+  background: #ffffff;
+  box-shadow: 0 25px 60px -15px rgba(47, 79, 26, 0.35);
+}
+[data-theme="paathai"] .tour-header {
+  background: rgba(74, 124, 46, 0.08);
+}
+[data-theme="paathai"] .tour-close-btn:hover {
+  background: rgba(74, 124, 46, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="paathai"] .tour-progress-bar {
+  background: rgba(74, 124, 46, 0.18);
+}
+[data-theme="paathai"] .tour-quote {
+  background: rgba(74, 124, 46, 0.07);
+}
+[data-theme="paathai"] .tour-callout.warning {
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  color: #92600a;
+}
+[data-theme="paathai"] .tour-callout.info {
+  background: rgba(3, 105, 161, 0.08);
+  border: 1px solid rgba(3, 105, 161, 0.4);
+  color: #075985;
+}
+[data-theme="paathai"] .tour-beat-item {
+  background: rgba(74, 124, 46, 0.06);
+}
+[data-theme="paathai"] .prepared-example-card {
+  background: rgba(74, 124, 46, 0.06);
+}
+[data-theme="paathai"] .flow-chip {
+  background: rgba(74, 124, 46, 0.1);
+  color: var(--text-primary);
+}
+[data-theme="paathai"] .tour-inline-action-btn:hover {
+  background: rgba(74, 124, 46, 0.1);
+}
+[data-theme="paathai"] .cred-card {
+  background: rgba(74, 124, 46, 0.06);
+}
+[data-theme="paathai"] .cred-detail code {
+  background: rgba(74, 124, 46, 0.12);
+  color: #b45309;
+}
+[data-theme="paathai"] .tour-video-btn {
+  background: rgba(185, 28, 28, 0.08);
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #b91c1c;
+}
+[data-theme="paathai"] .tour-video-btn:hover {
+  background: rgba(185, 28, 28, 0.16);
+  color: #7f1d1d;
+}
+[data-theme="paathai"] .tour-footer {
+  background: rgba(74, 124, 46, 0.08);
+}
+[data-theme="paathai"] .tour-dot {
+  background: rgba(74, 124, 46, 0.25);
+}
+
+/* Preview banners + feedback boxes (tour interactive previews) */
+[data-theme="paathai"] .preview-persistent-banner {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92600a;
+}
+[data-theme="paathai"] .preview-persistent-banner.teacher {
+  background: rgba(67, 56, 202, 0.08);
+  border-color: rgba(67, 56, 202, 0.35);
+  color: #3730a3;
+}
+[data-theme="paathai"] .preview-card {
+  background: rgba(74, 124, 46, 0.05);
+}
+[data-theme="paathai"] .preview-feedback-box.correct {
+  background: rgba(22, 101, 52, 0.1);
+  border-color: rgba(22, 101, 52, 0.45);
+  color: #166534;
+}
+[data-theme="paathai"] .preview-feedback-box.incorrect {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #92600a;
+}
+[data-theme="paathai"] .preview-feedback-box.info {
+  background: rgba(3, 105, 161, 0.08);
+  border-color: rgba(3, 105, 161, 0.4);
+  color: #075985;
+}
+[data-theme="paathai"] .preview-link-btn:hover {
+  color: var(--text-primary);
+}
+[data-theme="paathai"] .preview-opt-btn {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+[data-theme="paathai"] .preview-opt-btn:hover:not(:disabled) {
+  background: #f4f9ec;
+}
+[data-theme="paathai"] .preview-opt-btn {
+  border: 1.5px solid var(--border-color);
+}
+[data-theme="paathai"] .preview-opt-btn.active {
+  background: rgba(74, 124, 46, 0.15);
+  color: var(--text-primary);
+}
+[data-theme="paathai"] .preview-opt-btn.active-wrong {
+  background: rgba(217, 119, 6, 0.15);
+  color: #92600a;
+}
+[data-theme="paathai"] .nav-tab-btn.active:hover {
+  background: var(--accent-gradient);
+  color: #ffffff;
+}

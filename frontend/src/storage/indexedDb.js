@@ -269,6 +269,42 @@ export async function deleteStudentBySubjectKey(subjectKey) {
   });
 }
 
+/**
+ * Judge-demo hygiene: clear one student's local (device-side) progress data.
+ * Used when a DEMO profile logs out so the next judge on this device starts clean.
+ * Content packs and device metadata are kept (they carry no student progress).
+ */
+export async function clearStudentLocalData(studentId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['profiles', 'learning_states', 'attempts', 'sync_queue'], 'readwrite');
+    tx.objectStore('profiles').delete(studentId);
+    tx.objectStore('learning_states').delete(studentId);
+
+    const attemptsStore = tx.objectStore('attempts');
+    const attReq = attemptsStore.getAll();
+    attReq.onsuccess = () => {
+      (attReq.result || []).forEach((att) => {
+        if (att.student_id === studentId) {
+          attemptsStore.delete(att.attempt_id);
+        }
+      });
+    };
+
+    const queueStore = tx.objectStore('sync_queue');
+    const queueReq = queueStore.getAll();
+    queueReq.onsuccess = () => {
+      (queueReq.result || []).forEach((q) => {
+        if (q.student_id === studentId) {
+          queueStore.delete(q.attempt_id);
+        }
+      });
+    };
+    tx.oncomplete = () => resolve({ cleared: true });
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function getOrCreateDeviceId() {
   let devId = await getMeta('device_id');
   if (!devId) {

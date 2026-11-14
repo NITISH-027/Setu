@@ -42,7 +42,25 @@ RUN IT
              (backend serves frontend/dist automatically)
   Judge demo: open the app -> Student App -> tap a student (no PIN).
              Teacher Dashboard -> "Judge demo: one-tap teacher entry".
-  Tests:     python -m pytest tests   (expect 104 passed)
+  Tests:     python -m pytest tests   (expect 110 passed)
+
+NEW IN THIS BUILD (evening fixes)
+  - Paathai (light) theme contrast repair: every modal, banner, badge, notice,
+    status bar, dropdown and disabled state audited by rendered-pixel
+    screenshots; dark themes unchanged (scoped CSS overrides +
+    var-with-fallback inline styles only).
+  - Judge-demo reset: in SETU_DEMO_MODE, when a demo profile (one-tap student
+    or teacher entry) logs out or its session expires, its attempts, mastery,
+    hypotheses, trail, teacher decisions/overrides and queued items are
+    restored to the seeded starting state, and the device's local IndexedDB
+    copy for that profile is cleared on logout. Safe with two judges on the
+    same profile: the reset waits until no live session remains for that
+    profile. Real (PIN) accounts and non-demo deployments are never touched
+    (covered by tests). Every demo-mode session is capped at 2 hours.
+    Limits: the reset baseline is the DB state at server startup (on Render's
+    ephemeral disk that IS the seeded state); a judge who closes the browser
+    without logging out leaves the profile dirty until the 2h session expires
+    and the next logout/login event triggers the sweep.
 
 HONESTY (do not delete - judges can check every line)
   - BKT mastery is labelled "uncalibrated, hand-set" in the UI.

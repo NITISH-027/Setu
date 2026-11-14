@@ -31,6 +31,9 @@ export default function TeacherView() {
 
       if (res.ok) {
         const data = await res.json();
+        if (data.demo) {
+          localStorage.setItem('setu_demo_teacher', '1');
+        }
         setAuthToken(data.access_token);
         setTeacherName(data.username);
         setAssignedClasses(data.assigned_classes || []);
@@ -203,7 +206,7 @@ export default function TeacherView() {
         </form>
 
         {errorMessage && (
-          <div style={{ marginTop: '12px', fontSize: '12px', color: '#fca5a5', background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '4px' }}>
+          <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--soft-red, #fca5a5)', background: 'var(--inset-bg, rgba(0,0,0,0.3))', padding: '8px', borderRadius: '4px' }}>
             {errorMessage}
           </div>
         )}
@@ -228,14 +231,21 @@ export default function TeacherView() {
             id="class-selector"
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            style={{ padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+            style={{ padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
           >
             <option value="8-A">Class 8-A</option>
             <option value="8-B">Class 8-B</option>
           </select>
 
           <button onClick={fetchDashboard} className="btn-secondary">Refresh</button>
-          <button onClick={() => { setAuthToken(null); setPassword(''); }} className="btn-secondary" style={{ fontSize: '11px' }}>
+          <button onClick={() => {
+            // Tell the server the session ended (triggers demo reset sweep for demo entries).
+            if (authToken) {
+              fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } }).catch(() => {});
+            }
+            localStorage.removeItem('setu_demo_teacher');
+            setAuthToken(null); setPassword('');
+          }} className="btn-secondary" style={{ fontSize: '11px' }}>
             Logout
           </button>
         </div>
@@ -309,13 +319,13 @@ export default function TeacherView() {
 
       {/* Access Denied / Error Alert */}
       {errorMessage && !overrideModal && (
-        <div style={{ marginTop: '16px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '16px', borderRadius: '8px', color: '#fda4af' }}>
+        <div style={{ marginTop: '16px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '16px', borderRadius: '8px', color: 'var(--soft-rose, #fda4af)' }}>
           <strong>Error:</strong> {errorMessage}
         </div>
       )}
 
       {actionSuccess && (
-        <div style={{ marginTop: '16px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '12px', borderRadius: '8px', color: '#6ee7b7' }}>
+        <div style={{ marginTop: '16px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '12px', borderRadius: '8px', color: 'var(--soft-green, #6ee7b7)' }}>
           {actionSuccess}
         </div>
       )}
@@ -440,7 +450,7 @@ export default function TeacherView() {
               Teacher Pedagogical Override: {overrideModal.student_id}
             </h3>
             {errorMessage && (
-              <div id="override-error-msg" style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '10px 12px', borderRadius: '6px', color: '#fda4af', fontSize: '13px', marginBottom: '12px' }}>
+              <div id="override-error-msg" style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '10px 12px', borderRadius: '6px', color: 'var(--soft-rose, #fda4af)', fontSize: '13px', marginBottom: '12px' }}>
                 {errorMessage}
               </div>
             )}
@@ -450,7 +460,7 @@ export default function TeacherView() {
                 <select
                   value={overrideAction}
                   onChange={(e) => setOverrideAction(e.target.value)}
-                  style={{ width: '100%', padding: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+                  style={{ width: '100%', padding: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
                 >
                   <option value="assign_concept">Assign Concept Directly</option>
                   <option value="mark_cleared">Mark Gap Cleared</option>
@@ -466,7 +476,7 @@ export default function TeacherView() {
                   onChange={(e) => setOverrideReason(e.target.value)}
                   placeholder="Explain why the algorithmic sequence is being overridden..."
                   rows={3}
-                  style={{ width: '100%', padding: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '6px' }}
+                  style={{ width: '100%', padding: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
                 />
               </div>
 

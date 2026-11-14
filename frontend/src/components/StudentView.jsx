@@ -21,7 +21,8 @@ import {
   deleteStudentBySubjectKey,
   getOrCreateDeviceId,
   setMeta,
-  getMeta
+  getMeta,
+  clearStudentLocalData
 } from '../storage/indexedDb.js';
 
 export default function StudentView({ devSimulateOffline = false, onToggleDevOffline, language = 'en', onLanguageChange }) {
@@ -141,6 +142,9 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         return;
       }
       const data = await res.json();
+      if (data.demo) {
+        localStorage.setItem('setu_demo_profile', demoStudentId);
+      }
       setStudentId(demoStudentId);
       setAuthenticated(true);
       setToken(data.access_token);
@@ -1161,7 +1165,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               marginTop: '12px',
               fontSize: '12px',
               color: statusMessage.includes('Correct') ? 'var(--status-ok, #6ee7b7)' : 'var(--status-err, #fca5a5)',
-              background: 'rgba(0,0,0,0.3)',
+              background: 'var(--inset-bg, rgba(0,0,0,0.3))',
               padding: '8px',
               borderRadius: '4px'
             }}
@@ -1230,7 +1234,21 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             {effectivelyOnline ? 'Online' : 'Offline'}
           </span>
           <button
-            onClick={() => {
+            onClick={async () => {
+              const endingToken = token;
+              const endingStudent = studentId;
+              const wasDemoProfile = !!endingStudent && localStorage.getItem('setu_demo_profile') === endingStudent;
+              // Tell the server the session ended (best-effort; triggers demo reset for demo profiles).
+              if (endingToken) {
+                try {
+                  await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${endingToken}` } });
+                } catch (e) { /* offline logout: server sweeps on next session expiry */ }
+              }
+              // Demo profile on a shared judge device: wipe local progress so the next judge starts clean.
+              if (wasDemoProfile) {
+                try { await clearStudentLocalData(endingStudent); } catch (e) { /* best-effort */ }
+                localStorage.removeItem('setu_demo_profile');
+              }
               setAuthenticated(false);
               setPin('');
               setToken(null);
@@ -1320,16 +1338,16 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             : 'var(--border-color)'
           ),
           color: currentStage === 'probe'
-            ? '#fde047'
+            ? 'var(--soft-yellow, #fde047)'
             : currentStage === 'learn'
-            ? '#7dd3fc'
+            ? 'var(--soft-sky, #7dd3fc)'
             : currentStage === 'bridge_recheck'
-            ? '#d8b4fe'
+            ? 'var(--soft-purple, #d8b4fe)'
             : currentStage === 'move_ahead'
-            ? '#6ee7b7'
+            ? 'var(--soft-green, #6ee7b7)'
             : currentStage === 'flag'
-            ? '#fca5a5'
-            : '#e2e8f0'
+            ? 'var(--soft-red, #fca5a5)'
+            : 'var(--soft-slate, #e2e8f0)'
         }}
       >
         {currentStage === 'probe' && 'Diagnostic Probe: Checking foundational prerequisite...'}
@@ -1351,7 +1369,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               {item?.is_fallback ? ' (English fallback)' : ''}
             </span>
           </div>
-          <h3 id="lesson-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#fff' }}>
+          <h3 id="lesson-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>
             {item?.title || 'Micro-Lesson Bridge'}
           </h3>
           <div
@@ -1360,7 +1378,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             style={{
               fontSize: '14px',
               lineHeight: '1.6',
-              color: '#e2e8f0',
+              color: 'var(--soft-slate, #e2e8f0)',
               marginBottom: '16px',
               whiteSpace: 'pre-wrap'
             }}
@@ -1382,10 +1400,10 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       {/* Teacher Flag Screen (Failure 2) */}
       {step?.item_type === 'flag' && (
         <div id="teacher-flag-screen" data-testid="teacher-flag-screen" className="info-card" style={{ borderLeft: '4px solid #f43f5e' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#fca5a5', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--soft-red, #fca5a5)', marginBottom: '8px' }}>
             Teacher Assistance Flagged
           </h3>
-          <p id="teacher-flag-message" style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.5' }}>
+          <p id="teacher-flag-message" style={{ fontSize: '14px', color: 'var(--soft-slate2, #cbd5e1)', lineHeight: '1.5' }}>
             Your teacher has been notified. Please wait or ask your teacher.
           </p>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>
@@ -1397,10 +1415,10 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       {/* Move-Ahead / Enrichment Screen (Failure 2) */}
       {step?.item_type === 'enrichment' && (
         <div id="enrichment-screen" data-testid="enrichment-screen" className="info-card" style={{ borderLeft: '4px solid #10b981' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#6ee7b7', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--soft-green, #6ee7b7)', marginBottom: '8px' }}>
             High Mastery Verified!
           </h3>
-          <p id="move-ahead-message" style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.5' }}>
+          <p id="move-ahead-message" style={{ fontSize: '14px', color: 'var(--soft-slate2, #cbd5e1)', lineHeight: '1.5' }}>
             {step?.reason || 'Congratulations! You demonstrated strong mastery. Advancing ahead to next concept!'}
           </p>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>
@@ -1506,7 +1524,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           style={{
             fontSize: '11px',
             borderColor: queuedCount > 0 && effectivelyOnline ? 'var(--accent-emerald)' : 'var(--border-color)',
-            color: queuedCount > 0 && effectivelyOnline ? '#6ee7b7' : 'var(--text-muted)'
+            color: queuedCount > 0 && effectivelyOnline ? 'var(--soft-green, #6ee7b7)' : 'var(--text-muted)'
           }}
         >
           {queuedCount > 0 ? `Sync ${queuedCount} Queued Attempt(s)` : 'Queue Empty'}
@@ -1523,8 +1541,8 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           style={{
             marginTop: '8px',
             fontSize: '11px',
-            color: '#cbd5e1',
-            background: 'rgba(0,0,0,0.3)',
+            color: 'var(--soft-slate2, #cbd5e1)',
+            background: 'var(--inset-bg, rgba(0,0,0,0.3))',
             padding: '8px',
             borderRadius: '4px'
           }}

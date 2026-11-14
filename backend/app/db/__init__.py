@@ -4,7 +4,7 @@ from app.db.models import (
     HypothesisDB, AttemptDB, DecisionDB, TeacherOverrideDB,
     TombstoneDB, DeviceDB, AuditEventDB, ReviewRecordDB, GapClosedRecordDB,
     PinProfileDB, DeviceSubjectDB, TombstoneDeliveryDB,
-    TestSessionDB, TestItemDB
+    TestSessionDB, TestItemDB, DemoSessionDB
 )
 
 def init_db(target_engine=None):
@@ -55,5 +55,5 @@ __all__ = [
     "HypothesisDB", "AttemptDB", "DecisionDB", "TeacherOverrideDB",
     "TombstoneDB", "DeviceDB", "AuditEventDB", "ReviewRecordDB", "GapClosedRecordDB",
     "PinProfileDB", "DeviceSubjectDB", "TombstoneDeliveryDB",
-    "TestSessionDB", "TestItemDB"
+    "TestSessionDB", "TestItemDB", "DemoSessionDB"
 ]
