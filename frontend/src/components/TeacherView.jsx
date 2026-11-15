@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-export default function TeacherView() {
+import { makeT } from '../i18n/uiStrings.js';
+import AuthoringForm from './AuthoringForm';
+
+export default function TeacherView({ language = 'en' }) {
+  const t = makeT(language);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authToken, setAuthToken] = useState(null);
@@ -231,14 +235,14 @@ export default function TeacherView() {
       {/* Teacher Controls Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Teacher Control Dashboard</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: '700' }}>{t('teacher.title')}</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             Authenticated as: <strong>{teacherName}</strong> (Assigned: {assignedClasses.join(', ') || 'None'})
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Class View:</label>
+          <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('teacher.classView')}</label>
           <select
             id="class-selector"
             value={selectedClass}
@@ -249,7 +253,7 @@ export default function TeacherView() {
             <option value="8-B">Class 8-B</option>
           </select>
 
-          <button onClick={fetchDashboard} className="btn-secondary">Refresh</button>
+          <button onClick={fetchDashboard} className="btn-secondary">{t('teacher.refresh')}</button>
           <button onClick={() => {
             // Tell the server the session ended (triggers demo reset sweep for demo entries).
             if (authToken) {
@@ -266,20 +270,31 @@ export default function TeacherView() {
       {/* v3: Who needs help now - one-screen attention summary */}
       {attention && (
         <div id="attention-summary-panel" className="info-card" style={{ marginBottom: '14px', borderLeft: '4px solid var(--accent-primary)' }}>
-          <h3 style={{ fontSize: '15px', marginBottom: '6px' }}>Who needs help now ({attention.count})</h3>
+          <h3 style={{ fontSize: '15px', marginBottom: '6px' }}>{t('teacher.attentionTitle')} ({attention.count})</h3>
           {attention.count === 0 && (
-            <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>No student currently flagged, stuck, or with an open suspected gap.</div>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>{t('teacher.attentionEmpty')}</div>
           )}
           {attention.students_needing_attention.slice(0, 8).map((s) => (
             <div key={s.student_id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-color)', fontSize: '12.5px' }}>
               <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                {s.student_id}{s.urgency >= 3 ? ' - urgent' : ''}
+                {s.student_id}{s.urgency >= 3 ? ' - ' + t('teacher.urgent') : ''}
               </div>
               {s.reasons.map((r, i) => (
                 <div key={i} style={{ color: 'var(--text-secondary)' }}>- {r}</div>
               ))}
+              {s.evidence_line && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '11.5px', marginTop: '2px' }}>
+                  {t('teacher.why')}: {s.evidence_line}
+                </div>
+              )}
             </div>
           ))}
+          {attention.override_learning && attention.override_learning.total_overrides > 0 && (
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '8px', background: 'var(--bg-subtle)', padding: '6px 8px', borderRadius: '6px' }}>
+              {t('teacher.learnedFrom').replace('{n}', attention.override_learning.total_overrides)}
+              {' '}{attention.override_learning.label}
+            </div>
+          )}
           {attention.count > 8 && (
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
               + {attention.count - 8} more. {attention.note}
@@ -290,6 +305,9 @@ export default function TeacherView() {
           )}
         </div>
       )}
+
+      {/* v5: teacher authoring - add/edit questions as unreviewed drafts */}
+      {authToken && <AuthoringForm authToken={authToken} t={t} />}
 
       {/* Metrics Row */}
       {dashboard && (

@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import StudentView from './components/StudentView';
+import { makeT } from './i18n/uiStrings.js';
 import TeacherView from './components/TeacherView';
 import PrivacyView from './components/PrivacyView';
 import ReviewView from './components/ReviewView';
 import PaperModeView from './components/PaperModeView';
 import GuidedTourModal from './components/GuidedTourModal';
 
+function FootprintNote() {
+  const [fp, setFp] = useState(null);
+  useEffect(() => {
+    fetch('/api/demo/footprint').then((r) => (r.ok ? r.json() : null)).then(setFp).catch(() => {});
+  }, []);
+  if (!fp) return null;
+  const kb = (b) => (b == null ? '?' : (b / 1024).toFixed(1));
+  return (
+    <div style={{ marginTop: '4px' }}>
+      Built for low bandwidth: app script {kb(fp.js_bytes)} KB, styles {kb(fp.css_bytes)} KB, question pack {kb(fp.pack_bytes)} KB{' '}
+      <em>{fp.label}</em>. Attempts made offline are queued on the device and sync when the network returns.
+    </div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('student');
   const [devSimulateOffline, setDevSimulateOffline] = useState(false);
   const [isSystemOnline, setIsSystemOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [language, setLanguage] = useState('en');
+  const t = makeT(language);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
@@ -106,35 +123,35 @@ export default function App() {
             className={`nav-tab-btn ${activeTab === 'student' ? 'active' : ''}`}
             onClick={() => setActiveTab('student')}
           >
-            Student App (Phone)
+            {t('nav.student')}
           </button>
           <button
             id="tab-teacher"
             className={`nav-tab-btn ${activeTab === 'teacher' ? 'active' : ''}`}
             onClick={() => setActiveTab('teacher')}
           >
-            Teacher Dashboard
+            {t('nav.teacher')}
           </button>
           <button
             id="tab-privacy"
             className={`nav-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
             onClick={() => setActiveTab('privacy')}
           >
-            Data & Privacy
+            {t('nav.privacy')}
           </button>
           <button
             id="tab-review"
             className={`nav-tab-btn ${activeTab === 'review' ? 'active' : ''}`}
             onClick={() => setActiveTab('review')}
           >
-            Coverage & Review
+            {t('nav.review')}
           </button>
           <button
             id="tab-paper"
             className={`nav-tab-btn ${activeTab === 'paper' ? 'active' : ''}`}
             onClick={() => setActiveTab('paper')}
           >
-            Paper Mode
+            {t('nav.paper')}
           </button>
         </nav>
       </header>
@@ -149,7 +166,7 @@ export default function App() {
             onLanguageChange={setLanguage}
           />
         )}
-        {activeTab === 'teacher' && <TeacherView />}
+        {activeTab === 'teacher' && <TeacherView language={language} />}
         {activeTab === 'privacy' && <PrivacyView />}
         {activeTab === 'review' && <ReviewView />}
         {activeTab === 'paper' && <PaperModeView />}
@@ -164,6 +181,7 @@ export default function App() {
           BKT estimates are <em>uncalibrated and hand-set</em>. Evidence scores are <em>rule-based heuristics</em>.
           Content is <em>author-drafted, unreviewed</em>. Demo controls only, not a legal or school compliance claim.
         </div>
+        <FootprintNote />
       </footer>
 
       {/* Guided Tour Modal for Judges */}

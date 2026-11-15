@@ -114,7 +114,7 @@ def test_engine_excludes_probes_and_reports_excluded_concepts():
     eligible = te.eligible_concepts()
     assert "c8_math_linear_eq_one_var" in eligible
     # Graph-only / sparse concepts are reported, not hidden
-    assert "c6_math_integers_add_sub" in te.excluded_concepts()
+    assert "c7_math_exponents_intro" in te.excluded_concepts()  # probe-only concept (c6_math_integers_add_sub gained draft questions in Round 6)
     # No probe question is ever an assessment item
     for qs in te.questions_by_concept.values():
         for q in qs:

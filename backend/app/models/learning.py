@@ -126,4 +126,5 @@ class Plan(BaseModel):
     reason: str = Field(default="Initial diagnosis", description="Plain-language reason for why this plan/item was chosen")
     stuck_attempts_count: int = 0
     bridge_recheck_fails: int = 0
+    chain_probed: List[str] = Field(default_factory=list, description="Prerequisite concepts already chain-probed and passed this session")
     updated_at: datetime = Field(default_factory=datetime.utcnow)

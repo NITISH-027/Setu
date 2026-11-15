@@ -230,6 +230,36 @@ class AdaptiveEngine:
         cl = self.lessons_by_concept.get(concept_id, [])
         return (cl[0] if cl else None), False
 
+    def _next_chain_probe(self, start_concept_id: str, already_probed: List[str]) -> Optional[Tuple[Question, str]]:
+        """
+        v6 chain probing: a passed probe rules out ONE prerequisite, not all of
+        them. Breadth-first walk the prerequisite chain from the current
+        concept, skip concepts already probed (and passed), and return the
+        next concept that has a diagnostic probe, with its tag. None when the
+        chain is exhausted.
+        """
+        probed = set(already_probed or [])
+        prereq_map: Dict[str, List[str]] = {}
+        for e in self.pack.prerequisite_edges:
+            prereq_map.setdefault(e.concept, []).append(e.depends_on)
+        queue = [c for c in prereq_map.get(start_concept_id, [])]
+        visited = set(queue)
+        while queue:
+            concept = queue.pop(0)
+            if concept not in probed:
+                probe = next(
+                    (q for q in self.pack.questions
+                     if q.concept == concept and q.probe_for_misconception),
+                    None
+                )
+                if probe is not None:
+                    return probe, probe.probe_for_misconception
+            for dep in prereq_map.get(concept, []):
+                if dep not in visited:
+                    visited.add(dep)
+                    queue.append(dep)
+        return None
+
     def process_attempt(
         self,
         student: Student,
@@ -285,8 +315,27 @@ class AdaptiveEngine:
             if attempt.is_correct:
                 # Contradicted by probe: student showed prerequisite competence
                 active_hypothesis.status = HypothesisStatus.REJECTED
-                plan.current_stage = StageEnum.SOLVE
-                plan.reason = "Prerequisite diagnostic probe answered correctly, contradicting misconception hypothesis. Returning to practice."
+                # v6: a passed probe clears ONE prerequisite only. Continue
+                # down the prerequisite chain before giving up on gap-finding.
+                plan.chain_probed = list(dict.fromkeys(
+                    (plan.chain_probed or []) + [attempt.concept_id]
+                ))
+                nxt = self._next_chain_probe(plan.current_concept_id, plan.chain_probed)
+                if nxt is not None:
+                    probe_q, tag = nxt
+                    active_hypothesis = self.hypothesis_engine.open_hypothesis(
+                        student_id=student.pseudonymous_id,
+                        suspected_concept_id=probe_q.concept,
+                        misconception_tag=tag
+                    )
+                    plan.current_stage = StageEnum.PROBE
+                    plan.reason = (
+                        f"One prerequisite cleared; checking the next prerequisite "
+                        f"in the chain ('{probe_q.concept}') before returning to practice."
+                    )
+                else:
+                    plan.current_stage = StageEnum.SOLVE
+                    plan.reason = "Prerequisite chain checked, no gap supported by evidence. Returning to practice."
         elif not attempt.is_correct and attempt.misconception_tag and not is_probe_attempt:
             # First wrong answer: opens hypothesis with LOW score band, NO gap declared
             active_hypothesis = self.hypothesis_engine.open_hypothesis(

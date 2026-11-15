@@ -17,7 +17,7 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.db import init_db, SessionLocal
-from app.db.models import UserDB, StudentDB, PlanDB, MasteryStateDB, DeviceDB, PinProfileDB
+from app.db.models import UserDB, StudentDB, PlanDB, MasteryStateDB, DeviceDB, PinProfileDB, TeacherOverrideDB
 from app.auth.security import hash_password, hash_pin
 
 
@@ -160,6 +160,58 @@ def seed():
             )
             db.add(prof)
 
+        db.commit()
+
+        # 7. v4: synthetic teacher overrides on equivalent fractions, so the
+        # judge demo shows the human-in-the-loop visibly: the next student to
+        # start that concept begins at the override-refined estimate.
+        EQF = "c7_math_equivalent_fractions"
+        if db.query(TeacherOverrideDB).filter(TeacherOverrideDB.concept_id == EQF).count() == 0:
+            from datetime import datetime
+            synth = [
+                ("mark_cleared", "Synthetic demo override: oral check showed the idea is secure."),
+                ("mark_cleared", "Synthetic demo override: board work confirmed equivalence."),
+                ("reinforce", "Synthetic demo override: slips back when denominators grow."),
+            ]
+            for act, why in synth:
+                db.add(TeacherOverrideDB(
+                    student_id=stu_id,
+                    teacher_id="usr_tea_8a",
+                    class_id="8-A",
+                    concept_id=EQF,
+                    override_action=act,
+                    reason="[SYNTHETIC DEMO DATA] " + why,
+                    timestamp=datetime.utcnow(),
+                ))
+            db.commit()
+
+        # 8. v4: a second synthetic student queued on equivalent fractions with
+        # NO mastery row yet - the first question creates it at the refined
+        # prior, so the override effect is visible in the demo.
+        stu2_id = "stu_demo_02"
+        salt2 = secrets.token_hex(8)
+        pin_h2 = hash_pin(student_pin, salt2)
+        stu2 = db.query(StudentDB).filter(StudentDB.pseudonymous_id == stu2_id).first()
+        if not stu2:
+            db.add(StudentDB(
+                pseudonymous_id=stu2_id,
+                subject_key=secrets.token_hex(16),
+                class_id="8-A",
+                board="CBSE",
+                medium_language="ta",
+                pin_hash=pin_h2,
+                salt=salt2,
+                consent_status="not requested"
+            ))
+        plan2 = db.query(PlanDB).filter(PlanDB.student_id == stu2_id).first()
+        if not plan2:
+            db.add(PlanDB(
+                student_id=stu2_id,
+                class_id="8-A",
+                current_stage="solve",
+                current_concept_id=EQF,
+                reason="Initial practice sequence"
+            ))
         db.commit()
 
         if os.getenv("RENDER", "").lower() == "true":

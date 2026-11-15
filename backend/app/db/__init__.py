@@ -7,47 +7,47 @@ from app.db.models import (
     TestSessionDB, TestItemDB, DemoSessionDB
 )
 
+def _ensure_schema_columns(eng):
+    """Add model columns missing from an existing database.
+
+    create_all() creates missing TABLES but never alters existing ones, so a
+    DB file created by an older build (e.g. a v3 setu.db, or a deployed DB
+    from before a column was added) breaks the new code. For every table that
+    already exists, add any column the models declare but the DB lacks.
+    Only ever ADD COLUMN - never drops, renames or rewrites data. Works on
+    SQLite and Postgres via the SQLAlchemy inspector.
+    """
+    from sqlalchemy import inspect, text
+    insp = inspect(eng)
+    existing_tables = set(insp.get_table_names())
+    with eng.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue  # create_all handles brand-new tables
+            present = {c["name"] for c in insp.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in present:
+                    continue
+                col_type = col.type.compile(eng.dialect)
+                default = ""
+                if col.default is not None and getattr(col.default, "is_scalar", False):
+                    val = col.default.arg
+                    if isinstance(val, bool):
+                        default = " DEFAULT %d" % (1 if val else 0)
+                    elif isinstance(val, (int, float)):
+                        default = " DEFAULT %s" % val
+                    elif isinstance(val, str):
+                        default = " DEFAULT '%s'" % val.replace("'", "''")
+                conn.execute(text(
+                    "ALTER TABLE %s ADD COLUMN %s %s%s" % (table.name, col.name, col_type, default)
+                ))
+                print("DB migration: added missing column %s.%s (%s)" % (table.name, col.name, col_type))
+
+
 def init_db(target_engine=None):
     eng = target_engine or engine
     Base.metadata.create_all(bind=eng)
-    
-    # Handle SQLite missing column additions dynamically (no-op on Postgres or other dialects)
-    if eng.dialect.name == "sqlite":
-        try:
-            from sqlalchemy import text
-            with eng.connect() as conn:
-                # Check devices.device_purge_token
-                res = conn.execute(text("PRAGMA table_info(devices)"))
-                cols = [row[1] for row in res.fetchall()]
-                if cols and "device_purge_token" not in cols:
-                    conn.execute(text("ALTER TABLE devices ADD COLUMN device_purge_token VARCHAR"))
-                    conn.commit()
-                
-                # Check users.is_seeded
-                res = conn.execute(text("PRAGMA table_info(users)"))
-                cols = [row[1] for row in res.fetchall()]
-                if cols and "is_seeded" not in cols:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN is_seeded BOOLEAN DEFAULT 0"))
-                    conn.commit()
-
-                # Check students.failed_attempts and locked_until
-                res = conn.execute(text("PRAGMA table_info(students)"))
-                cols = [row[1] for row in res.fetchall()]
-                if cols and "failed_attempts" not in cols:
-                    conn.execute(text("ALTER TABLE students ADD COLUMN failed_attempts INTEGER DEFAULT 0"))
-                    conn.commit()
-                if cols and "locked_until" not in cols:
-                    conn.execute(text("ALTER TABLE students ADD COLUMN locked_until DATETIME"))
-                    conn.commit()
-
-                # Check tombstones.expires_at
-                res = conn.execute(text("PRAGMA table_info(tombstones)"))
-                cols = [row[1] for row in res.fetchall()]
-                if cols and "expires_at" not in cols:
-                    conn.execute(text("ALTER TABLE tombstones ADD COLUMN expires_at DATETIME"))
-                    conn.commit()
-        except Exception:
-            pass
+    _ensure_schema_columns(eng)
 
 __all__ = [
     "engine", "SessionLocal", "Base", "get_db", "init_db",

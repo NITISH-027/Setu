@@ -11,7 +11,8 @@
   ],
   "draft_unreviewed_languages": [
    "hi",
-   "te"
+   "te",
+   "ta"
   ],
   "author": "Setu Authoring Engine",
   "created_at": "2026-10-27T12:49:28.179125"
@@ -4736,6 +4737,618 @@
     }
    ],
    "probe_for_misconception": "tag_eqf_size_confusion",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "probe_eqf_add_same_01_ta",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.3,
+   "language": "ta",
+   "item_type": "diagnostic",
+   "question_text": "பிரியா 1/2 = 2/3 என்று சொல்கிறாள், ஏனெனில் மேலே 1, கீழே 1 கூட்டினாள். அவள் சரியா?",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "இல்லை, 1/2 மற்றும் 2/3 வெவ்வேறு அளவுகள்",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": null
+    },
+    {
+     "id": "opt_2",
+     "text": "ஆம், அவள் சரி",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_add_same_to_both",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": "tag_eqf_add_same_to_both",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null,
+    "reviewer_note": " Tamil text DRAFT pending teacher review."
+   }
+  },
+  {
+   "id": "probe_eqf_one_side_01_ta",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.3,
+   "language": "ta",
+   "item_type": "diagnostic",
+   "question_text": "2/3 க்கு சமமான பின்னம் எது?",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "4/6",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": null
+    },
+    {
+     "id": "opt_2",
+     "text": "2/6",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_change_one_side_only",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "4/3",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_change_one_side_only",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": "tag_eqf_change_one_side_only",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null,
+    "reviewer_note": " Tamil text DRAFT pending teacher review."
+   }
+  },
+  {
+   "id": "probe_eqf_flip_01_ta",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.3,
+   "language": "ta",
+   "item_type": "diagnostic",
+   "question_text": "3/4 க்கு சமமான பின்னம் எது?",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "6/8",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": null
+    },
+    {
+     "id": "opt_2",
+     "text": "4/3",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_reciprocal_flip",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "3/8",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_change_one_side_only",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": "tag_eqf_reciprocal_flip",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null,
+    "reviewer_note": " Tamil text DRAFT pending teacher review."
+   }
+  },
+  {
+   "id": "probe_eqf_operation_01_ta",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.4,
+   "language": "ta",
+   "item_type": "diagnostic",
+   "question_text": "விடுபட்ட எண்ணை நிரப்புக: 1/2 = ?/6",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "3",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 3
+    },
+    {
+     "id": "opt_2",
+     "text": "8",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_wrong_operation",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "2",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_wrong_operation",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": "tag_eqf_wrong_operation",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null,
+    "reviewer_note": " Tamil text DRAFT pending teacher review."
+   }
+  },
+  {
+   "id": "probe_eqf_size_01_ta",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.4,
+   "language": "ta",
+   "item_type": "diagnostic",
+   "question_text": "எது பெரியது: ஒரே பிட்சாவின் 1/4 பகுதியா, 1/8 பகுதியா?",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "1/4",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": null
+    },
+    {
+     "id": "opt_2",
+     "text": "1/8, ஏனெனில் 8 என்பது 4 ஐ விட பெரியது",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_size_confusion",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "இரண்டும் சமம்",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_size_confusion",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": "tag_eqf_size_confusion",
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null,
+    "reviewer_note": " Tamil text DRAFT pending teacher review."
+   }
+  },
+  {
+   "id": "q_c7_seq_d1",
+   "concept": "c7_math_simple_eq",
+   "difficulty": 0.3,
+   "language": "en",
+   "question_text": "Solve for x: x + 5 = 12",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "7",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 7
+    },
+    {
+     "id": "opt_2",
+     "text": "17",
+     "is_correct": false,
+     "misconception_tag": "tag_sign_error_on_transposition",
+     "numeric_value": 17
+    },
+    {
+     "id": "opt_3",
+     "text": "2.4",
+     "is_correct": false,
+     "misconception_tag": "tag_dividing_instead_of_subtracting",
+     "numeric_value": 2.4
+    },
+    {
+     "id": "opt_4",
+     "text": "60",
+     "is_correct": false,
+     "misconception_tag": "tag_dividing_instead_of_subtracting",
+     "numeric_value": 60
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c7_seq_d2",
+   "concept": "c7_math_simple_eq",
+   "difficulty": 0.4,
+   "language": "en",
+   "question_text": "Solve for x: x - 3 = 8",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "11",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 11
+    },
+    {
+     "id": "opt_2",
+     "text": "5",
+     "is_correct": false,
+     "misconception_tag": "tag_sign_error_on_transposition",
+     "numeric_value": 5
+    },
+    {
+     "id": "opt_3",
+     "text": "24",
+     "is_correct": false,
+     "misconception_tag": "tag_dividing_instead_of_subtracting",
+     "numeric_value": 24
+    },
+    {
+     "id": "opt_4",
+     "text": "-5",
+     "is_correct": false,
+     "misconception_tag": "tag_sign_error_on_transposition",
+     "numeric_value": -5
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c7_seq_d3",
+   "concept": "c7_math_simple_eq",
+   "difficulty": 0.5,
+   "language": "en",
+   "question_text": "Solve for x: 3x = 18",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "6",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 6
+    },
+    {
+     "id": "opt_2",
+     "text": "15",
+     "is_correct": false,
+     "misconception_tag": "tag_dividing_instead_of_subtracting",
+     "numeric_value": 15
+    },
+    {
+     "id": "opt_3",
+     "text": "21",
+     "is_correct": false,
+     "misconception_tag": "tag_sign_error_on_transposition",
+     "numeric_value": 21
+    },
+    {
+     "id": "opt_4",
+     "text": "54",
+     "is_correct": false,
+     "misconception_tag": "tag_dividing_instead_of_subtracting",
+     "numeric_value": 54
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_int_d1",
+   "concept": "c6_math_integers_add_sub",
+   "difficulty": 0.3,
+   "language": "en",
+   "question_text": "Compute: 7 - 12",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "-5",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": -5
+    },
+    {
+     "id": "opt_2",
+     "text": "5",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": 5
+    },
+    {
+     "id": "opt_3",
+     "text": "19",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": 19
+    },
+    {
+     "id": "opt_4",
+     "text": "-19",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": -19
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_int_d2",
+   "concept": "c6_math_integers_add_sub",
+   "difficulty": 0.4,
+   "language": "en",
+   "question_text": "Compute: -3 + 8",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "5",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 5
+    },
+    {
+     "id": "opt_2",
+     "text": "-5",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": -5
+    },
+    {
+     "id": "opt_3",
+     "text": "11",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": 11
+    },
+    {
+     "id": "opt_4",
+     "text": "-11",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": -11
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_int_d3",
+   "concept": "c6_math_integers_add_sub",
+   "difficulty": 0.5,
+   "language": "en",
+   "question_text": "Compute: -4 - 6",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "-10",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": -10
+    },
+    {
+     "id": "opt_2",
+     "text": "10",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": 10
+    },
+    {
+     "id": "opt_3",
+     "text": "2",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": 2
+    },
+    {
+     "id": "opt_4",
+     "text": "-2",
+     "is_correct": false,
+     "misconception_tag": "tag_class6_integer_subtraction",
+     "numeric_value": -2
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_frac_d1",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.3,
+   "language": "en",
+   "question_text": "Add: 1/4 + 1/4",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "2/4",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 0.5
+    },
+    {
+     "id": "opt_2",
+     "text": "2/8",
+     "is_correct": false,
+     "misconception_tag": "tag_adding_denominators_directly",
+     "numeric_value": 0.25
+    },
+    {
+     "id": "opt_3",
+     "text": "1/4",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_add_same_to_both",
+     "numeric_value": 0.25
+    },
+    {
+     "id": "opt_4",
+     "text": "4/4",
+     "is_correct": false,
+     "misconception_tag": "tag_adding_denominators_directly",
+     "numeric_value": 1
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_frac_d2",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.4,
+   "language": "en",
+   "question_text": "Add: 1/3 + 1/6",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "3/6",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": 0.5
+    },
+    {
+     "id": "opt_2",
+     "text": "2/9",
+     "is_correct": false,
+     "misconception_tag": "tag_adding_denominators_directly",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "2/6",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_change_one_side_only",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_4",
+     "text": "1/9",
+     "is_correct": false,
+     "misconception_tag": "tag_adding_denominators_directly",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": null,
+   "review_record": {
+    "status": "author-drafted, unreviewed",
+    "reviewer_name": null,
+    "reviewer_role": null,
+    "attestation_date": null,
+    "item_version": 1,
+    "attestation_statement": null
+   }
+  },
+  {
+   "id": "q_c6_frac_d3",
+   "concept": "c6_math_fractions_basic",
+   "difficulty": 0.5,
+   "language": "en",
+   "question_text": "Which is bigger: 2/3 or 3/5?",
+   "options": [
+    {
+     "id": "opt_1",
+     "text": "2/3",
+     "is_correct": true,
+     "misconception_tag": null,
+     "numeric_value": null
+    },
+    {
+     "id": "opt_2",
+     "text": "3/5",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_size_confusion",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_3",
+     "text": "They are equal",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_size_confusion",
+     "numeric_value": null
+    },
+    {
+     "id": "opt_4",
+     "text": "Cannot compare",
+     "is_correct": false,
+     "misconception_tag": "tag_eqf_size_confusion",
+     "numeric_value": null
+    }
+   ],
+   "probe_for_misconception": null,
    "review_record": {
     "status": "author-drafted, unreviewed",
     "reviewer_name": null,

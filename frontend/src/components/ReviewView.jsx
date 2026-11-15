@@ -10,6 +10,9 @@ export default function ReviewView() {
   const [attestationStatement, setAttestationStatement] = useState('I checked this item');
   const [attestationMessage, setAttestationMessage] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [drafts, setDrafts] = useState(null);
+  const [draftMsg, setDraftMsg] = useState('');
+  const [rejectReasons, setRejectReasons] = useState({});
 
   // Content Editor State (Failure 10 & Acceptance Test L)
   const [editorPack, setEditorPack] = useState(null);
@@ -39,11 +42,43 @@ export default function ReviewView() {
         setLoginError('');
         fetchCoverageWithToken(data.access_token);
         fetchEditorPack(data.access_token);
+        fetchDrafts(data.access_token);
       } else {
         setLoginError('Login failed. Please check credentials.');
       }
     } catch {
       setLoginError('Network error during login.');
+    }
+  };
+
+  const fetchDrafts = async (authToken) => {
+    try {
+      const res = await fetch('/api/review/drafts', { headers: { 'Authorization': `Bearer ${authToken || token}` } });
+      if (res.ok) setDrafts((await res.json()).drafts || []);
+    } catch { /* drafts panel is additive */ }
+  };
+
+  const decideDraft = async (id, action) => {
+    setDraftMsg('');
+    const body = action === 'approve'
+      ? { reviewer_name: reviewerName, attestation: attestationStatement }
+      : { reviewer_name: reviewerName, reason: (rejectReasons[id] || '').trim() };
+    try {
+      const res = await fetch(`/api/review/drafts/${id}/${action}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setDraftMsg(`${id}: ${action === 'approve' ? 'approved and now LIVE' : 'rejected (flagged, kept out of the student flow)'}.`);
+        fetchDrafts();
+        fetchCoverageWithToken(token);
+      } else {
+        setDraftMsg(`${id}: ${data.detail || 'decision failed'}`);
+      }
+    } catch {
+      setDraftMsg('Network error - decision not saved.');
     }
   };
 
@@ -230,6 +265,76 @@ export default function ReviewView() {
             </button>
           </form>
           {loginError && <div style={{ fontSize: '12px', color: 'var(--soft-red, #fca5a5)', marginTop: '6px' }}>{loginError}</div>}
+          <button
+            style={{ marginTop: '8px', fontSize: '12px' }}
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/auth/demo-login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ profile: 'reviewer' })
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  setToken(data.access_token);
+                  setReviewerName(data.username);
+                  setReviewerRole(data.role);
+                  fetchCoverageWithToken(data.access_token);
+                  fetchEditorPack(data.access_token);
+                  fetchDrafts(data.access_token);
+                } else {
+                  setLoginError('Demo reviewer entry needs demo mode on the backend.');
+                }
+              } catch { setLoginError('Network error during demo login.'); }
+            }}
+          >
+            ⛰️ Judge demo: one-tap reviewer entry (no password)
+          </button>
+        </div>
+      )}
+
+      {/* v6: Teacher drafts awaiting review */}
+      {token && drafts && (
+        <div className="info-card" style={{ borderLeft: '4px solid var(--accent-amber, #f59e0b)' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>
+            Teacher drafts awaiting review ({drafts.filter((d) => d.review_status !== 'reviewed').length})
+          </h3>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            Only items you approve here are served to students. Approving records your name and attestation on the item.
+          </div>
+          {drafts.length === 0 && <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>No teacher-authored drafts yet. Teachers add questions from the Teacher Dashboard ("Add a question").</div>}
+          {drafts.map((d) => (
+            <div key={d.id} style={{ borderTop: '1px solid var(--border-color)', padding: '8px 0', fontSize: '12.5px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <strong style={{ flex: 1 }}>{d.question_text}</strong>
+                <span style={{
+                  fontSize: '10.5px', padding: '2px 8px', borderRadius: '10px',
+                  background: d.review_status === 'reviewed' ? 'var(--accent-emerald)' : (d.review_status === 'flagged' ? 'var(--soft-red, #fca5a5)' : 'var(--soft-amber, #fcd34d)'),
+                  color: '#1e293b'
+                }}>
+                  {d.review_status}{d.live ? ' - LIVE' : ''}{d.reviewer_name ? ` by ${d.reviewer_name}` : ''}
+                </span>
+              </div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '11.5px', marginTop: '2px' }}>
+                {d.concept} | {d.language} | v{d.version} | correct: {(d.options.find((o) => o.is_correct) || {}).text}
+              </div>
+              {d.review_status !== 'reviewed' && (
+                <div style={{ display: 'flex', gap: '6px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" style={{ fontSize: '11.5px' }} onClick={() => decideDraft(d.id, 'approve')}>
+                    Approve (goes live)
+                  </button>
+                  <input
+                    value={rejectReasons[d.id] || ''}
+                    onChange={(e) => setRejectReasons((r) => ({ ...r, [d.id]: e.target.value }))}
+                    placeholder="rejection reason"
+                    style={{ fontSize: '11.5px', width: '200px' }}
+                  />
+                  <button style={{ fontSize: '11.5px' }} onClick={() => decideDraft(d.id, 'reject')}>Reject</button>
+                </div>
+              )}
+            </div>
+          ))}
+          {draftMsg && <div style={{ fontSize: '12px', color: 'var(--accent-primary)', marginTop: '6px' }}>{draftMsg}</div>}
         </div>
       )}
 

@@ -25,10 +25,11 @@ from app.db import (
     TestSessionDB, TestItemDB
 )
 from app import demo_reset
+from app import authoring  # registers AuthoredQuestionDB before init_db()
 from app.misconception_explainers import get_explainer
 from app.auth.security import (
     hash_password, verify_password, hash_pin, create_session,
-    get_current_session, require_teacher, require_admin, require_reviewer,
+    get_current_session, require_teacher, require_admin, require_reviewer, require_role,
     verify_teacher_class_access, verify_student_access,
     verify_student_only_access, verify_teacher_or_admin_student_access,
     invalidate_session, invalidate_all_student_sessions,
@@ -37,7 +38,8 @@ from app.auth.security import (
 from app.models.pack import ContentPack, ReviewStatus
 from app.models.student import Student, ConsentStatus
 from app.models.learning import Attempt, Plan, MasteryState, Hypothesis, HypothesisStatus, StageEnum, BKTParameters
-from app.models.content import HintLadder
+from app.models.content import ReviewRecord
+from app.models.content import HintLadder, Question
 from app.engine.adaptive_engine import AdaptiveEngine
 from app.engine.test_engine import AdaptiveTestEngine
 from app.teacher.teacher_service import TeacherService
@@ -84,6 +86,18 @@ else:
 engine = AdaptiveEngine(pack)
 test_engine = AdaptiveTestEngine(pack)
 teacher_service = TeacherService()
+
+# v5: merge teacher-authored draft questions stored from previous runs.
+try:
+    _db = SessionLocal()
+    try:
+        _n_authored = authoring.load_authored_into_pack(_db, pack)
+        if _n_authored:
+            print(f"Loaded {_n_authored} teacher-authored draft questions into the pack.")
+    finally:
+        _db.close()
+except Exception as _e:
+    print(f"Authoring load skipped: {_e}")
 DEMO_MODE = os.getenv("SETU_DEMO_MODE", "false").lower() == "true"
 
 paper_manager = PaperModeManager(pack, engine)
@@ -117,6 +131,29 @@ def verify_production_safeguards():
                 )
         finally:
             db.close()
+
+
+@app.on_event("startup")
+def ensure_demo_users():
+    """Demo mode only: make the one-tap teacher/reviewer entries work on a fresh DB."""
+    if not DEMO_MODE:
+        return
+    db = SessionLocal()
+    try:
+        for uid, uname, role, classes in (
+            ("usr_demo_teacher", "demo_teacher", "teacher", '["8-A", "8-B"]'),
+            ("usr_demo_reviewer", "demo_reviewer", "reviewer", "[]"),
+        ):
+            if not db.query(UserDB).filter(UserDB.username == uname).first():
+                db.add(UserDB(
+                    id=uid, username=uname,
+                    password_hash=hash_password("demo123"),
+                    role=role, assigned_classes=classes, is_seeded=True,
+                ))
+        db.commit()
+        print("DEMO MODE: demo teacher/reviewer accounts present.")
+    finally:
+        db.close()
 
 
 # Pydantic Schemas for strictly validated input (FIX 1d)
@@ -183,7 +220,8 @@ def load_student_domain_state(db: Session, student_id: str):
             items_queue=json.loads(plan_db.items_queue) if plan_db.items_queue else [],
             reason=plan_db.reason,
             stuck_attempts_count=plan_db.stuck_attempts_count,
-            bridge_recheck_fails=plan_db.bridge_recheck_fails
+            bridge_recheck_fails=plan_db.bridge_recheck_fails,
+            chain_probed=json.loads(plan_db.chain_probed) if getattr(plan_db, "chain_probed", None) else []
         )
 
     # Load primary concept mastery
@@ -218,7 +256,7 @@ def load_student_domain_state(db: Session, student_id: str):
 
     hyp_db = db.query(HypothesisDB).filter(
         HypothesisDB.student_id == student_id,
-        HypothesisDB.status == "open"
+        HypothesisDB.status.in_(["open", "supported"])  # supported still drives lesson/bridge
     ).order_by(HypothesisDB.id.desc()).first()
     hypothesis = None
     if hyp_db:
@@ -242,6 +280,15 @@ def load_or_create_mastery_state(db: Session, student_id: str, concept_id: str) 
     ).first()
     if not m_db:
         bkt_params = BKTParameters()
+        # v4: if this concept has logged teacher overrides, start at the
+        # override-refined prior (hand-set targets, see override_learning.py)
+        from app.override_learning import refined_prior
+        rp = refined_prior(db, concept_id)
+        if rp:
+            bkt_params = BKTParameters(
+                prior=rp[0],
+                label=f"refined from {rp[1]} teacher overrides (hand-set)",
+            )
         m_db = MasteryStateDB(
             student_id=student_id,
             concept_id=concept_id,
@@ -296,6 +343,7 @@ def save_student_domain_state(
         p_db.reason = plan.reason
         p_db.stuck_attempts_count = plan.stuck_attempts_count
         p_db.bridge_recheck_fails = plan.bridge_recheck_fails
+        p_db.chain_probed = json.dumps(getattr(plan, "chain_probed", []) or [])
         p_db.updated_at = datetime.utcnow()
 
     if mastery:
@@ -324,7 +372,7 @@ def save_student_domain_state(
     if hypothesis:
         h_db = db.query(HypothesisDB).filter(
             HypothesisDB.student_id == student_id,
-            HypothesisDB.status == "open"
+            HypothesisDB.status.in_(["open", "supported"])
         ).order_by(HypothesisDB.id.desc()).first()
         if not h_db:
             h_db = HypothesisDB(
@@ -334,6 +382,8 @@ def save_student_domain_state(
             )
             db.add(h_db)
         h_db.suspected_concept_id = hypothesis.suspected_concept_id
+        h_db.misconception_tag = hypothesis.misconception_tag
+        h_db.status = hypothesis.status.value if hasattr(hypothesis.status, "value") else str(hypothesis.status)
         evidence_serialized = [
             item.model_dump(mode="json") if hasattr(item, "model_dump") else (item if isinstance(item, dict) else str(item))
             for item in (hypothesis.evidence_list or [])
@@ -662,7 +712,23 @@ def demo_login(payload: Dict[str, str] = Body(...), db: Session = Depends(get_db
             "assigned_classes": user.get_classes()
         }
 
-    raise HTTPException(status_code=400, detail="Unknown demo profile. Use 'student:<id>' or 'teacher'.")
+    if profile == "reviewer":
+        user = db.query(UserDB).filter(UserDB.role == "reviewer").first()
+        if not user:
+            raise HTTPException(status_code=404, detail="No reviewer account exists yet.")
+        session = create_session(db, user_id=user.id, role=user.role, device_id=device_id, duration_hours=2)
+        demo_reset.mark_demo_session(db, session.token, student_id=None)
+        return {
+            "access_token": session.token,
+            "token_type": "bearer",
+            "demo": True,
+            "demo_session_hours": 2,
+            "role": user.role,
+            "username": user.username,
+            "assigned_classes": []
+        }
+
+    raise HTTPException(status_code=400, detail="Unknown demo profile. Use 'student:<id>', 'teacher' or 'reviewer'.")
 
 
 @app.post("/api/auth/logout")
@@ -1024,20 +1090,46 @@ def get_attention_summary(
         ).order_by(MasteryStateDB.mastery_estimate.asc()).first()
         if not reasons:
             continue  # only students who actually need attention
+        # v4 'why' evidence line: recent attempts + strongest hypothesis band,
+        # so the teacher sees the raw signal behind the flag, not a verdict.
+        recent = db.query(AttemptDB).filter(
+            AttemptDB.student_id == sid
+        ).order_by(AttemptDB.timestamp.desc()).limit(3).all()
+        recent_marks = "".join("C" if a.is_correct else "W" for a in reversed(recent)) or "no attempts yet"
+        band = None
+        if open_hyps:
+            band = open_hyps[0].evidence_band
+        evidence_line = f"Recent: {recent_marks}"
+        if band:
+            evidence_line += f" | rule-based evidence: {band}"
+        evidence_line += " (hand-set rules, not a diagnosis)"
         items.append({
             "student_id": sid,
             "urgency": urgency,
             "reasons": reasons,
+            "evidence_line": evidence_line,
             "weakest_concept": weakest.concept_id if weakest else None,
             "weakest_mastery": weakest.mastery_estimate if weakest else None,
             "mastery_label": weakest.mastery_label if weakest else None,
         })
     items.sort(key=lambda x: (-x["urgency"], x["student_id"]))
+    from app.override_learning import override_stats, refined_prior
+    ostats = override_stats(db, class_id)
+    refined = {}
+    for cid, n in ostats["per_concept"].items():
+        rp = refined_prior(db, cid)
+        if rp:
+            refined[cid] = {"overrides": n, "starting_estimate": rp[0]}
     return {
         "class_id": class_id,
         "generated_at": now.isoformat(),
         "students_needing_attention": items,
         "count": len(items),
+        "override_learning": {
+            "total_overrides": ostats["total_overrides"],
+            "refined_concepts": refined,
+            "label": "Starting estimates refined from teacher overrides (hand-set targets, shrinkage k=4). Not a fitted model.",
+        },
         "note": "Rule-based flags and hand-set estimates, not diagnoses. Verify with the student before acting."
     }
 
@@ -2687,6 +2779,243 @@ def get_class_test_results(
 # Placed after all API routes so /api/* and /health keep precedence.
 from fastapi.staticfiles import StaticFiles
 FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+
+
+# ---------- v5: Teacher authoring (validated, draft-only) ----------
+
+class AuthoringOptionPayload(BaseModel):
+    text: str
+    is_correct: bool = False
+    misconception_tag: Optional[str] = None
+
+
+class AuthoringQuestionPayload(BaseModel):
+    concept: str
+    language: str = "en"
+    question_text: str
+    options: List[AuthoringOptionPayload]
+    difficulty: float = 0.5
+    probe_for_misconception: Optional[str] = None
+
+
+@app.get("/api/teacher/authoring/concepts")
+def authoring_concepts(session: SessionDB = Depends(require_teacher)):
+    """Concepts a teacher can author questions for (id + name, draft honesty flags)."""
+    return {
+        "concepts": [
+            {"id": c.id, "name": c.name, "class_level": c.class_level, "graph_only": c.graph_only}
+            for c in pack.concepts
+        ],
+        "note": "New concepts cannot be created from the form yet - only questions for existing concepts.",
+    }
+
+
+@app.get("/api/teacher/authoring/questions")
+def authoring_list(session: SessionDB = Depends(require_teacher), db: Session = Depends(get_db)):
+    from app.authoring import AuthoredQuestionDB
+    rows = db.query(AuthoredQuestionDB).order_by(AuthoredQuestionDB.updated_at.desc()).all()
+    out = []
+    for r in rows:
+        q = json.loads(r.payload)
+        out.append({
+            "id": r.id,
+            "concept": q["concept"],
+            "language": q["language"],
+            "question_text": q["question_text"],
+            "version": r.version,
+            "review_status": q["review_record"]["status"],
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        })
+    return {"questions": out, "note": "All teacher-authored items are drafts until a human reviewer attests them."}
+
+
+@app.post("/api/teacher/authoring/questions")
+def authoring_create(
+    payload: AuthoringQuestionPayload,
+    session: SessionDB = Depends(require_teacher),
+    db: Session = Depends(get_db),
+):
+    """
+    Validate and store a teacher-authored question. ERROR issues reject with
+    422; WARNING issues are returned but the draft is stored. Always enters
+    the pack as 'author-drafted, unreviewed'.
+    """
+    from app import authoring
+    qid = "q_teacher_" + secrets.token_hex(4)
+    question, issues = authoring.validate_teacher_question(pack, payload.model_dump(), qid)
+    if question is None:
+        raise HTTPException(status_code=422, detail={"issues": issues})
+    row = authoring.store_question(db, question, session.user_id)
+    # v6 review workflow: drafts are NOT served to students until a reviewer approves.
+    return {
+        "id": row.id,
+        "stored": True,
+        "live": False,
+        "review_status": question.review_record.status.value,
+        "issues": issues,
+        "note": "Stored as an unreviewed draft. NOT served to students until a reviewer approves it (Coverage & Review tab). Structural validation only - a subject teacher must still check the maths and tags.",
+    }
+
+
+@app.put("/api/teacher/authoring/questions/{question_id}")
+def authoring_update(
+    question_id: str,
+    payload: AuthoringQuestionPayload,
+    session: SessionDB = Depends(require_teacher),
+    db: Session = Depends(get_db),
+):
+    from app import authoring
+    row = db.query(authoring.AuthoredQuestionDB).filter(authoring.AuthoredQuestionDB.id == question_id).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Teacher-authored question not found (only form-authored items can be edited here).")
+    question, issues = authoring.validate_teacher_question(pack, payload.model_dump(), question_id, editing=True)
+    if question is None:
+        raise HTTPException(status_code=422, detail={"issues": issues})
+    row = authoring.store_question(db, question, session.user_id, editing=True)
+    refreshed = Question.model_validate_json(row.payload)
+    # An edit returns a live item to draft: pull it from the served pack until re-approved.
+    if refreshed.review_record.status.value != "reviewed" and pack.get_question(question_id) is not None:
+        pack.questions[:] = [q for q in pack.questions if q.id != question_id]
+    return {
+        "id": row.id,
+        "stored": True,
+        "version": row.version,
+        "review_status": refreshed.review_record.status.value,
+        "issues": issues,
+        "note": "Edit saved; the item stays an unreviewed draft (version bumped).",
+    }
+
+
+# ---------- v6: Draft review workflow (approve/reject before going live) ----------
+
+class ReviewDecisionPayload(BaseModel):
+    reviewer_name: str
+    attestation: Optional[str] = None   # required for approve
+    reason: Optional[str] = None        # required for reject
+
+
+@app.get("/api/review/drafts")
+def review_list_drafts(
+    session: SessionDB = Depends(require_role(["reviewer", "admin"])),
+    db: Session = Depends(get_db),
+):
+    """All teacher-authored questions with their review status."""
+    rows = db.query(authoring.AuthoredQuestionDB).order_by(authoring.AuthoredQuestionDB.updated_at.desc()).all()
+    out = []
+    for r in rows:
+        q = json.loads(r.payload)
+        out.append({
+            "id": r.id,
+            "concept": q["concept"],
+            "language": q["language"],
+            "question_text": q["question_text"],
+            "options": [{"text": o["text"], "is_correct": o["is_correct"], "misconception_tag": o.get("misconception_tag")} for o in q["options"]],
+            "version": r.version,
+            "review_status": q["review_record"]["status"],
+            "reviewer_name": q["review_record"].get("reviewer_name"),
+            "live": pack.get_question(r.id) is not None,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        })
+    return {"drafts": out, "note": "Only 'reviewed' items are served to students. Drafts and flagged items stay out of the student flow."}
+
+
+@app.post("/api/review/drafts/{question_id}/approve")
+def review_approve(
+    question_id: str,
+    payload: ReviewDecisionPayload,
+    session: SessionDB = Depends(require_role(["reviewer", "admin"])),
+    db: Session = Depends(get_db),
+):
+    if not payload.reviewer_name.strip():
+        raise HTTPException(status_code=400, detail="reviewer_name is required.")
+    if not payload.attestation or len(payload.attestation.strip()) < 3:
+        raise HTTPException(status_code=400, detail="An attestation statement (e.g. 'I checked this item') is required to approve.")
+    row = db.query(authoring.AuthoredQuestionDB).filter(authoring.AuthoredQuestionDB.id == question_id).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Teacher-authored question not found.")
+    q = Question.model_validate_json(row.payload)
+    q.review_record = ReviewRecord(
+        status=ReviewStatus.REVIEWED,
+        reviewer_name=payload.reviewer_name.strip(),
+        reviewer_role="reviewer (self-declared)",
+        attestation_date=datetime.utcnow(),
+        item_version=row.version or 1,
+        attestation_statement=payload.attestation.strip(),
+    )
+    row.payload = q.model_dump_json()
+    row.updated_at = datetime.utcnow()
+    db.commit()
+    authoring.upsert_into_pack(pack, q)
+    return {
+        "id": question_id,
+        "review_status": "reviewed",
+        "live": True,
+        "note": "Approved and now served to students. Reviewer name and attestation stored on the item.",
+    }
+
+
+@app.post("/api/review/drafts/{question_id}/reject")
+def review_reject(
+    question_id: str,
+    payload: ReviewDecisionPayload,
+    session: SessionDB = Depends(require_role(["reviewer", "admin"])),
+    db: Session = Depends(get_db),
+):
+    if not payload.reason or len(payload.reason.strip()) < 3:
+        raise HTTPException(status_code=400, detail="A rejection reason is required.")
+    row = db.query(authoring.AuthoredQuestionDB).filter(authoring.AuthoredQuestionDB.id == question_id).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Teacher-authored question not found.")
+    q = Question.model_validate_json(row.payload)
+    q.review_record = ReviewRecord(
+        status=ReviewStatus.FLAGGED,
+        reviewer_name=payload.reviewer_name.strip() or None,
+        item_version=row.version or 1,
+        attestation_statement=f"REJECTED: {payload.reason.strip()}",
+    )
+    row.payload = q.model_dump_json()
+    row.updated_at = datetime.utcnow()
+    db.commit()
+    if pack.get_question(question_id) is not None:
+        pack.questions[:] = [x for x in pack.questions if x.id != question_id]
+    return {
+        "id": question_id,
+        "review_status": "flagged",
+        "live": False,
+        "note": "Rejected: flagged and kept out of the student flow. The teacher can edit and resubmit.",
+    }
+
+
+@app.get("/api/demo/footprint")
+def demo_footprint():
+    """
+    v4 low-bandwidth proof: measured byte sizes of the served app.
+    Numbers are measured from the actual files on this server, not estimates.
+    """
+    def dir_bytes(path, exts):
+        total = 0
+        if os.path.isdir(path):
+            for name in os.listdir(path):
+                if name.split("?")[0].endswith(exts):
+                    total += os.path.getsize(os.path.join(path, name))
+        return total
+
+    assets = os.path.join(FRONTEND_DIST, "assets")
+    js = dir_bytes(assets, (".js",))
+    css = dir_bytes(assets, (".css",))
+    pack_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "packs", "cbse_math_pack.json"))
+    pack_bytes = os.path.getsize(pack_path) if os.path.isfile(pack_path) else None
+    measured = js > 0
+    return {
+        "measured": measured,
+        "js_bytes": js if measured else None,
+        "css_bytes": css if measured else None,
+        "pack_bytes": pack_bytes,
+        "label": "[MEASURED on this server build]" if measured else "[MEASURE: frontend build not present on this server]",
+        "note": "Question text and UI strings are plain text; the offline queue stores attempts locally and syncs when the network returns.",
+    }
+
+
 if os.path.isdir(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 

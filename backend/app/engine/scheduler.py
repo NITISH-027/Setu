@@ -34,6 +34,10 @@ class SpacedRepetitionScheduler:
             else:
                 interval_days = round(mastery_state.interval_days * mastery_state.ease_factor, 1)
 
+            # v4: cap the interval. SM-2 has no cap, so a long success streak
+            # overflows Python's datetime range (year 9999). 365 days is a
+            # hand-set demo ceiling, not a retention finding.
+            interval_days = min(interval_days, 365.0)
             mastery_state.consecutive_successes += 1
         else:
             # Failed recall: reset repetitions

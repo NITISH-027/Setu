@@ -24,8 +24,10 @@ import {
   getMeta,
   clearStudentLocalData
 } from '../storage/indexedDb.js';
+import { makeT } from '../i18n/uiStrings.js';
 
 export default function StudentView({ devSimulateOffline = false, onToggleDevOffline, language = 'en', onLanguageChange }) {
+  const t = makeT(language);
   const [studentId, setStudentId] = useState('');
   const [pin, setPin] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
@@ -1079,7 +1081,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               color: effectivelyOnline ? 'var(--badge-online-text, #6ee7b7)' : 'var(--badge-offline-text, #fca5a5)'
             }}
           >
-            {effectivelyOnline ? 'Online' : 'Offline'}
+            {effectivelyOnline ? t('common.online') : t('common.offline')}
           </span>
         </div>
 
@@ -1269,7 +1271,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             className="btn-secondary"
             style={{ fontSize: '10px', padding: '2px 6px' }}
           >
-            Logout
+            {t('common.logout')}
           </button>
         </div>
       </div>
@@ -1278,7 +1280,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       <div className="badge-row" style={{ marginBottom: '10px' }}>
         <span className="badge-stage">{currentStage}</span>
         <span id="mastery-estimate-badge" className="badge-uncalibrated">
-          Mastery: {(currentMastery * 100).toFixed(0)}% (uncalibrated, hand-set)
+          {t('student.mastery')}: {(currentMastery * 100).toFixed(0)}% (uncalibrated, hand-set)
         </span>
         <span id="queued-count-badge" className="badge-heuristic">
           Queued: {queuedCount}
@@ -1303,7 +1305,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           className="btn-secondary"
           style={{ width: '100%', marginBottom: '8px', fontSize: '13px', padding: '10px' }}
         >
-          📝 Take Chapter Test (adaptive)
+          📝 {t('student.chapterTest')}
         </button>
       )}
 
@@ -1352,13 +1354,13 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             : 'var(--soft-slate, #e2e8f0)'
         }}
       >
-        {currentStage === 'probe' && 'Diagnostic Probe: Checking foundational prerequisite...'}
-        {currentStage === 'learn' && 'Micro-Lesson: Reviewing prerequisite concept bridge.'}
-        {currentStage === 'bridge_recheck' && 'Bridge Re-check: Verifying prerequisite mastery before continuing.'}
-        {currentStage === 'solve' && (prevStage === 'bridge_recheck' || prevStage === 'learn' || prevStage === 'probe') && 'Returned to original topic: Solved the prerequisite gap! Back to standard practice.'}
-        {currentStage === 'solve' && (!prevStage || prevStage === 'solve') && 'Standard Practice: Solve the problem below.'}
-        {currentStage === 'move_ahead' && 'Fast Track: Mastery achieved! Advancing ahead.'}
-        {currentStage === 'flag' && 'Intervention: Teacher notified for 1-on-1 clinic support.'}
+        {currentStage === 'probe' && t('student.stage.probe')}
+        {currentStage === 'learn' && t('student.stage.learn')}
+        {currentStage === 'bridge_recheck' && t('student.stage.bridge')}
+        {currentStage === 'solve' && (prevStage === 'bridge_recheck' || prevStage === 'learn' || prevStage === 'probe') && t('student.stage.return')}
+        {currentStage === 'solve' && (!prevStage || prevStage === 'solve') && t('student.stage.solve')}
+        {currentStage === 'move_ahead' && t('student.stage.ahead')}
+        {currentStage === 'flag' && t('student.stage.flag')}
       </div>
 
       {/* Lesson Screen (Failure 2) */}
@@ -1403,10 +1405,10 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       {step?.item_type === 'flag' && (
         <div id="teacher-flag-screen" data-testid="teacher-flag-screen" className="info-card" style={{ borderLeft: '4px solid #f43f5e' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--soft-red, #fca5a5)', marginBottom: '8px' }}>
-            Teacher Assistance Flagged
+            {t('student.flaggedTitle')}
           </h3>
           <p id="teacher-flag-message" style={{ fontSize: '14px', color: 'var(--soft-slate2, #cbd5e1)', lineHeight: '1.5' }}>
-            Your teacher has been notified. Please wait or ask your teacher.
+            {t('student.flaggedBody')}
           </p>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>
             Reason: {step?.reason || 'Concept practice paused for small group clinic.'}
@@ -1473,7 +1475,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           className="action-btn"
           style={{ width: '100%', marginTop: '10px' }}
         >
-          Submit Answer
+          {t('student.submit')}
         </button>
       )}
 
@@ -1488,7 +1490,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               className="btn-secondary"
               style={{ fontSize: '11px' }}
             >
-              Need a Hint? (Level 1)
+              {t('student.hint')} (Level {hintLevel + 1})
             </button>
           )}
           {hintLevel >= 1 && (
@@ -1529,11 +1531,11 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             color: queuedCount > 0 && effectivelyOnline ? 'var(--soft-green, #6ee7b7)' : 'var(--text-muted)'
           }}
         >
-          {queuedCount > 0 ? `Sync ${queuedCount} Queued Attempt(s)` : 'Queue Empty'}
+          {queuedCount > 0 ? t('student.queueSync', { n: queuedCount }) : t('student.queueEmpty')}
         </button>
 
         <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-          {effectivelyOnline ? 'Auto-sync active' : 'Offline: local IndexedDB'}
+          {effectivelyOnline ? t('student.autoSync') : t('student.offlineLocal')}
         </span>
       </div>
 
@@ -1551,10 +1553,10 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
               color: 'var(--soft-amber, #fcd34d)'
             }}
           >
-            <div style={{ fontWeight: '700', marginBottom: '4px' }}>Why this answer is wrong</div>
+            <div style={{ fontWeight: '700', marginBottom: '4px' }}>{t('student.explainerTitle')}</div>
             <div>{misconceptionExplainer.text}</div>
             <div style={{ fontSize: '10px', marginTop: '6px', color: 'var(--text-muted)' }}>
-              {misconceptionExplainer.is_fallback ? 'Shown in English (Tamil explainer not written yet). ' : ''}
+              {misconceptionExplainer.is_fallback ? t('student.explainerFallback') + ' ' : ''}
               Content: {misconceptionExplainer.review_status}.
             </div>
           </div>

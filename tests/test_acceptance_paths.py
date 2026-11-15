@@ -289,8 +289,25 @@ def test_acceptance_d_stuck_path_and_teacher_override_actions(client):
         "selected_option_id": correct_probe_opt.id
     }, headers=headers)
 
-    # Back in SOLVE
-    solve_step = client.get("/api/student/stu_acc_d/next-step", headers=headers).json()
+    # v6 chain probing: a passed probe clears ONE prerequisite only. The engine
+    # now walks the remaining prerequisite chain before returning to SOLVE.
+    # Answer each chain probe correctly until the chain is exhausted.
+    solve_step = None
+    for _ in range(8):
+        step = client.get("/api/student/stu_acc_d/next-step", headers=headers).json()
+        if step["step"]["stage"] == "solve":
+            solve_step = step
+            break
+        assert step["step"]["stage"] == "probe", step["step"]
+        pq = pack.get_question(step["item"]["id"])
+        pq_correct = next(o for o in pq.options if o.is_correct)
+        client.post("/api/student/stu_acc_d/attempt", json={
+            "question_id": step["item"]["id"],
+            "concept_id": step["item"]["concept"],
+            "selected_option_id": pq_correct.id
+        }, headers=headers)
+    # Back in SOLVE after the chain is exhausted
+    assert solve_step is not None, "chain probing never returned to SOLVE"
     assert solve_step["step"]["stage"] == "solve"
 
     # 3. Answer wrong in SOLVE again -> 2nd consecutive wrong solve answer -> FLAG!

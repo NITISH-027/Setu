@@ -45,11 +45,11 @@ MISCONCEPTION_EXPLAINERS = {
     },
     "tag_eqf_reciprocal_flip": {
         "en": "The top and bottom cannot be swapped: 1/2 is not the same as 2/1. Equivalent means same value, same point on the number line.",
-        "ta": None,
+        "ta": "மேல் எண்ணையும் கீழ் எண்ணையும் இடம் மாற்றக் கூடாது: 1/2 என்பது 2/1 அல்ல. சமம் என்றால் எண் கோட்டில் அதே புள்ளி. [DRAFT - ஆசிரியர் மதிப்பாய்வு தேவை]",
     },
     "tag_eqf_wrong_operation": {
         "en": "Check the operation: multiply (or divide) BOTH numerator and denominator by the SAME number. Any other operation changes the value.",
-        "ta": None,
+        "ta": "செயலைச் சரிபார்: தொகுதி மற்றும் பகுதி இரண்டையும் ஒரே எண்ணால் பெருக்கு (அல்லது வகு). வேறு செயல் மதிப்பை மாற்றிவிடும். [DRAFT - ஆசிரியர் மதிப்பாய்வு தேவை]",
     },
     "tag_eqf_change_one_side_only": {
         "en": "Changing only the top or only the bottom breaks the fraction. Whatever you do to the numerator, do the same to the denominator.",
@@ -57,7 +57,7 @@ MISCONCEPTION_EXPLAINERS = {
     },
     "tag_eqf_size_confusion": {
         "en": "Bigger numbers do not mean a bigger fraction. 3/6 and 1/2 are the same size - look at the value, not the digits.",
-        "ta": None,
+        "ta": "பெரிய எண்கள் என்றால் பெரிய பின்னம் அல்ல. 3/6 மற்றும் 1/2 ஒரே அளவு - இலக்கங்களை அல்ல, மதிப்பைப் பார். [DRAFT - ஆசிரியர் மதிப்பாய்வு தேவை]",
     },
     # Other authored tags (outside the demo spine, English only)
     "tag_adding_denominators_directly": {

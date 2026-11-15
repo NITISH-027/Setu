@@ -58,6 +58,7 @@ class PlanDB(Base):
     reason = Column(Text, default="Initial diagnosis")
     stuck_attempts_count = Column(Integer, default=0)
     bridge_recheck_fails = Column(Integer, default=0)
+    chain_probed = Column(Text, default="[]")
     updated_at = Column(DateTime, default=datetime.utcnow)
 
 
