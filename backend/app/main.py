@@ -71,6 +71,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_shell_cache_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path in ("/", "/index.html", "/sw.js"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
 # Initialize DB tables on startup
 init_db()
 

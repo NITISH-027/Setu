@@ -6,7 +6,7 @@
  * Bypasses /api/ routes completely.
  */
 
-const CACHE_NAME = 'setu-cache-v6';
+const CACHE_NAME = 'setu-cache-v7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -32,7 +32,13 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim();
+  event.waitUntil(
+    self.clients.claim().then(() => {
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        return Promise.all(clients.map((client) => client.navigate(client.url).catch(() => {})));
+      });
+    })
+  );
 });
 
 self.addEventListener('fetch', (event) => {

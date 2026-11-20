@@ -156,8 +156,15 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        let refreshed = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshed) return;
+          refreshed = true;
+          window.location.reload();
+        });
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
           .then((reg) => {
+            reg.update();
             if (reg.installing) reg.installing.addEventListener('statechange', () => {});
           })
           .catch(() => {});
