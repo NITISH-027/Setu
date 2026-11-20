@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 
 import { makeT } from '../i18n/uiStrings.js';
 import AuthoringForm from './AuthoringForm';
+import ParentReport from './ParentReport';
 
 export default function TeacherView({ language = 'en' }) {
   const t = makeT(language);
+  const [showParentReport, setShowParentReport] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authToken, setAuthToken] = useState(null);
@@ -230,6 +232,8 @@ export default function TeacherView({ language = 'en' }) {
     );
   }
 
+  if (showParentReport) return <ParentReport token={authToken} classId={selectedClass} onClose={() => setShowParentReport(false)} />;
+
   return (
     <div className="wide-container">
       {/* Teacher Controls Header */}
@@ -265,6 +269,12 @@ export default function TeacherView({ language = 'en' }) {
             Logout
           </button>
         </div>
+      </div>
+
+      <div className="info-card" style={{ margin: '16px 0' }}>
+        <h3>Bring the next step home</h3>
+        <p style={{ margin: '8px 0' }}>A short parent note with one or two practice ideas. Preview it before sharing.</p>
+        <button className="action-btn" onClick={() => setShowParentReport(true)}>Parent report</button>
       </div>
 
       {/* v3: Who needs help now - one-screen attention summary */}

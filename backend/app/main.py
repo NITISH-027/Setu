@@ -10,7 +10,7 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field, ValidationError
-from fastapi import FastAPI, HTTPException, Depends, Query, Body, Security, status, Header
+from fastapi import Response, FastAPI, HTTPException, Depends, Query, Body, Security, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -999,6 +999,40 @@ def get_offline_pack(
 # ==========================================
 # TEACHER DASHBOARD & OVERRIDES (FIX 1c)
 # ==========================================
+
+@app.get("/api/teacher/class/{class_id}/report-students")
+def get_report_students(class_id: str, response: Response,
+                        auth: Optional[HTTPAuthorizationCredentials] = Security(security_bearer)):
+    # Keep auth, reads and connection release in ONE worker. Generator-scoped
+    # DB dependencies can hold pooled connections while waiting for worker slots.
+    with SessionLocal() as db:
+        session = get_current_session(auth, db)
+        require_teacher(session)
+        verify_teacher_class_access(session, class_id, db)
+        response.headers["Cache-Control"] = "no-store"
+        rows = db.query(StudentDB.pseudonymous_id).filter(StudentDB.class_id == class_id).order_by(StudentDB.pseudonymous_id).all()
+        return {"students": [row[0] for row in rows]}
+
+
+@app.get("/api/teacher/student/{student_id}/parent-report")
+def get_parent_report(student_id: str, response: Response,
+                      auth: Optional[HTTPAuthorizationCredentials] = Security(security_bearer)):
+    # Keep auth, reads and connection release in ONE worker. Generator-scoped
+    # DB dependencies can hold pooled connections while waiting for worker slots.
+    with SessionLocal() as db:
+        session = get_current_session(auth, db)
+        require_teacher(session)
+        # Class authorisation runs before any answer history is read.
+        student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found.")
+        verify_teacher_class_access(session, student.class_id, db)
+        attempts = db.query(AttemptDB).filter(AttemptDB.student_id == student_id).order_by(AttemptDB.timestamp.desc(), AttemptDB.id.desc()).limit(20).all()
+        from app.parent_report import build_parent_report
+        response.headers["Cache-Control"] = "no-store"
+        return build_parent_report(pack, attempts, datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
+
+
 
 @app.get("/api/teacher/class/{class_id}")
 def get_teacher_class_dashboard(

@@ -1244,6 +1244,9 @@ def build_pack() -> ContentPack:
     except Exception as e:
         print(f"Warning: could not import content_expansion: {e}")
 
+    from app.bridge_analogies import apply_bridge_analogies
+    apply_bridge_analogies(lessons)
+
     pack = ContentPack(
         metadata=PackMetadata(
             board="CBSE",
