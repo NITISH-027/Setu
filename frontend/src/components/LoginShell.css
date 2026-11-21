@@ -1,0 +1,124 @@
+/* Login-only visual system. No app-wide theme or authenticated styles change. */
+.setu-login-page {
+  --login-ink: #51465e;
+  --login-muted: #756a80;
+  --login-purple: #9168bd;
+  width: 100%;
+  min-height: 100svh;
+  padding: 6vh 30px 18px;
+  background: #eee6f3;
+  color: var(--login-ink);
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+.setu-login-scene {
+  position: relative;
+  isolation: isolate;
+  width: min(1132px, 100%);
+  min-height: 804px;
+  margin: 0 auto;
+  border: 2px solid #fff9f6;
+  border-radius: 34px;
+  background: #fcece5;
+  box-shadow: 0 8px 16px #7961811c, 0 2px 4px #79618112;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 55% 45%;
+  align-items: center;
+}
+.setu-login-art {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: none;
+}
+.setu-login-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #fff3ecf5, #fff3ecbb 19%, transparent 39%); }
+.setu-login-story { align-self: stretch; padding: 38px 44px; pointer-events: none; }
+.setu-login-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--login-ink); font-size: 25px; font-weight: 700; text-decoration: none; pointer-events: auto; }
+.setu-login-brand > span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 15px; background: linear-gradient(140deg, #d9c2ee, #ad85ce); box-shadow: inset 2px 2px 3px #ffffff99, 0 3px 4px #8662a42b; color: white; }
+.setu-login-brand svg { width: 30px; }
+.setu-login-welcome { margin: 38px 0 0 15px; }
+.setu-login-welcome h1 { font-size: clamp(25px, 2.8vw, 36px); letter-spacing: -1px; line-height: 1.2; color: var(--login-ink); }
+.setu-login-welcome h1 span { color: #e9b952; text-shadow: 0 2px 2px #b9863d40; }
+.setu-login-welcome p { margin-top: 13px; font-size: 18px; line-height: 1.55; color: #5f5269; }
+.setu-login-card { align-self: center; margin: 42px 36px 42px 0; padding: 42px 38px 30px; border-radius: 30px; background: #fffcfcf5; border: 1px solid #fff; box-shadow: 0 7px 12px #876d7520, 0 2px 4px #a37d8712; }
+.setu-login-card header { text-align: center; margin-bottom: 25px; }
+.setu-login-card h2 { font-size: 25px; font-weight: 700; letter-spacing: -.6px; color: var(--login-ink); line-height: 1.3; }
+.setu-login-card header p { font-size: 13px; line-height: 1.5; margin-top: 9px; color: var(--login-muted); }
+.setu-login-card header p span { color: #ae85ce; }
+.setu-role-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 13px; background: #f2ebf7; margin-bottom: 24px; gap: 4px; }
+.setu-role-tabs button { border: 0; border-radius: 10px; min-height: 40px; font: inherit; font-size: 13px; color: #75657f; background: transparent; cursor: pointer; }
+.setu-role-tabs button[aria-pressed='true'] { color: #674885; font-weight: 700; background: #fff; box-shadow: 0 2px 5px #7d5d9620; }
+.setu-login-form { display: grid; gap: 20px; }
+.setu-login-field label { display: block; margin-bottom: 8px; font-size: 13px; color: #51465e; }
+.setu-input-wrap { display: flex; align-items: center; border: 1.5px solid #e6dfe7; border-radius: 15px; padding: 6px; background: #fffcfc; transition: border-color .15s, box-shadow .15s; }
+.setu-input-wrap:focus-within { border-color: #b69bcd; box-shadow: 0 0 0 4px #e9dff1; }
+.setu-input-icon { flex: 0 0 34px; width: 34px; height: 34px; display: grid; place-items: center; color: #a581c5; background: #f0e7f6; border-radius: 10px; box-shadow: inset 1px 1px 2px white; }
+.setu-input-icon svg { width: 21px; height: 21px; }
+.setu-login-page .setu-input-wrap input:is([type="text"], [type="password"]) { min-width: 0; width: 100%; min-height: 36px; border: none; outline: none; box-shadow: none; background: transparent; padding: 6px 10px; color: #51465e; font: inherit; font-size: 14px; border-radius: 8px; }
+.setu-input-wrap input::placeholder { color: #8c8291; opacity: 1; }
+.setu-eye { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 9px; border: 0; border-radius: 10px; color: #8c8291; background: transparent; cursor: pointer; }
+.setu-eye svg { width: 21px; }
+.setu-login-submit { border: 1px solid #a17ac4; border-radius: 14px; min-height: 49px; width: 100%; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: linear-gradient(180deg, #b897d8, #a47bcd); box-shadow: inset 0 2px 2px #ffffff55, 0 2px 2px #8d65ab25; margin-top: 5px; }
+.setu-login-submit:hover { background: linear-gradient(180deg, #a786c8, #9267ba); }
+.setu-login-status { font-size: 12px; line-height: 1.5; background: #fff0ee; border: 1px solid #efc8c3; color: #9d3e38; padding: 10px 12px; border-radius: 10px; margin-top: 14px; overflow-wrap: anywhere; }
+.setu-login-connection { font-size: 11px; color: #756a80; margin-bottom: 13px; }
+.setu-login-divider { display: flex; align-items: center; gap: 12px; color: #756a80; font-size: 12px; margin: 22px 0 14px; }
+.setu-login-divider::before, .setu-login-divider::after { content: ''; height: 1px; flex: 1; background: #e8e0e7; }
+.setu-login-demo-list { display: grid; gap: 8px; }
+.setu-login-secondary { width: 100%; min-height: 44px; font: inherit; font-size: 12px; border: 1px solid #e6dfe7; border-radius: 13px; background: #fffdfd; color: #5f5269; cursor: pointer; padding: 10px 12px; overflow-wrap: anywhere; }
+.setu-login-secondary:hover { background: #f2ebf7; border-color: #b69bcd; }
+.setu-login-demo-hint, .setu-login-help { font-size: 12px; line-height: 1.5; text-align: center; color: #756a80; }
+.setu-login-demo-hint { margin: 10px 0; }
+.setu-login-help { margin-top: 23px; }
+.setu-login-dev { margin-top: 15px; font-size: 11px; color: #756a80; }
+.setu-login-dev summary { cursor: pointer; padding: 8px 0; }
+.setu-login-utilities { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px 15px; align-items: center; margin: 17px auto 0; max-width: 1132px; }
+.setu-login-utilities button, .setu-login-utilities select { color: #71617f; font: inherit; font-size: 11px; border: 0; background: transparent; min-height: 36px; padding: 4px; cursor: pointer; }
+.setu-login-language select { max-width: 160px; }
+.setu-login-page :is(button,a,select):focus-visible { outline: 3px solid #8a60ad; outline-offset: 3px; }
+.setu-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.setu-app-login .main-content { padding: 0; max-width: none; margin: 0; width: 100%; }
+@media (min-width: 1500px) { .setu-login-page { display: flex; flex-direction: column; justify-content: center; } }
+@media (max-width: 1050px) and (min-width: 761px) { .setu-login-scene { grid-template-columns: 49% 51%; } .setu-login-story { padding: 30px; } .setu-login-welcome { margin-left: 0; } .setu-login-card { padding: 30px 25px; margin-right: 24px; } .setu-login-welcome p { font-size: 16px; } .setu-login-art { background-position: 28% bottom; } }
+@media (max-width: 760px) {
+  .setu-login-page { padding: 18px 14px; }
+  .setu-login-scene { display: flex; flex-direction: column; min-height: 0; border-radius: 25px; }
+  .setu-login-story { width: 100%; padding: 22px 24px 0; min-height: 274px; position: relative; }
+  .setu-login-brand { font-size: 22px; }
+  .setu-login-welcome { margin: 24px 0 0; }
+  .setu-login-welcome h1 { font-size: 27px; }
+  .setu-login-welcome p { font-size: 14px; }
+  .setu-login-art { height: 340px; background-size: auto 450px; background-position: 39% 40%; }
+  .setu-login-art::after { background: linear-gradient(90deg, #fff0e8e6, #fff0e866 48%, transparent 65%), linear-gradient(0deg, #fcece5, transparent 30%); }
+  .setu-login-card { width: calc(100% - 24px); margin: 0 12px 12px; padding: 28px 22px 24px; border-radius: 23px; }
+  .setu-login-card h2 { font-size: 23px; }
+  .setu-login-card header { margin-bottom: 20px; }
+  .setu-login-utilities { gap: 3px 12px; margin-top: 12px; }
+  .setu-login-utilities button, .setu-login-utilities select { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .setu-input-wrap { transition: none; } }
+
+.setu-login-demo-picker > summary { text-align: center; list-style: none; display: grid; place-items: center; }
+.setu-login-demo-picker > summary::-webkit-details-marker { display: none; }
+.setu-login-demo-picker[open] .setu-login-demo-list { margin-top: 8px; }
+.setu-login-page .setu-login-utilities select { background: transparent; color: #71617f; border: 0; box-shadow: none; }
+
+/* Retain the existing brand hook without inheriting the old theme. */
+.setu-login-page .setu-login-brand .brand-title { background: none; -webkit-text-fill-color: currentColor; color: #51465e; font: inherit; letter-spacing: normal; }
+
+/* Reserve real space for the illustration so text and the form never cover it. */
+.setu-login-scene { background: #ffefe7; }
+.setu-login-art { top: 238px; right: 45%; bottom: 0; background: url('../assets/setu-login-art.webp') center bottom / contain no-repeat; }
+.setu-login-art::after { background: linear-gradient(180deg, #ffefe7 0%, transparent 14%); }
+.setu-login-welcome { margin-top: 28px; }
+@media (max-width: 1050px) and (min-width: 761px) { .setu-login-art { right: 51%; top: 245px; background-position: center bottom; } }
+@media (max-width: 760px) {
+  .setu-login-story { min-height: 520px; }
+  .setu-login-welcome { margin-top: 18px; }
+  .setu-login-art { top: 204px; right: 0; bottom: auto; height: 310px; background-size: contain; background-position: center bottom; }
+  .setu-login-art::after { background: linear-gradient(180deg, #ffefe7, transparent 9%); }
+}
+
+.setu-login-demo-notice { padding: 16px; border: 1px solid #dfd0e9; background: #faf7fc; border-radius: 13px; color: #5f5269; font-size: 12px; line-height: 1.7; margin: 18px 0; }
+.setu-login-demo-notice strong { font-weight: 600; }
+.setu-login-demo-notice p { margin: 8px 0 12px; }

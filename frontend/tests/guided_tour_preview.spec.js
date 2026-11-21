@@ -50,7 +50,7 @@ test.describe('Guided Tour Step 5 Interactive Previews & Fixes', () => {
       // FIX 5 Check 2: Worksheet notice
       const step4Text = page.locator('.tour-body');
       await expect(step4Text).toContainText(
-        'Worksheet printing is not available in this build; teachers can still enter answers from paper practice in the Paper Mode tab.'
+        'Teachers can open a printable worksheet after signing in, then enter answers from paper practice in the Paper Mode tab.'
       );
       await expect(step4Text).not.toContainText('currently undergoing verification');
 

@@ -30,6 +30,7 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     // Wait until signed in online
     await expect(page.locator('#connection-status-badge')).toHaveText('Online');
@@ -103,6 +104,7 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     // 5b. Correct PIN test
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
     await expect(page.locator('.info-card')).toBeVisible();
     await expect(page.locator('#connection-status-badge')).toHaveText('Offline');
     await page.screenshot({ path: path.join(screenshotsDir, '05b_offline_signin_success.png'), fullPage: true });
@@ -171,6 +173,7 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
     await expect(page.locator('.info-card')).toBeVisible();
 
     // Queue must still be present across page reload!
@@ -238,6 +241,7 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await page.fill('#student-id-input', 'stu_e2e_02');
     await page.fill('#student-pin-input', '9876');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
     await expect(page.locator('.info-card')).toBeVisible({ timeout: 10000 });
 
     // Wait until pack and profile are stored in IndexedDB
@@ -293,6 +297,7 @@ test.describe('FIX 3: Offline PWA, Local Engine & IndexedDB Lifecycle', () => {
     await page.fill('#student-id-input', 'stu_e2e_02');
     await page.fill('#student-pin-input', '9876');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     // 4. Verify stage is bridge_recheck
     await expect(page.locator('.badge-stage')).toHaveText('bridge_recheck', { timeout: 10000 });

@@ -296,8 +296,8 @@ export default function GuidedTourModal({ isOpen, onClose, onNavigateTab }) {
               </div>
 
               <div className="tour-callout warning">
-                <strong>Worksheet Notice:</strong> Worksheet printing is not available
-                in this build; teachers can still enter answers from paper practice
+                <strong>Worksheet Notice:</strong> Teachers can open a printable worksheet
+                after signing in, then enter answers from paper practice
                 in the Paper Mode tab.
               </div>
             </div>

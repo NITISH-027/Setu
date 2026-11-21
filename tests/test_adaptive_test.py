@@ -391,3 +391,114 @@ def test_additive_schema_is_idempotent_on_existing_db(tmp_path):
         assert "summary_json" in cols
         cols_items = [r[1] for r in conn.execute(text("PRAGMA table_info(test_items)")).fetchall()]
         assert "served_reason" in cols_items
+
+
+# UI review history must stay factual, private, and read-only.
+def test_review_history_contains_only_submitted_sanitized_questions(client):
+    auth = student_token(client)
+    state = start_session(client, auth, length=4)
+    assert state['answered_items'] == []
+    first = state['current_item']
+    result = answer_current(client, auth, state, correct=False, attempt_id='review-first')
+    state = result['session']
+    assert len(state['answered_items']) == 1
+    entry = state['answered_items'][0]
+    assert entry['sequence'] == first['sequence']
+    assert entry['question']['id'] == first['question']['id']
+    assert entry['is_correct'] is False
+    assert entry['selected_option_id']
+    for option in entry['question']['options']:
+        assert 'is_correct' not in option
+        assert 'misconception_tag' not in option
+    assert state['current_item']['sequence'] == 2
+    assert all(item['question']['id'] != state['current_item']['question']['id'] for item in state['answered_items'])
+    resumed = client.get(f'/api/student/{SID}/test/active', headers=auth).json()['active']
+    assert resumed['answered_items'] == state['answered_items']
+
+
+def test_completed_response_and_saved_report_keep_review_history(client):
+    auth = student_token(client)
+    state = start_session(client, auth, length=2)
+    first = answer_current(client, auth, state, correct=True)
+    last = answer_current(client, auth, first['session'], correct=False)
+    assert last['completed'] is True
+    assert last['session']['status'] == 'completed'
+    assert len(last['session']['answered_items']) == 2
+    assert [item['is_correct'] for item in last['session']['answered_items']] == [True, False]
+    assert last['session']['summary'] == last['summary']
+    saved = client.get(f"/api/student/{SID}/test/{state['session_id']}", headers=auth)
+    assert saved.status_code == 200
+    assert saved.json()['answered_items'] == last['session']['answered_items']
+
+
+def test_identical_answer_retry_keeps_one_review_entry(client):
+    auth = student_token(client)
+    initial = start_session(client, auth, length=4)
+    first = answer_current(client, auth, initial, correct=True, attempt_id='history-retry')
+    retry = answer_current(client, auth, initial, correct=True, attempt_id='history-retry')
+    assert retry['idempotent_replay'] is True
+    assert retry['answered_count'] == 1
+    assert retry['answered_items'] == first['session']['answered_items']
+
+
+def test_student_home_counts_saved_attempts_and_active_test(client):
+    auth = student_token(client)
+    before = client.get(f'/api/student/{SID}/dashboard?timezone_offset_minutes=330', headers=auth)
+    assert before.status_code == 200
+    assert before.json()['total_attempts'] == 0
+    assert before.json()['streak_days'] == 0
+    assert before.json()['active_test'] is None
+    state = start_session(client, auth, length=4)
+    result = answer_current(client, auth, state, correct=True)
+    result = answer_current(client, auth, result['session'], correct=False)
+    home = client.get(f'/api/student/{SID}/dashboard?timezone_offset_minutes=330', headers=auth).json()
+    assert home['total_attempts'] == 2
+    assert home['total_correct'] == 1
+    assert home['concepts_practised'] == 2
+    assert sum(day['attempts'] for day in home['activity']) == 2
+    assert home['activity'][-1]['attempts'] == 2
+    assert home['active_days_last_7'] == 1
+    assert home['streak_days'] == 1
+    assert home['active_test'] == {'answered': 2, 'planned': 4}
+    assert all('question' not in concept for concept in home['concepts'])
+
+
+def test_student_home_rejects_other_student_and_teacher(client):
+    auth = student_token(client)
+    assert client.get('/api/student/someone_else/dashboard', headers=auth).status_code == 403
+    teacher = teacher_token(client, TEACHER_A)
+    assert client.get(f'/api/student/{SID}/dashboard', headers=teacher).status_code == 403
+    assert client.get(f'/api/student/{SID}/dashboard').status_code in (401, 403)
+    assert client.get(f'/api/student/{SID}/dashboard?timezone_offset_minutes=9999', headers=auth).status_code == 422
+
+
+def test_student_home_empty_mastery_is_not_fabricated(client):
+    home = client.get(f'/api/student/{SID}/dashboard', headers=student_token(client)).json()
+    assert home['total_attempts'] == 0
+    assert len(home['activity']) == 7
+    assert all(day['attempts'] == 0 for day in home['activity'])
+    assert any(concept['mastery'] is None for concept in home['concepts'])
+    actual = next(concept for concept in home['concepts'] if concept['concept_id'] == 'c8_math_linear_eq_one_var')
+    assert actual['mastery'] is not None
+    assert actual['attempts'] == 0
+
+
+def test_student_home_streak_uses_distinct_days_and_stops_at_gap(client):
+    from datetime import datetime, timedelta
+    auth = student_token(client)
+    midday = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
+    db = SessionLocal()
+    try:
+        for i, days_ago in enumerate([0, 0, 1, 2, 4]):
+            db.add(AttemptDB(id=f'home-streak-{i}', student_id=SID,
+                             question_id='q_c8_leq_01', concept_id='c8_math_linear_eq_one_var',
+                             selected_option_id='opt_1', is_correct=True,
+                             timestamp=midday - timedelta(days=days_ago)))
+        db.commit()
+    finally:
+        db.close()
+    home = client.get(f'/api/student/{SID}/dashboard', headers=auth).json()
+    assert home['streak_days'] == 3
+    assert home['active_days_last_7'] == 4
+    assert home['total_attempts'] == 5
+    assert [day['attempts'] for day in home['activity']] == [0, 0, 1, 0, 1, 1, 2]

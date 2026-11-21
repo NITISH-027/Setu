@@ -17,6 +17,7 @@ test.describe('Setu Full Acceptance Browser Journeys (Tests A - L)', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     // 3. Initial Solve stage
     await expect(page.locator('.badge-stage')).toHaveText('solve', { timeout: 10000 });
@@ -78,6 +79,7 @@ test.describe('Setu Full Acceptance Browser Journeys (Tests A - L)', () => {
     await page.fill('#student-id-input', 'stu_e2e_02');
     await page.fill('#student-pin-input', '9876');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     await expect(page.locator('.badge-stage')).toHaveText('solve', { timeout: 10000 });
 
@@ -134,6 +136,7 @@ test.describe('Setu Full Acceptance Browser Journeys (Tests A - L)', () => {
     await page.fill('#student-id-input', 'stu_e2e_02');
     await page.fill('#student-pin-input', '9876');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
     await expect(page.locator('.option-btn').first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -144,6 +147,7 @@ test.describe('Setu Full Acceptance Browser Journeys (Tests A - L)', () => {
     await page.fill('#student-id-input', 'stu_e2e_fast');
     await page.fill('#student-pin-input', '2222');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     await expect(page.locator('.badge-stage')).toHaveText('solve', { timeout: 10000 });
 

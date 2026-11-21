@@ -30,7 +30,7 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
 
     // Wait for header and brand elements
     await expect(page.locator('.brand-title')).toBeVisible();
-    await expect(page.locator('.nav-tabs')).toBeVisible();
+    await expect(page.locator('.setu-role-tabs')).toBeVisible();
 
     // Verify document does not have horizontal overflow (scrollWidth <= clientWidth)
     const hasHorizontalOverflow = await page.evaluate(() => {
@@ -48,10 +48,10 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
 
     // Verify brand and tabs
     await expect(page.locator('.brand-title')).toBeVisible();
-    await expect(page.locator('.nav-tabs')).toBeVisible();
+    await expect(page.locator('.setu-role-tabs')).toBeVisible();
 
     // Check header height is reasonable (not wrapping into broken overlap)
-    const headerBox = await page.locator('.app-header').boundingBox();
+    const headerBox = await page.locator('.setu-role-tabs').boundingBox();
     expect(headerBox).not.toBeNull();
     expect(headerBox.height).toBeLessThan(120);
 
@@ -73,7 +73,7 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
       page.waitForResponse(r => r.url().includes('/api/auth/login')),
       page.click('#teacher-signin-btn')
     ]);
-    await expect(page.locator('text=Teacher Control Dashboard')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Small steps, thoughtful support.' })).toBeVisible({ timeout: 15000 });
     await page.screenshot({ path: path.join(screenshotsDir, 'teacher_dashboard.png'), fullPage: true });
 
     // Switch to Student App and sign in
@@ -82,6 +82,7 @@ test.describe('Mobile Viewport & Phone Layout Tests', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
     await expect(page.locator('.phone-container')).toBeVisible();
     await expect(page.locator('.info-card')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotsDir, 'student_solve_flow.png'), fullPage: true });
