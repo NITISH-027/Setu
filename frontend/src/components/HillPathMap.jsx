@@ -13,7 +13,8 @@ function prettyConcept(conceptId) {
   return words.replace(/\b\w/g, (c) => c.toUpperCase()) || conceptId;
 }
 
-export default function HillPathMap({ masteries = {}, currentConcept }) {
+export default function HillPathMap({ masteries = {}, currentConcept, currentMastery, concepts: packConcepts = [] }) {
+  const displayName = id => packConcepts.find(concept => concept.id === id)?.name || prettyConcept(id);
   const seen = Object.keys(masteries);
   const concepts = currentConcept && !seen.includes(currentConcept)
     ? [...seen, currentConcept]
@@ -45,34 +46,14 @@ export default function HillPathMap({ masteries = {}, currentConcept }) {
     .map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`))
     .join(' ');
 
-  return (
-    <div className="hillmap-wrap" data-testid="hillpath-map">
-      <svg viewBox="0 0 320 78" className="hillmap-svg" aria-label="Learning path map">
+  return <div className="hillmap-wrap" data-testid="hillpath-map">
+    {n === 1 ? <div className="hillmap-single"><div className="hillmap-single-stone" aria-hidden="true">✦</div><span className="hillmap-current-label">Your current concept</span><strong>{displayName(concepts[0])}</strong><small>{masteries[concepts[0]] != null || currentMastery != null ? `${Math.round((masteries[concepts[0]] ?? currentMastery) * 100)}% mastery estimate` : 'No saved estimate in this path yet'}</small></div> : <>
+      <svg viewBox="0 0 320 100" className="hillmap-svg" aria-label="Learning path map">
         <path d={pathD} className="hillmap-path" fill="none" />
-        {points.map((p) => {
-          const mastery = masteries[p.c] || 0;
-          const isCurrent = p.c === currentConcept;
-          const isDone = mastery >= MASTERY_DONE_THRESHOLD;
-          const cls = isCurrent ? 'hillmap-current' : isDone ? 'hillmap-done' : 'hillmap-visited';
-          const mark = isCurrent ? '\u2605' : isDone ? '\u2713' : '';
-          return (
-            <g key={p.c}>
-              <circle cx={p.x} cy={p.y} r="9" className={`hillmap-stone ${cls}`} />
-              {mark && (
-                <text x={p.x} y={p.y + 4} textAnchor="middle" className="hillmap-mark">
-                  {mark}
-                </text>
-              )}
-              <text x={Math.max(34, Math.min(286, p.x))} y={p.y + 22} textAnchor="middle" className="hillmap-label">
-                {prettyConcept(p.c).slice(0, 12)}
-              </text>
-            </g>
-          );
-        })}
+        {points.map((point, index) => <g key={point.c}><circle cx={point.x} cy={point.y} r="15" className={`hillmap-stone ${point.c === currentConcept ? 'hillmap-current' : (masteries[point.c] || 0) >= MASTERY_DONE_THRESHOLD ? 'hillmap-done' : 'hillmap-visited'}`} /><text x={point.x} y={point.y + 4} textAnchor="middle" className="hillmap-mark">{point.c === currentConcept ? '★' : index + 1}</text></g>)}
       </svg>
-      <div className="hillmap-caption">
-        {doneCount} milestone{doneCount === 1 ? '' : 's'} crossed. Orange stone = where you are now.
-      </div>
-    </div>
-  );
+      <ol className="hillmap-concept-list">{concepts.map((concept, index) => <li key={concept}><span>{index + 1}</span><div><strong>{displayName(concept)}</strong><small>{concept === currentConcept ? 'Current concept · ' : ''}{masteries[concept] == null ? 'Not estimated' : `${Math.round(masteries[concept] * 100)}% estimate`}</small></div></li>)}</ol>
+    </>}
+    <div className="hillmap-caption">{doneCount} milestone{doneCount === 1 ? '' : 's'} crossed. Lilac star = your current concept. Estimates are uncalibrated, not course completion.</div>
+  </div>;
 }

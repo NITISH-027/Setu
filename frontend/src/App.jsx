@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import StudentView from './components/StudentView';
-import { makeT } from './i18n/uiStrings.js';
 import TeacherView from './components/TeacherView';
 import PrivacyView from './components/PrivacyView';
 import ReviewView from './components/ReviewView';
 import PaperModeView from './components/PaperModeView';
 import GuidedTourModal from './components/GuidedTourModal';
+import LearningHeader from './components/LearningHeader';
 
 function FootprintNote() {
   const [fp, setFp] = useState(null);
@@ -24,11 +24,18 @@ function FootprintNote() {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('student');
+  const [studentSignedIn, setStudentSignedIn] = useState(false);
+  const [teacherSignedIn, setTeacherSignedIn] = useState(false);
+  const [isTestScreen, setIsTestScreen] = useState(false);
+  const [isHomeScreen, setIsHomeScreen] = useState(false);
+  const isTeacherDashboard = activeTab === 'teacher' && teacherSignedIn;
+  const isLogin = (activeTab === 'student' && !studentSignedIn) || (activeTab === 'teacher' && !teacherSignedIn);
   const [devSimulateOffline, setDevSimulateOffline] = useState(false);
   const [isSystemOnline, setIsSystemOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [language, setLanguage] = useState('en');
-  const t = makeT(language);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const loginNavigation = { onNavigate: setActiveTab, onTour: () => setIsTourOpen(true), onLanguageChange: setLanguage };
+
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('setu_theme') || 'paathai';
@@ -58,7 +65,7 @@ export default function App() {
   const effectivelyOffline = !isSystemOnline || devSimulateOffline;
 
   return (
-    <>
+    <div className={isLogin ? "setu-app-login" : isTeacherDashboard ? "setu-app-teacher" : (isTestScreen || isHomeScreen) ? "setu-app-quiz" : "setu-app"}>
       {effectivelyOffline && (
         <div className="offline-banner" style={{ background: '#78350f', color: '#fef3c7', padding: '6px 12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
           {!isSystemOnline
@@ -67,113 +74,30 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Header */}
-      <header className="app-header">
-        <div className="brand-section">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div className="logo-badge">SETU</div>
-            <div className="brand-title">Adaptive Learning</div>
-          </div>
-
-          {/* Theme & Language Selectors & Guided Tour */}
-          <div className="header-controls">
-            <button
-              id="guided-tour-btn"
-              data-testid="guided-tour-btn"
-              onClick={() => setIsTourOpen(true)}
-              className="guided-tour-btn"
-              title="Open 3-minute guided walkthrough for judges"
-            >
-              ✨ Guided Tour (3 min)
-            </button>
-
-            <select
-              id="theme-select"
-              data-testid="theme-select"
-              aria-label="Color Theme"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className="header-select theme-select"
-            >
-              <option value="paathai">⛰️ Paathai (Hill Path)</option>
-              <option value="emerald">🌿 Emerald Jade</option>
-              <option value="amethyst">✨ Velvet Amethyst</option>
-              <option value="amber">🔥 Amber Sunset</option>
-            </select>
-
-            {/* Medium Language Switcher (Failure 5) */}
-            <select
-              id="language-select"
-              data-testid="language-select"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="header-select language-select"
-            >
-              <option value="en">English (Supported)</option>
-              <option value="hi">हिंदी (Unreviewed Draft)</option>
-              <option value="ta">தமிழ் (Unreviewed Draft)</option>
-              <option value="te">తెలుగు (Unreviewed Draft)</option>
-            </select>
-          </div>
-        </div>
-
-        <nav className="nav-tabs">
-          <button
-            id="tab-student"
-            className={`nav-tab-btn ${activeTab === 'student' ? 'active' : ''}`}
-            onClick={() => setActiveTab('student')}
-          >
-            {t('nav.student')}
-          </button>
-          <button
-            id="tab-teacher"
-            className={`nav-tab-btn ${activeTab === 'teacher' ? 'active' : ''}`}
-            onClick={() => setActiveTab('teacher')}
-          >
-            {t('nav.teacher')}
-          </button>
-          <button
-            id="tab-privacy"
-            className={`nav-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
-            onClick={() => setActiveTab('privacy')}
-          >
-            {t('nav.privacy')}
-          </button>
-          <button
-            id="tab-review"
-            className={`nav-tab-btn ${activeTab === 'review' ? 'active' : ''}`}
-            onClick={() => setActiveTab('review')}
-          >
-            {t('nav.review')}
-          </button>
-          <button
-            id="tab-paper"
-            className={`nav-tab-btn ${activeTab === 'paper' ? 'active' : ''}`}
-            onClick={() => setActiveTab('paper')}
-          >
-            {t('nav.paper')}
-          </button>
-        </nav>
-      </header>
+      {!isLogin && !isTestScreen && !isHomeScreen && !isTeacherDashboard && <LearningHeader activeTab={activeTab} onNavigate={setActiveTab} onTour={() => setIsTourOpen(true)} theme={theme} onThemeChange={setTheme} language={language} onLanguageChange={setLanguage} />}
 
       {/* Main View Area */}
       <main className="main-content">
         {activeTab === 'student' && (
           <StudentView
+            loginNavigation={loginNavigation}
+            onAuthChange={setStudentSignedIn}
+            onTestScreenChange={setIsTestScreen}
+            onHomeScreenChange={setIsHomeScreen}
             devSimulateOffline={devSimulateOffline}
             onToggleDevOffline={() => setDevSimulateOffline(!devSimulateOffline)}
             language={language}
             onLanguageChange={setLanguage}
           />
         )}
-        {activeTab === 'teacher' && <TeacherView language={language} />}
+        {activeTab === 'teacher' && <TeacherView language={language} loginNavigation={loginNavigation} onAuthChange={setTeacherSignedIn} />}
         {activeTab === 'privacy' && <PrivacyView />}
         {activeTab === 'review' && <ReviewView />}
         {activeTab === 'paper' && <PaperModeView />}
       </main>
 
       {/* Honest Footer */}
-      <footer className="app-footer">
+      {!isLogin && !isTestScreen && !isHomeScreen && !isTeacherDashboard && <footer className="app-footer">
         <div>
           <strong>Setu:</strong> A wrong answer is a hypothesis, not a diagnosis. Inside an authored concept graph.
         </div>
@@ -182,7 +106,7 @@ export default function App() {
           Content is <em>author-drafted, unreviewed</em>. Demo controls only, not a legal or school compliance claim.
         </div>
         <FootprintNote />
-      </footer>
+      </footer>}
 
       {/* Guided Tour Modal for Judges */}
       <GuidedTourModal
@@ -193,6 +117,6 @@ export default function App() {
           setIsTourOpen(false);
         }}
       />
-    </>
+    </div>
   );
 }

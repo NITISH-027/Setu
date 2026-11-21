@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import TestView from './TestView';
+import StudentHome from './StudentHome';
+import './LearningScreens.css';
+import LoginShell, { LoginField } from './LoginShell';
 import { BKTEngine, RuleSequencer, HypothesisEngine, SpacedRepetitionScheduler } from '../engine/index.js';
 import HillPathMap from './HillPathMap';
 import DiagnosisTrail from './DiagnosisTrail';
@@ -26,11 +29,15 @@ import {
 } from '../storage/indexedDb.js';
 import { makeT } from '../i18n/uiStrings.js';
 
-export default function StudentView({ devSimulateOffline = false, onToggleDevOffline, language = 'en', onLanguageChange }) {
+export default function StudentView({ devSimulateOffline = false, onToggleDevOffline, language = 'en', onLanguageChange, loginNavigation, onAuthChange, onTestScreenChange, onHomeScreenChange }) {
   const t = makeT(language);
   const [studentId, setStudentId] = useState('');
   const [pin, setPin] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
+  useEffect(() => {
+    onAuthChange?.(authenticated);
+    return () => onAuthChange?.(false);
+  }, [authenticated, onAuthChange]);
   const [token, setToken] = useState(null);
   const [classId, setClassId] = useState('8-A');
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -51,7 +58,14 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
   const [conceptMasteries, setConceptMasteries] = useState({});
   const [offlinePackData, setOfflinePackData] = useState(null);
   const [testMode, setTestMode] = useState(false);
+  const [showHome, setShowHome] = useState(true);
+  useEffect(() => {
+    onHomeScreenChange?.(authenticated && showHome && !testMode);
+    return () => onHomeScreenChange?.(false);
+  }, [authenticated, showHome, testMode, onHomeScreenChange]);
   const [demoStudents, setDemoStudents] = useState(null);
+  const [demoLoadState, setDemoLoadState] = useState('idle');
+  const [demoRetry, setDemoRetry] = useState(0);
   const [trail, setTrail] = useState([]);
 
   // Diagnosis trail ("Watch Setu think"): only real engine decisions are recorded.
@@ -91,6 +105,11 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
 
   const effectivelyOnline = isOnline && !devSimulateOffline;
 
+  useEffect(() => {
+    onTestScreenChange?.(testMode && effectivelyOnline && Boolean(token));
+    return () => onTestScreenChange?.(false);
+  }, [testMode, effectivelyOnline, token, onTestScreenChange]);
+
   // Automatically trigger sync when connectivity transitions to online
   useEffect(() => {
     if (effectivelyOnline) {
@@ -119,16 +138,32 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
     return tag.replace(/^tag_[a-z]+_/, '').replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
   };
 
-  // Demo mode (SETU_DEMO_MODE=true on backend): list tap-able student profiles.
-  // Silently stays hidden when the backend says demo mode is off (403) or is unreachable.
+  // Demo entry is available only when the backend enables it. An empty
+  // enabled demo needs an explicit setup notice, not a silently missing entry.
   useEffect(() => {
-    if (!authenticated && effectivelyOnline) {
-      fetch('/api/auth/demo-students')
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => setDemoStudents(d && d.students && d.students.length > 0 ? d.students : null))
-        .catch(() => setDemoStudents(null));
-    }
-  }, [authenticated, effectivelyOnline]);
+    if (authenticated || !effectivelyOnline) return;
+    const controller = new AbortController();
+    setDemoLoadState('loading');
+    fetch('/api/auth/demo-students', { signal: controller.signal })
+      .then(async response => {
+        if (response.status === 403) return { state: 'disabled', students: null };
+        if (!response.ok) throw new Error('Demo profiles unavailable');
+        const data = await response.json();
+        if (!Array.isArray(data.students)) throw new Error('Invalid demo profiles');
+        return { state: data.students.length ? 'ready' : 'empty', students: data.students };
+      })
+      .then(result => {
+        if (controller.signal.aborted) return;
+        setDemoStudents(result.students);
+        setDemoLoadState(result.state);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setDemoStudents(null);
+        setDemoLoadState('error');
+      });
+    return () => controller.abort();
+  }, [authenticated, effectivelyOnline, demoRetry]);
 
   // One-tap demo sign-in: no PIN, per-child profile separation kept (each tap = one child).
   const handleDemoLogin = async (demoStudentId, demoClassId) => {
@@ -149,6 +184,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         localStorage.setItem('setu_demo_profile', demoStudentId);
       }
       setStudentId(demoStudentId);
+      setShowHome(true);
       setAuthenticated(true);
       setToken(data.access_token);
       const studentClass = data.class_id || demoClassId || '8-A';
@@ -223,7 +259,8 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         profile.locked_until = null;
         await saveStudentProfile(profile);
 
-        setAuthenticated(true);
+        setShowHome(true);
+      setAuthenticated(true);
         setClassId(profile.class_id || '8-A');
         setToken(profile.token || null);
         setStatusMessage('Signed in offline with cached device verifier.');
@@ -267,6 +304,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
       }
 
       const data = await res.json();
+      setShowHome(true);
       setAuthenticated(true);
       setToken(data.access_token);
       const studentClass = data.class_id || '8-A';
@@ -1065,131 +1103,62 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
     }
   };
 
+  const handleLogout = async () => {
+    const endingToken = token;
+    const endingStudent = studentId;
+    const wasDemoProfile = !!endingStudent && localStorage.getItem('setu_demo_profile') === endingStudent;
+    // Tell the server the session ended (best-effort; triggers demo reset for demo profiles).
+    if (endingToken) {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${endingToken}` } });
+      } catch (e) { /* offline logout: server sweeps on next session expiry */ }
+    }
+    // Demo profile on a shared judge device: wipe local progress so the next judge starts clean.
+    if (wasDemoProfile) {
+      try { await clearStudentLocalData(endingStudent); } catch (e) { /* best-effort */ }
+      localStorage.removeItem('setu_demo_profile');
+    }
+    setAuthenticated(false);
+    setPin('');
+    setToken(null);
+    setStudentId('');
+    setNextStepData(null);
+    setSelectedOptId(null);
+    setHintLevel(0);
+    setCurrentMastery(0.2);
+    setCurrentConcept('c8_math_linear_eq_one_var');
+    setCurrentStage('solve');
+    setPrevStage(null);
+    setConceptMasteries({});
+    setTrail([]);
+    setStatusMessage('');
+  };
+
   // ----------------------------------------------------
   // Render Sign-In Form (Empty defaults, FIX 6)
   // ----------------------------------------------------
   if (!authenticated) {
     return (
-      <div className="phone-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700' }}>Student Sign-In</h2>
-          <span
-            id="connection-status-badge"
-            className="badge-uncalibrated"
-            style={{
-              background: effectivelyOnline ? 'var(--badge-online-bg, rgba(16, 185, 129, 0.2))' : 'var(--badge-offline-bg, rgba(239, 68, 68, 0.2))',
-              color: effectivelyOnline ? 'var(--badge-online-text, #6ee7b7)' : 'var(--badge-offline-text, #fca5a5)'
-            }}
-          >
-            {effectivelyOnline ? t('common.online') : t('common.offline')}
-          </span>
-        </div>
-
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Shared Device • Salted PIN Authentication • Offline Capable
-        </p>
-
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Student Pseudonym</label>
-            <input
-              id="student-id-input"
-              data-testid="student-id-input"
-              type="text"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              placeholder="e.g. stu_demo_01"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--input-bg, var(--bg-secondary))',
-                border: '1px solid var(--border-color)',
-                color: 'var(--input-text, #fff)',
-                borderRadius: '6px'
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>4-Digit PIN</label>
-            <input
-              id="student-pin-input"
-              data-testid="student-pin-input"
-              type="password"
-              maxLength="4"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter PIN"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--input-bg, var(--bg-secondary))',
-                border: '1px solid var(--border-color)',
-                color: 'var(--input-text, #fff)',
-                borderRadius: '6px'
-              }}
-            />
-          </div>
-
-          <button
-            id="student-signin-btn"
-            data-testid="student-signin-btn"
-            type="submit"
-            className="action-btn"
-          >
-            {effectivelyOnline ? 'Sign In (Online)' : 'Sign In (Offline Profile)'}
-          </button>
+      <LoginShell role="student" {...loginNavigation} language={language}>
+        <p className="setu-login-connection"><span id="connection-status-badge">{effectivelyOnline ? t('common.online') : t('common.offline')}</span> · Student ID + PIN</p>
+        <form onSubmit={handleLogin} className="setu-login-form">
+          <LoginField label="Student ID" id="student-id-input" data-testid="student-id-input" value={studentId} onChange={(e) => setStudentId(e.target.value)} placeholder="Enter your student ID" autoComplete="username" autoCapitalize="none" spellCheck={false} required />
+          <LoginField label="4-digit PIN" secret id="student-pin-input" data-testid="student-pin-input" value={pin} onChange={(e) => setPin(e.target.value)} maxLength={4} minLength={4} pattern="[0-9]{4}" inputMode="numeric" autoComplete="current-password" placeholder="Enter your PIN" required />
+          <button id="student-signin-btn" data-testid="student-signin-btn" type="submit" className="setu-login-submit">{effectivelyOnline ? 'Log in' : 'Log in offline'}</button>
         </form>
-
-        {demoStudents && (
-          <div id="demo-student-picker" data-testid="demo-student-picker" style={{ marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '10px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-              Judge demo (no PIN): tap a student. Each profile keeps its own progress.
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {demoStudents.map((s) => (
-                <button
-                  key={s.student_id}
-                  type="button"
-                  className="btn-secondary"
-                  data-testid={`demo-login-${s.student_id}`}
-                  onClick={() => handleDemoLogin(s.student_id, s.class_id)}
-                >
-                  {s.student_id} ({s.class_id})
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {statusMessage && (
-          <div
-            id="student-status-message"
-            style={{
-              marginTop: '12px',
-              fontSize: '12px',
-              color: statusMessage.includes('Correct') ? 'var(--status-ok, #6ee7b7)' : 'var(--status-err, #fca5a5)',
-              background: 'var(--inset-bg, rgba(0,0,0,0.3))',
-              padding: '8px',
-              borderRadius: '4px'
-            }}
-          >
-            {statusMessage}
-          </div>
-        )}
-
-        {/* Developer simulation toggle aid */}
-        <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-          <button
-            type="button"
-            onClick={onToggleDevOffline}
-            className="btn-secondary"
-            style={{ fontSize: '11px', width: '100%' }}
-          >
-            {devSimulateOffline ? 'Disable Dev Offline Simulation' : 'Dev: Simulate Offline Mode'}
-          </button>
-        </div>
-      </div>
+        {statusMessage && <div id="student-status-message" className="setu-login-status" role="alert">{statusMessage}</div>}
+        {effectivelyOnline && demoLoadState === 'ready' && <div id="demo-student-picker" data-testid="demo-student-picker">
+          <div className="setu-login-divider">or explore a demo</div>
+          <div className="setu-login-demo-list" aria-label="Student demo profiles">{demoStudents.map((s) => <button key={s.student_id} type="button" className="setu-login-secondary" data-testid={`demo-login-${s.student_id}`} onClick={() => handleDemoLogin(s.student_id, s.class_id)}>Try {s.student_id} ({s.class_id})</button>)}</div>
+          <p className="setu-login-demo-hint">No PIN needed. Each demo profile has separate progress.</p>
+        </div>}
+        {effectivelyOnline && ['empty', 'error'].includes(demoLoadState) && <div className="setu-login-demo-notice" role="status" data-testid="student-demo-notice">
+          <strong>{demoLoadState === 'empty' ? 'No student demos are set up yet.' : 'Student demo profiles could not be loaded.'}</strong>
+          <p>{demoLoadState === 'empty' ? 'Demo mode is on, but this database has no student profiles. Ask the person running this local demo to set up synthetic demo data, then retry.' : 'Check the connection and retry. Student ID + PIN sign-in is still available.'}</p>
+          <button type="button" className="setu-login-secondary" onClick={() => setDemoRetry(value => value + 1)}>Retry student demos</button>
+        </div>}
+        <details className="setu-login-dev"><summary>Offline testing</summary><button type="button" onClick={onToggleDevOffline} className="setu-login-secondary">{devSimulateOffline ? 'Disable Dev Offline Simulation' : 'Dev: Simulate Offline Mode'}</button></details>
+      </LoginShell>
     );
   }
 
@@ -1215,9 +1184,11 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
     );
   }
 
+  if (showHome) return <StudentHome studentId={studentId} classId={classId} token={token} online={effectivelyOnline} queuedCount={queuedCount} currentConcept={currentConcept} currentStage={currentStage} onContinue={() => setShowHome(false)} onTest={() => { setShowHome(false); setTestMode(true); }} onNavigate={loginNavigation.onNavigate} onTour={loginNavigation.onTour} onLogout={handleLogout} />;
+
   return (
-    <div className="phone-container">
-      {/* Header with real state (FIX 3g) */}
+    <div className="phone-container setu-practice">
+      <div className="practice-toolbar"><button type="button" className="btn-secondary" onClick={() => setShowHome(true)}>← Learning home</button>      {/* Header with real state (FIX 3g) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
           <span style={{ fontSize: '13px', fontWeight: '600' }}>Student: {studentId}</span>
@@ -1238,36 +1209,7 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
             {effectivelyOnline ? 'Online' : 'Offline'}
           </span>
           <button
-            onClick={async () => {
-              const endingToken = token;
-              const endingStudent = studentId;
-              const wasDemoProfile = !!endingStudent && localStorage.getItem('setu_demo_profile') === endingStudent;
-              // Tell the server the session ended (best-effort; triggers demo reset for demo profiles).
-              if (endingToken) {
-                try {
-                  await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${endingToken}` } });
-                } catch (e) { /* offline logout: server sweeps on next session expiry */ }
-              }
-              // Demo profile on a shared judge device: wipe local progress so the next judge starts clean.
-              if (wasDemoProfile) {
-                try { await clearStudentLocalData(endingStudent); } catch (e) { /* best-effort */ }
-                localStorage.removeItem('setu_demo_profile');
-              }
-              setAuthenticated(false);
-              setPin('');
-              setToken(null);
-              setStudentId('');
-              setNextStepData(null);
-              setSelectedOptId(null);
-              setHintLevel(0);
-              setCurrentMastery(0.2);
-              setCurrentConcept('c8_math_linear_eq_one_var');
-              setCurrentStage('solve');
-              setPrevStage(null);
-              setConceptMasteries({});
-              setTrail([]);
-              setStatusMessage('');
-            }}
+            onClick={handleLogout}
             className="btn-secondary"
             style={{ fontSize: '10px', padding: '2px 6px' }}
           >
@@ -1276,7 +1218,9 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         </div>
       </div>
 
-      {/* Honest Badges Row */}
+</div>
+      <header className="practice-heading"><p>YOUR ADAPTIVE PRACTICE</p><h1>A small step. A stronger start.</h1><span>{offlinePackData?.concepts?.find(concept => concept.id === currentConcept)?.name || currentConcept.replace(/c\d+_math_/, '').replace(/_/g, ' ')} · Your saved learning plan</span></header>
+      <div className="practice-layout"><section className="practice-main">      {/* Honest Badges Row */}
       <div className="badge-row" style={{ marginBottom: '10px' }}>
         <span className="badge-stage">{currentStage}</span>
         <span id="mastery-estimate-badge" className="badge-uncalibrated">
@@ -1286,28 +1230,6 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           Queued: {queuedCount}
         </span>
       </div>
-
-      <HillPathMap masteries={conceptMasteries} currentConcept={currentConcept} />
-
-      <DiagnosisTrail events={trail} />
-
-      {lastSyncTime && (
-        <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-          Last sync: {lastSyncTime}
-        </div>
-      )}
-
-      {effectivelyOnline && (
-        <button
-          id="take-chapter-test-btn"
-          data-testid="take-chapter-test-btn"
-          onClick={() => setTestMode(true)}
-          className="btn-secondary"
-          style={{ width: '100%', marginBottom: '8px', fontSize: '13px', padding: '10px' }}
-        >
-          📝 {t('student.chapterTest')}
-        </button>
-      )}
 
       {/* Visible message for every stage change (Acceptance Test A & Failure 2) */}
       <div
@@ -1517,28 +1439,6 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
         </div>
       )}
 
-      {/* Sync Control & Status */}
-      <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button
-          id="sync-now-btn"
-          data-testid="sync-now-btn"
-          onClick={triggerSyncIfPossible}
-          disabled={!effectivelyOnline || queuedCount === 0}
-          className="btn-secondary"
-          style={{
-            fontSize: '11px',
-            borderColor: queuedCount > 0 && effectivelyOnline ? 'var(--accent-emerald)' : 'var(--border-color)',
-            color: queuedCount > 0 && effectivelyOnline ? 'var(--soft-green, #6ee7b7)' : 'var(--text-muted)'
-          }}
-        >
-          {queuedCount > 0 ? t('student.queueSync', { n: queuedCount }) : t('student.queueEmpty')}
-        </button>
-
-        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-          {effectivelyOnline ? t('student.autoSync') : t('student.offlineLocal')}
-        </span>
-      </div>
-
         {misconceptionExplainer && (
           <div
             id="misconception-explainer-card"
@@ -1576,6 +1476,51 @@ export default function StudentView({ devSimulateOffline = false, onToggleDevOff
           {statusMessage}
         </div>
       )}
+</section><aside className="practice-aside"><div className="practice-path-title"><p>YOUR LEARNING PATH</p><h2>Every step counts.</h2><small>Concepts visited in your saved session</small></div>      <HillPathMap masteries={conceptMasteries} currentConcept={currentConcept} currentMastery={currentMastery} concepts={offlinePackData?.concepts || []} />
+
+      <DiagnosisTrail events={trail} />
+
+      {lastSyncTime && (
+        <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+          Last sync: {lastSyncTime}
+        </div>
+      )}
+
+      {effectivelyOnline && (
+        <button
+          id="take-chapter-test-btn"
+          data-testid="take-chapter-test-btn"
+          onClick={() => setTestMode(true)}
+          className="btn-secondary"
+          style={{ width: '100%', marginBottom: '8px', fontSize: '13px', padding: '10px' }}
+        >
+          {t('student.chapterTest')}
+        </button>
+      )}
+
+      {/* Sync Control & Status */}
+      <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button
+          id="sync-now-btn"
+          data-testid="sync-now-btn"
+          onClick={triggerSyncIfPossible}
+          disabled={!effectivelyOnline || queuedCount === 0}
+          className="btn-secondary"
+          style={{
+            fontSize: '11px',
+            borderColor: queuedCount > 0 && effectivelyOnline ? 'var(--accent-emerald)' : 'var(--border-color)',
+            color: queuedCount > 0 && effectivelyOnline ? 'var(--soft-green, #6ee7b7)' : 'var(--text-muted)'
+          }}
+        >
+          {queuedCount > 0 ? t('student.queueSync', { n: queuedCount }) : t('student.queueEmpty')}
+        </button>
+
+        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+          {effectivelyOnline ? t('student.autoSync') : t('student.offlineLocal')}
+        </span>
+      </div>
+
+</aside></div>
     </div>
   );
 }

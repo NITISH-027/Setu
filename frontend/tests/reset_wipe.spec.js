@@ -18,6 +18,7 @@ test.describe('FIX 4: Stale Device Reset & Client IndexedDB Wipe', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     // Confirm student dashboard loaded
     await expect(page.locator('#connection-status-badge')).toHaveText('Online');

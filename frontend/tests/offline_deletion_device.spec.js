@@ -23,6 +23,7 @@ test.describe('FIX 1: Offline Deletion Propagation to Device', () => {
     await page.fill('#student-id-input', 'stu_e2e_01');
     await page.fill('#student-pin-input', '5678');
     await page.click('#student-signin-btn');
+    await page.locator('#continue-learning-btn').click();
 
     // Confirm student dashboard loaded online
     await expect(page.locator('#connection-status-badge')).toHaveText('Online');

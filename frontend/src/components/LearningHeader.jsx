@@ -1,0 +1,11 @@
+import React from 'react';
+import { LoginIcon } from './LoginShell';
+import { makeT } from '../i18n/uiStrings.js';
+
+export default function LearningHeader({ activeTab, onNavigate, onTour, theme, onThemeChange, language, onLanguageChange }) {
+  const t = makeT(language);
+  return <header className="learning-header app-header">
+    <div className="learning-header-top"><a href="#" className="learning-header-brand" onClick={event => { event.preventDefault(); onNavigate('student'); }}><LoginIcon /><span>Setu<span>Learn</span></span></a><div className="learning-header-tools"><button id="guided-tour-btn" data-testid="guided-tour-btn" className="learning-tour-button" onClick={onTour}><span aria-hidden="true">✦</span> Guided tour</button><details className="learning-display"><summary>Display & language</summary><div><label>Theme<select id="theme-select" data-testid="theme-select" aria-label="Color Theme" value={theme} onChange={event => onThemeChange(event.target.value)}><option value="paathai">Paathai (Hill Path)</option><option value="emerald">Emerald Jade</option><option value="amethyst">Velvet Amethyst</option><option value="amber">Amber Sunset</option></select></label><label>Learning language<select id="language-select" data-testid="language-select" value={language} onChange={event => onLanguageChange(event.target.value)}><option value="en">English (Supported)</option><option value="hi">हिंदी (Unreviewed Draft)</option><option value="ta">தமிழ் (Unreviewed Draft)</option><option value="te">తెలుగు (Unreviewed Draft)</option></select></label><small>Draft-language and prototype limits still apply.</small></div></details></div></div>
+    <nav className="learning-header-nav" aria-label="Setu tools">{[{id:'student',label:'Practice',icon:'▷'},{id:'teacher',label:'Teacher',icon:'◫'},{id:'paper',label:'Paper mode',icon:'▤'},{id:'privacy',label:'Privacy',icon:'◎'},{id:'review',label:'Content review',icon:'▥'}].map(tab => <button key={tab.id} id={`tab-${tab.id}`} className={activeTab === tab.id ? 'is-active' : ''} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => onNavigate(tab.id)}><span aria-hidden="true">{tab.icon}</span>{language === 'en' ? tab.label : t(`nav.${tab.id}`)}</button>)}</nav>
+  </header>;
+}

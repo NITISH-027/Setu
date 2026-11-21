@@ -763,6 +763,50 @@ def get_coverage_report(session: SessionDB = Depends(get_current_session)):
 # STUDENT FLOW & SERVER-SIDE GRADING (FIX 1, 2)
 # ==========================================
 
+@app.get("/api/student/{student_id}/dashboard")
+def get_student_dashboard(
+    student_id: str,
+    timezone_offset_minutes: int = Query(default=0, ge=-840, le=840),
+    session: SessionDB = Depends(get_current_session),
+    db: Session = Depends(get_db)
+):
+    """Read-only student home, from saved attempts and mastery, not demo counters."""
+    verify_student_only_access(session, student_id)
+    student = db.query(StudentDB).filter(StudentDB.pseudonymous_id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+    offset = timedelta(minutes=timezone_offset_minutes)
+    today = (datetime.utcnow() + offset).date()
+    attempts = db.query(AttemptDB).filter(AttemptDB.student_id == student_id).all()
+    days = {}
+    for attempt in attempts:
+        if attempt.timestamp:
+            day = (attempt.timestamp + offset).date()
+            days[day] = days.get(day, 0) + 1
+    activity = [{"date": (today - timedelta(days=i)).isoformat(),
+                 "attempts": days.get(today - timedelta(days=i), 0)} for i in range(6, -1, -1)]
+    streak = 0
+    day = today if today in days else today - timedelta(days=1)
+    while day in days:
+        streak += 1
+        day -= timedelta(days=1)
+    masteries = {m.concept_id: m for m in db.query(MasteryStateDB).filter(MasteryStateDB.student_id == student_id).all()}
+    concepts = []
+    for concept in pack.concepts:
+        mastery = masteries.get(concept.id)
+        concepts.append({"concept_id": concept.id, "name": concept.name,
+                         "mastery": mastery.mastery_estimate if mastery else None,
+                         "attempts": sum(1 for attempt in attempts if attempt.concept_id == concept.id)})
+    active = db.query(TestSessionDB).filter(TestSessionDB.student_id == student_id, TestSessionDB.status == "in_progress").order_by(TestSessionDB.started_at.desc()).first()
+    return {"student_id": student_id, "class_id": student.class_id,
+            "total_attempts": len(attempts), "total_correct": sum(1 for a in attempts if a.is_correct),
+            "active_days_last_7": sum(1 for day in activity if day["attempts"]),
+            "streak_days": streak, "activity": activity, "concepts": concepts,
+            "concepts_practised": len({a.concept_id for a in attempts}),
+            "active_test": {"answered": db.query(TestItemDB).filter(TestItemDB.session_id == active.id, TestItemDB.answered_at.isnot(None)).count(), "planned": active.planned_length} if active else None,
+            "mastery_label": "uncalibrated, hand-set", "activity_label": "Saved server attempts, including tests"}
+
+
 @app.get("/api/student/{student_id}/next-step")
 def get_student_next_step(
     student_id: str,
@@ -2342,7 +2386,24 @@ def _test_session_state(db: Session, student: Student, session_db: TestSessionDB
                 "question": sanitized
             }
 
+    # Read-only review history. Never reveal the key for an unanswered item.
+    answered_items = []
+    for answered_item in answered:
+        question = pack.get_question(answered_item.question_id)
+        if not question:
+            continue
+        concept = pack.get_concept(answered_item.concept_id)
+        answered_items.append({
+            "sequence": answered_item.sequence,
+            "concept_id": answered_item.concept_id,
+            "concept_name": concept.name if concept else answered_item.concept_id,
+            "question": sanitize_question_for_client(question.model_dump()),
+            "selected_option_id": answered_item.selected_option_id,
+            "is_correct": bool(answered_item.is_correct)
+        })
+
     result = {
+        "answered_items": answered_items,
         "session_id": session_db.id,
         "status": session_db.status,
         "planned_length": session_db.planned_length,
@@ -2706,6 +2767,7 @@ def answer_adaptive_test(
         db.commit()
         response["completed"] = True
         response["summary"] = summary
+        response["session"] = _test_session_state(db, student, session_db)
         return response
 
     next_item = _serve_next_test_item(db, student, session_db)
@@ -2723,6 +2785,7 @@ def answer_adaptive_test(
         db.commit()
         response["completed"] = True
         response["summary"] = summary
+        response["session"] = _test_session_state(db, student, session_db)
         return response
 
     db.add(DecisionDB(

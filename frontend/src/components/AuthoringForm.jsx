@@ -94,106 +94,21 @@ export default function AuthoringForm({ authToken, t }) {
     setStatus(`Editing ${item.id} - re-enter the options, then save. Stays an unreviewed draft.`);
   };
 
-  return (
-    <div className="info-card" style={{ marginBottom: '14px', borderLeft: '4px solid var(--accent-secondary, #f59e0b)' }}>
-      <h3 style={{ fontSize: '15px', marginBottom: '6px' }}>{t('teacher.authorTitle')}</h3>
-      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-        {t('teacher.authorNote')}
-      </div>
-
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
-        <label style={{ fontSize: '12px' }}>
-          Concept:
-          <select value={concept} onChange={(e) => setConcept(e.target.value)} style={{ marginLeft: '4px' }}>
-            <option value="">- choose -</option>
-            {concepts.map((c) => (
-              <option key={c.id} value={c.id}>{c.name} (Class {c.class_level})</option>
-            ))}
-          </select>
-        </label>
-        <label style={{ fontSize: '12px' }}>
-          Language:
-          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ marginLeft: '4px' }}>
-            <option value="en">English</option>
-            <option value="ta">தமிழ் (draft)</option>
-            <option value="hi">हिंदी (draft)</option>
-            <option value="te">తెలుగు (draft)</option>
-          </select>
-        </label>
-      </div>
-
-      <textarea
-        value={questionText}
-        onChange={(e) => setQuestionText(e.target.value)}
-        placeholder="Question text, e.g. Solve for x: x + 3 = 10"
-        style={{ width: '100%', minHeight: '44px', marginBottom: '8px', fontSize: '13px' }}
-      />
-
-      {options.map((o, i) => (
-        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px', fontSize: '12px' }}>
-          <input
-            type="radio"
-            name="author-correct"
-            checked={o.is_correct}
-            onChange={() => setOptions((opts) => opts.map((x, j) => ({ ...x, is_correct: j === i })))}
-            title="Mark as the correct option"
-          />
-          <input
-            value={o.text}
-            onChange={(e) => setOption(i, { text: e.target.value })}
-            placeholder={`Option ${i + 1}`}
-            style={{ width: '110px' }}
-          />
-          {!o.is_correct && (
-            <input
-              value={o.misconception_tag}
-              onChange={(e) => setOption(i, { misconception_tag: e.target.value })}
-              placeholder="misconception tag (tag_...)"
-              style={{ flex: 1 }}
-            />
-          )}
-          {o.is_correct && <span style={{ color: 'var(--text-muted)' }}>correct answer</span>}
-        </div>
-      ))}
-
-      <div style={{ marginTop: '6px', fontSize: '12px' }}>
-        <input
-          value={probeFor}
-          onChange={(e) => setProbeFor(e.target.value)}
-          placeholder="Optional: probe_for_misconception tag (makes this a diagnostic probe)"
-          style={{ width: '70%' }}
-        />
-      </div>
-
-      {issues.length > 0 && (
-        <div style={{ marginTop: '8px' }}>
-          {issues.map((i, k) => (
-            <div key={k} style={{ fontSize: '12px', color: i.severity === 'ERROR' ? '#b91c1c' : '#b45309' }}>
-              {i.severity}: {i.message}
-            </div>
-          ))}
-        </div>
-      )}
-      {status && <div style={{ fontSize: '12px', color: 'var(--accent-primary)', marginTop: '8px' }}>{status}</div>}
-
-      <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-        <button className="btn-primary" onClick={submit} disabled={!concept || !questionText.trim()}>
-          {editingId ? 'Save edit (stays draft)' : t('teacher.authorSubmit')}
-        </button>
-        {editingId && <button onClick={resetForm}>Cancel edit</button>}
-      </div>
-
-      {authored.length > 0 && (
-        <div style={{ marginTop: '10px', fontSize: '12px' }}>
-          <strong>Your drafted questions ({authored.length}):</strong>
-          {authored.slice(0, 10).map((item) => (
-            <div key={item.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderTop: '1px solid var(--border-color)', padding: '4px 0' }}>
-              <span style={{ flex: 1 }}>{item.question_text.slice(0, 60)} <em style={{ color: 'var(--text-muted)' }}>[{item.review_status}, v{item.version}]</em></span>
-              <button style={{ fontSize: '11px' }} onClick={() => startEdit(item)}>Edit</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <section className="teacher-card setu-authoring">
+    <div className="teacher-card-heading"><div><p className="teacher-eyebrow">YOUR TEACHING TOOLKIT</p><h3>{t('teacher.authorTitle')}</h3></div><span className="teacher-evidence-pill">Unreviewed draft</span></div>
+    <p className="teacher-muted">{t('teacher.authorNote')}</p>
+    <div className="teacher-author-fields"><label>Concept<select aria-label="Concept" value={concept} onChange={e => setConcept(e.target.value)}><option value="">- choose -</option>{concepts.map(item => <option key={item.id} value={item.id}>{item.name} (Class {item.class_level})</option>)}</select></label><label>Language<select aria-label="Language" value={language} onChange={e => setLanguage(e.target.value)}><option value="en">English</option><option value="ta">தமிழ் (draft)</option><option value="hi">हिंदी (draft)</option><option value="te">తెలుగు (draft)</option></select></label></div>
+    <label className="teacher-author-question">Question<textarea aria-label="Question" value={questionText} onChange={e => setQuestionText(e.target.value)} placeholder="Question text, e.g. Solve for x: x + 3 = 10" rows={3}/></label>
+    <div className="teacher-author-options-heading"><strong>Answer options</strong><span>Select one correct answer. Add misconception tags to the others.</span></div>
+    {options.map((option, index) => <div className="teacher-author-option" key={index}>
+      <label className="teacher-author-radio"><input type="radio" name="author-correct" checked={option.is_correct} onChange={() => setOptions(opts => opts.map((item, i) => ({ ...item, is_correct: i === index })))} aria-label={`Mark option ${index + 1} as correct`} /><span>{String.fromCharCode(65 + index)}</span></label>
+      <label className="teacher-option-text"><span>Option {index + 1}</span><input aria-label={`Option ${index + 1}`} value={option.text} onChange={e => setOption(index, { text: e.target.value })} placeholder={`Option ${index + 1}`}/></label>
+      {!option.is_correct ? <label className="teacher-option-tag"><span>Misconception tag</span><input aria-label="Misconception tag" value={option.misconception_tag} onChange={e => setOption(index, { misconception_tag: e.target.value })} placeholder="tag_..."/></label> : <span className="teacher-evidence-pill">Correct answer</span>}
+    </div>)}
+    <label className="teacher-author-question teacher-probe">Diagnostic probe tag <small>Optional. Makes this a diagnostic probe.</small><input value={probeFor} onChange={e => setProbeFor(e.target.value)} placeholder="probe_for_misconception tag"/></label>
+    {issues.length > 0 && <div className="teacher-notice is-error" role="alert">{issues.map((issue, index) => <p key={index}>{issue.severity}: {issue.message}</p>)}</div>}
+    {status && <p className="teacher-notice is-success" role="status">{status}</p>}
+    <div className="teacher-author-submit"><p>A subject teacher must check the maths and tags before this is used.</p><div><button className="btn-primary" onClick={submit} disabled={!concept || !questionText.trim()}>{editingId ? 'Save edit (stays draft)' : t('teacher.authorSubmit')}</button>{editingId && <button className="btn-secondary" onClick={resetForm}>Cancel edit</button>}</div></div>
+    {authored.length > 0 && <div className="teacher-draft-list"><h4>Your drafted questions ({authored.length})</h4>{authored.slice(0, 10).map(item => <article key={item.id}><div><strong>{item.question_text.slice(0, 60)}</strong><small>{item.review_status} · v{item.version}</small></div><button className="btn-secondary" onClick={() => startEdit(item)}>Edit</button></article>)}</div>}
+  </section>;
 }

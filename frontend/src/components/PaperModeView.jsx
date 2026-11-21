@@ -174,141 +174,15 @@ export default function PaperModeView() {
     }
   };
 
-  return (
-    <div className="wide-container">
-      <div>
-        <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Teacher-Mediated Paper Mode</h2>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          India Fit • No device at home • Printable question sets + bulk response entry
-        </p>
-      </div>
-
-      {/* Generator Section */}
-      <div className="info-card">
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>
-          Generate Printable Question Worksheet
-        </h3>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-          Outputs formatted clean printable HTML with question codes and option bubbles for offline classroom administration.
-        </p>
-
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            value={selectedConcept}
-            onChange={(e) => setSelectedConcept(e.target.value)}
-            style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
-          >
-            <option value="c8_math_linear_eq_one_var">Linear Equations in One Variable (Class 8)</option>
-            <option value="c8_math_rational_ops">Operations on Rational Numbers (Class 8)</option>
-            <option value="c8_math_squares_square_roots">Squares and Square Roots (Class 8)</option>
-          </select>
-
-          <button onClick={handlePrintWorksheet} className="btn-secondary" style={{ borderColor: 'var(--accent-blue)', color: 'var(--accent-blue)' }}>
-            Open Printable Sheet in New Tab
-          </button>
-        </div>
-      </div>
-
-      {/* Teacher Authentication Card */}
-      {!teacherToken && (
-        <div className="info-card" style={{ background: 'rgba(56, 189, 248, 0.05)' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-            Teacher Credentials (Required for Bulk Paper Entry)
-          </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              id="teacher-paper-username"
-              type="text"
-              value={teacherUsername}
-              onChange={(e) => setTeacherUsername(e.target.value)}
-              placeholder="teacher username"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
-            />
-            <input
-              id="teacher-paper-password"
-              type="password"
-              value={teacherPassword}
-              onChange={(e) => setTeacherPassword(e.target.value)}
-              placeholder="password"
-              style={{ padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '6px' }}
-            />
-            <button onClick={handleTeacherLogin} className="btn-secondary">
-              Sign In
-            </button>
-          </div>
-          {authError && <div style={{ fontSize: '12px', color: 'var(--soft-red, #fca5a5)', marginTop: '6px' }}>{authError}</div>}
-        </div>
-      )}
-
-      {/* Bulk Entry Real Teacher Form (Failure 8) */}
-      <div className="info-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700' }}>
-            Bulk Response Entry (Teacher Form)
-          </h3>
-          <button onClick={handleAddRow} className="btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }}>
-            + Add Student Row
-          </button>
-        </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-          Teacher collects physical sheets and inputs chosen options in bulk.
-          Submitted via real API endpoint (POST /api/teacher/bulk-paper-submit). Real AttemptDB and MasteryStateDB rows are updated.
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-          {bulkEntries.map((row, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                id={`bulk-student-id-${idx}`}
-                data-testid={`bulk-student-id-${idx}`}
-                type="text"
-                placeholder="Student Pseudonym"
-                value={row.student_id}
-                onChange={(e) => handleUpdateRow(idx, 'student_id', e.target.value)}
-                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
-              />
-              <input
-                id={`bulk-question-id-${idx}`}
-                data-testid={`bulk-question-id-${idx}`}
-                type="text"
-                placeholder="Question ID"
-                value={row.question_id}
-                onChange={(e) => handleUpdateRow(idx, 'question_id', e.target.value)}
-                style={{ width: '130px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
-              />
-              <input
-                id={`bulk-option-id-${idx}`}
-                data-testid={`bulk-option-id-${idx}`}
-                type="text"
-                placeholder="Option ID (opt_1, etc.)"
-                value={row.selected_option_id}
-                onChange={(e) => handleUpdateRow(idx, 'selected_option_id', e.target.value)}
-                style={{ width: '120px', padding: '6px 8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--input-text, #fff)', borderRadius: '4px', fontSize: '12px' }}
-              />
-              {bulkEntries.length > 1 && (
-                <button
-                  onClick={() => handleRemoveRow(idx)}
-                  className="btn-secondary"
-                  style={{ fontSize: '10px', padding: '4px 6px', color: 'var(--soft-red, #fca5a5)', borderColor: 'var(--soft-red, #fca5a5)' }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <button
-          id="process-bulk-paper-btn"
-          data-testid="process-bulk-paper-btn"
-          onClick={handleRealBulkSubmit}
-          disabled={isSubmitting}
-          className="action-btn"
-          style={{ width: 'auto' }}
-        >
-          {isSubmitting ? 'Processing...' : 'Process Bulk Responses Through Engine'}
-        </button>
-
+  return <div className="wide-container paper-mode-page">
+    <header className="paper-heading"><p className="paper-eyebrow">FROM PAPER TO PRACTICE</p><h1>Teacher-Mediated Paper Mode</h1><p>Learning can start on a worksheet. Bring saved classroom answers back into the same adaptive engine.</p></header>
+    <div className="paper-top-grid"><section className="paper-card paper-generator"><span className="paper-step">01 / PREPARE</span><h2>Generate Printable Question Worksheet</h2><p>Open a clean worksheet with question codes and option bubbles for offline classroom use.</p><label>Choose a concept<select aria-label="Worksheet concept" value={selectedConcept} onChange={e => setSelectedConcept(e.target.value)}><option value="c8_math_linear_eq_one_var">Linear Equations in One Variable (Class 8)</option><option value="c8_math_rational_ops">Operations on Rational Numbers (Class 8)</option><option value="c8_math_squares_square_roots">Squares and Square Roots (Class 8)</option></select></label><button className="action-btn" onClick={handlePrintWorksheet}>Open Printable Sheet in New Tab</button><small>Teacher sign-in is required. The worksheet opens separately.</small></section>
+      <section className="paper-card paper-auth"><span className="paper-step">TEACHER ACCESS</span><h2>{teacherToken ? 'Your teacher session is ready.' : 'Sign in to keep records safe.'}</h2>{!teacherToken ? <><p>Your existing teacher account is used for worksheets and bulk entry.</p><label htmlFor="teacher-paper-username">Teacher username</label><input id="teacher-paper-username" type="text" autoComplete="username" value={teacherUsername} onChange={e => setTeacherUsername(e.target.value)} placeholder="Teacher username"/><label htmlFor="teacher-paper-password">Password</label><input id="teacher-paper-password" type="password" autoComplete="current-password" value={teacherPassword} onChange={e => setTeacherPassword(e.target.value)} placeholder="Password"/><button onClick={handleTeacherLogin} className="btn-secondary">Sign In</button></> : <><span className="paper-ready">✓ Signed in</span><p>The server checks access to each student's class before processing their answer.</p><small>Review student, question and option IDs before submitting. Results are saved to real learner records.</small></>}</section>
+    </div>
+    {authError && <p className="paper-notice is-error" role="alert">{authError}</p>}
+    <section className="paper-card paper-entry"><div className="paper-entry-title"><div><p className="paper-eyebrow">02 / RECORD THE ANSWERS</p><h2>Bulk Response Entry (Teacher Form)</h2></div><button onClick={handleAddRow} className="btn-secondary">+ Add Student Row</button></div><p>Enter the chosen options from collected paper sheets. The server grades saved answers and updates mastery using the existing adaptive engine.</p><div className="paper-example-note">Example rows are prefilled. Replace them with the actual student, question and option IDs before submitting.</div>
+    <div className="paper-entry-rows">{bulkEntries.map((row,index) => <article className="paper-entry-row" key={index}><span className="paper-row-number">{String(index + 1).padStart(2,'0')}</span><label htmlFor={`bulk-student-id-${index}`}>Student pseudonym<input id={`bulk-student-id-${index}`} data-testid={`bulk-student-id-${index}`} value={row.student_id} onChange={e => handleUpdateRow(index,'student_id',e.target.value)} placeholder="Student pseudonym"/></label><label htmlFor={`bulk-question-id-${index}`}>Question ID<input id={`bulk-question-id-${index}`} data-testid={`bulk-question-id-${index}`} value={row.question_id} onChange={e => handleUpdateRow(index,'question_id',e.target.value)} placeholder="Question ID"/></label><label htmlFor={`bulk-option-id-${index}`}>Chosen option ID<input id={`bulk-option-id-${index}`} data-testid={`bulk-option-id-${index}`} value={row.selected_option_id} onChange={e => handleUpdateRow(index,'selected_option_id',e.target.value)} placeholder="Option ID (opt_1, etc.)"/></label>{bulkEntries.length > 1 && <button className="paper-remove" aria-label={`Remove row ${index+1}`} onClick={() => handleRemoveRow(index)}>×</button>}</article>)}</div>
+    <div className="paper-submit"><p>Submitting writes the answers to learner records. Check the IDs and choices first.</p><button id="process-bulk-paper-btn" data-testid="process-bulk-paper-btn" onClick={handleRealBulkSubmit} disabled={isSubmitting} className="action-btn">{isSubmitting ? 'Processing...' : 'Process Bulk Responses Through Engine'}</button></div>
         {/* Server Confirmed Results (Failure 8) */}
         {submissionResult && submissionResult.processed_count > 0 && (
           <div
@@ -359,7 +233,6 @@ export default function PaperModeView() {
             </ul>
           </div>
         )}
-      </div>
-    </div>
-  );
+    </section>
+  </div>;
 }
